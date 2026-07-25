@@ -1,24 +1,51 @@
-import logo from './logo.svg';
-import './App.css';
+import AppRoutes from "./routes/AppRoutes";
+import "./App.css";
 
+import GlobalLoader from "./components/GlobalLoader";
+
+import { NotificationProvider } from "./context/NotificationContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
+// =========================
+// APP CONTENT
+// =========================
+function AppContent() {
+
+  const { loading } = useAuth();
+
+
+
+  // WAIT AUTH INIT
+  if (loading) {
+    return null;
+  }
+
+  return (
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <GlobalLoader />
+
+      <AppRoutes />
+    </>
+  );
+}
+
+
+// =========================
+// ROOT APP
+// =========================
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
+    </AuthProvider>
   );
 }
 
