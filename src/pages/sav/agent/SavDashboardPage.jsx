@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 
 import apiFetch from "../../../services/apiFetch";
 
-import TicketStatusBadge from "../components/TicketStatusBadge";
-import TicketPriorityBadge from "../components/TicketPriorityBadge";
+import TicketStatusBadge from "../../../components/sav/TicketStatusBadge";
+import TicketPriorityBadge from "../../../components/sav/TicketPriorityBadge";
 
 export default function SavDashboardPage() {
 

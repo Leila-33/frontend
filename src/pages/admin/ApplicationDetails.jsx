@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
-import ApplicationTimeline from "../../components/ApplicationTimeline";
-import { STATUS } from "../../utilis/status";
+import ApplicationTimeline from "../../components/applications/ApplicationTimeline";
+import { STATUS } from "../../utils/status";
 
 
 export default function AdminApplication() {

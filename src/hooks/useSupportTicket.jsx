@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import apiFetch from "../../../services/apiFetch";
-import { updateSupportTicketStatus } from "../service/supportTicketService";
+import apiFetch from "../services/apiFetch";
+import { updateSupportTicketStatus } from "../services/supportTicketService";
 
 export default function useSupportTicket(id) {
   const [ticket, setTicket] = useState(null);

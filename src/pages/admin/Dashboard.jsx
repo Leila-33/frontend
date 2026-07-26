@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import apiFetch from "../../services/apiFetch";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { STATUS } from "../../utilis/status";
+import { STATUS } from "../../utils/status";
 
 export default function AdminDashboard() {
 

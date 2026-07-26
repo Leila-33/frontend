@@ -2,8 +2,24 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import apiFetch from "../../services/apiFetch";
 import { toast } from "react-toastify";
+import DetailLayout from "../../layouts/DetailLayout";
+import { testDriveStatusConfig } from "../../utils/status";
 
-export default function TestDriveDetails() {
+const eventIcons = {
+
+  TEST_DRIVE_CREATED: "bi bi-calendar-plus",
+
+  TEST_DRIVE_CONFIRMED: "bi bi-check-circle-fill",
+
+  TEST_DRIVE_REJECTED: "bi bi-x-circle-fill",
+
+  TEST_DRIVE_CANCELLED: "bi bi-calendar-x-fill",
+
+  TEST_DRIVE_COMPLETED: "bi bi-flag-fill",
+
+};
+
+export default function TestDriveDetailsClient() {
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -40,6 +56,7 @@ export default function TestDriveDetails() {
   useEffect(() => {
     fetchDetails();
   }, [id]);
+  
 const cancelTestDrive = async () => {
 
   try {
@@ -58,110 +75,137 @@ const cancelTestDrive = async () => {
   }
 };
 
-  // =========================
-  // STATUS UI
-  // =========================
-  const statusConfig = {
+const addToCalendar = () => {
 
-    pending: {
-      label: "En attente",
-      class: "bg-warning text-dark",
-      progress: 25
-    },
+ const startDate = new Date(
+   testDrive.appointment_date
+ );
 
-    confirmed: {
-      label: "Confirmé",
-      class: "bg-primary",
-      progress: 60
-    },
+ const endDate = new Date(
+   startDate.getTime() + 60 * 60 * 1000
+ );
 
-    completed: {
-      label: "Terminé",
-      class: "bg-success",
-      progress: 100
-    },
 
-    cancelled: {
-      label: "Annulé",
-      class: "bg-danger",
-      progress: 0
-    },
+ const formatGoogleDate = (date)=>
+   date
+   .toISOString()
+   .replace(/-|:|\.\d+/g,"");
 
-    rejected: {
-      label: "Refusé",
-      class: "bg-danger",
-      progress: 0
-    }
-  };
 
-  // =========================
-  // EVENT ICONS
-  // =========================
-  const eventIcons = {
+ const url =
+ `https://calendar.google.com/calendar/render?action=TEMPLATE`
+ +
+ `&text=${encodeURIComponent(
+   `Essai routier ${testDrive.vehicle.brand} ${testDrive.vehicle.model}`
+ )}`
+ +
+ `&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`
+ +
+ `&details=${encodeURIComponent(
+   "Essai routier Mmotors"
+ )}`
+ +
+ `&location=Mmotors`;
 
-    TEST_DRIVE_CREATED: "📝",
 
-    TEST_DRIVE_CONFIRMED: "✅",
+ window.open(url,"_blank");
 
-    TEST_DRIVE_REJECTED: "❌",
+};
 
-    TEST_DRIVE_CANCELLED: "⚠️",
+const contactSupport = () => {
 
-    TEST_DRIVE_COMPLETED: "🏁",
-  };
+ const subject = encodeURIComponent(
+   `Support essai routier ${testDrive.id}`
+ );
 
-  if (!testDrive) return null;
 
-  const status =
-    statusConfig[testDrive.status];
+ const body = encodeURIComponent(
+ `Bonjour,
 
+J’ai une question concernant mon essai routier du ${new Date(
+ testDrive.appointment_date
+ ).toLocaleString()}.
+
+Merci.`
+ );
+
+
+ window.location.href =
+ `mailto:support@mmotors.com?subject=${subject}&body=${body}`;
+
+};
+
+if (!testDrive) {
   return (
+    <div className="container py-5 text-center">
+      <div className="spinner-border text-primary" />
+      <p className="mt-3 text-muted">
+        Chargement de l'essai routier...
+      </p>
+    </div>
+  );
+}
+const status = testDriveStatusConfig[testDrive] || testDriveStatusConfig.pending;
+
+
+return (
+
+  <DetailLayout
+    showBackButton
+    breadcrumb={[
+      {
+        label: "Mes essais routiers",
+        path: "/mytestdrives"
+      },
+      {
+        label: `${testDrive.vehicle?.brand || ""} ${testDrive.vehicle?.model || ""}`
+      }
+    ]}
+  >
 
     <div className="container py-4">
 
-      {/* =========================
-          BACK
-      ========================= */}
-      <button
-        className="btn btn-light mb-4"
-        onClick={() => navigate(-1)}
-      >
-        ← Retour
-      </button>
-
       <div className="row g-4">
+
 
         {/* =========================
             LEFT SIDE
         ========================= */}
         <div className="col-lg-8">
 
+
           {/* VEHICLE CARD */}
           <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
 
+
             {/* IMAGE */}
             <div
-              className="d-flex align-items-center justify-content-center bg-light"
+              className="
+                d-flex
+                align-items-center
+                justify-content-center
+                bg-light
+              "
               style={{
+
                 height: "320px",
-                backgroundImage: testDrive.vehicle.images?.[0]
-                  ? `url(${testDrive.vehicle.images[0]})`
-                  : "none",
+
+                backgroundImage:
+                  testDrive.vehicle?.images?.[0]
+                    ? `url(${testDrive.vehicle.images[0]})`
+                    : "none",
 
                 backgroundSize: "cover",
                 backgroundPosition: "center"
               }}
             >
 
-              {!testDrive.vehicle.images?.[0] && (
+
+              {!testDrive.vehicle?.images?.[0] && (
 
                 <div className="text-center">
 
-                  <div
-                    style={{
-                      fontSize: "64px"
-                    }}
-                  >
+                  <div style={{fontSize:"64px"}}>
                     🚗
                   </div>
 
@@ -175,47 +219,76 @@ const cancelTestDrive = async () => {
 
             </div>
 
+
+
             <div className="card-body p-4">
 
-              <div className="d-flex justify-content-between align-items-start mb-3">
+
+              <div className="
+                d-flex
+                justify-content-between
+                align-items-start
+                mb-3
+              ">
+
 
                 <div>
 
                   <h2 className="fw-bold mb-1">
-                    {testDrive.vehicle.brand}{" "}
-                    {testDrive.vehicle.model}
+
+                    {testDrive.vehicle?.brand}{" "}
+                    {testDrive.vehicle?.model}
+
                   </h2>
 
+
                   <p className="text-muted mb-0">
-                    Essai routier premium
+                    Essai routier
                   </p>
+
 
                 </div>
 
-                <span className={`badge ${status.class} px-3 py-2`}>
+
+
+                <span
+                  className={`badge ${status.className} px-3 py-2`}
+                >
                   {status.label}
                 </span>
 
+
               </div>
 
+
+
+
               {/* DATE */}
+
               <div className="mb-4">
 
                 <small className="text-muted d-block">
                   Date du rendez-vous
                 </small>
 
+
                 <div className="fw-semibold fs-5">
 
                   {new Date(
                     testDrive.appointment_date
-                  ).toLocaleString()}
+                  ).toLocaleString(
+                    "fr-FR"
+                  )}
 
                 </div>
 
               </div>
 
+
+
+
               {/* COMMENT */}
+
               {testDrive.comment && (
 
                 <div className="mb-4">
@@ -224,253 +297,359 @@ const cancelTestDrive = async () => {
                     Commentaire
                   </small>
 
-                  <div className="bg-light rounded-3 p-3">
+
+                  <div className="
+                    bg-light
+                    rounded-3
+                    p-3
+                  ">
                     {testDrive.comment}
                   </div>
+
 
                 </div>
 
               )}
 
+
+
+
+
+
               {/* PROGRESS */}
+
               <div>
 
-                <div className="d-flex justify-content-between mb-2">
+
+                <div className="
+                  d-flex
+                  justify-content-between
+                  mb-2
+                ">
 
                   <small className="text-muted">
                     Progression
                   </small>
 
+
                   <small className="fw-semibold">
                     {status.progress}%
                   </small>
 
+
                 </div>
+
+
 
                 <div
                   className="progress"
-                  style={{ height: "8px" }}
+                  style={{
+                    height:"8px"
+                  }}
                 >
+
                   <div
                     className="progress-bar"
                     style={{
-                      width: `${status.progress}%`
+                      width:`${status.progress}%`
                     }}
                   />
+
                 </div>
+
 
               </div>
 
+
+
             </div>
+
 
           </div>
 
-          {/* =========================
-              TIMELINE
-          ========================= */}
-          <div className="card border-0 shadow-sm rounded-4 mt-4">
+
+
+
+
+          {/* TIMELINE */}
+
+          <div className="
+            card
+            border-0
+            shadow-sm
+            rounded-4
+            mt-4
+          ">
+
 
             <div className="card-body p-4">
 
+
               <h4 className="fw-bold mb-4">
-                Timeline
+                Historique
               </h4>
 
-              <div className="position-relative">
 
-                {/* LINE */}
-                <div
-                  style={{
-                    position: "absolute",
-                    left: "18px",
-                    top: 0,
-                    bottom: 0,
-                    width: "2px",
-                    background: "#e9ecef"
-                  }}
-                />
 
-                {testDrive.timeline.map((event, index) => (
+              {
+                testDrive.timeline?.length ? (
 
-                  <div
-                    key={index}
-                    className="d-flex mb-4 position-relative"
-                  >
+                  <div className="position-relative">
 
-                    {/* ICON */}
+
                     <div
-                      className="rounded-circle bg-white border shadow-sm d-flex align-items-center justify-content-center"
                       style={{
-                        width: "38px",
-                        height: "38px",
-                        zIndex: 2,
-                        fontSize: "18px"
+                        position:"absolute",
+                        left:"18px",
+                        top:0,
+                        bottom:0,
+                        width:"2px",
+                        background:"#e9ecef"
                       }}
-                    >
-                      {eventIcons[event.type] || "📌"}
-                    </div>
+                    />
 
-                    {/* CONTENT */}
-                    <div className="ms-3 flex-grow-1">
 
-                      <div className="fw-semibold">
-                        {event.message}
+
+                    {testDrive.timeline.map(
+                      (event,index)=>(
+
+
+                      <div
+                        key={index}
+                        className="
+                          d-flex
+                          mb-4
+                          position-relative
+                        "
+                      >
+
+
+                        <div
+                          className="
+                            rounded-circle
+                            bg-white
+                            border
+                            shadow-sm
+                            d-flex
+                            align-items-center
+                            justify-content-center
+                          "
+                          style={{
+                            width:"38px",
+                            height:"38px",
+                            zIndex:2
+                          }}
+                        >
+
+                          <i className={eventIcons[event.type] || "bi bi-info-circle"}></i>
+
+                        </div>
+
+
+
+                        <div className="ms-3">
+
+
+                          <div className="fw-semibold">
+                            {event.message}
+                          </div>
+
+
+                          <small className="text-muted">
+
+                            {
+                              new Date(
+                                event.date
+                              ).toLocaleString(
+                                "fr-FR"
+                              )
+                            }
+
+                          </small>
+
+
+                        </div>
+
+
+
                       </div>
 
-                      <small className="text-muted">
-                        {new Date(
-                          event.date
-                        ).toLocaleString()}
-                      </small>
 
-                    </div>
+                    ))}
+
+
 
                   </div>
 
-                ))}
 
-              </div>
+                ) : (
+
+                  <p className="text-muted">
+                    Aucun historique disponible.
+                  </p>
+
+                )
+              }
+
+
 
             </div>
 
+
           </div>
+
+
 
         </div>
 
-        {/* =========================
-            RIGHT SIDE
-        ========================= */}
+
+
+
+
+        {/* RIGHT SIDE */}
+
         <div className="col-lg-4">
 
-          {/* USER CARD */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4">
+
+
+          {/* USER */}
+
+          <div className="
+            card
+            border-0
+            shadow-sm
+            rounded-4
+            mb-4
+          ">
+
 
             <div className="card-body p-4">
 
+
               <h5 className="fw-bold mb-3">
-                Informations conducteur
+                Mes informations
               </h5>
 
-              <div className="mb-3">
 
-                <small className="text-muted d-block">
-                  Nom
-                </small>
 
-                <div className="fw-semibold">
-                  {testDrive.user.name}
-                </div>
+              <small className="text-muted d-block">
+                Nom
+              </small>
+
+              <div className="fw-semibold mb-3">
+
+                {testDrive.user?.name}
+
+              </div>
+
+
+
+              <small className="text-muted d-block">
+                Email
+              </small>
+
+              <div className="fw-semibold">
+
+                {testDrive.user?.email}
 
               </div>
 
-              <div>
 
-                <small className="text-muted d-block">
-                  Email
-                </small>
-
-                <div className="fw-semibold">
-                  {testDrive.user.email}
-                </div>
-
-              </div>
 
             </div>
 
+
           </div>
 
+
+
+
+
           {/* ACTIONS */}
-          <div className="card border-0 shadow-sm rounded-4">
+
+          <div className="
+            card
+            border-0
+            shadow-sm
+            rounded-4
+          ">
+
 
             <div className="card-body p-4">
+
 
               <h5 className="fw-bold mb-3">
                 Actions
               </h5>
 
-              {/* CALENDAR */}
-              {/* ADD TO CALENDAR */}
+
+
+
               {testDrive.status === "confirmed" && (
 
                 <button
                   className="btn btn-primary w-100 mb-2"
-                  onClick={() => {
-
-                    const startDate = new Date(
-                      testDrive.appointment_date
-                    );
-
-                    // +1h duration
-                    const endDate = new Date(
-                      startDate.getTime() + 60 * 60 * 1000
-                    );
-
-                    // GOOGLE FORMAT
-                    const formatGoogleDate = (date) =>
-                      date
-                        .toISOString()
-                        .replace(/-|:|\.\d+/g, "");
-
-                    const calendarUrl =
-                      `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-                      `&text=Essai+routier+-+${encodeURIComponent(
-                        `${testDrive.vehicle.brand} ${testDrive.vehicle.model}`
-                      )}` +
-                      `&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}` +
-                      `&details=${encodeURIComponent(
-                        `Essai routier avec ${testDrive.vehicle.brand} ${testDrive.vehicle.model}`
-                      )}` +
-                      `&location=${encodeURIComponent("Mmotors")}`;
-
-                    window.open(calendarUrl, "_blank");
-                  }}
+                  onClick={addToCalendar}
                 >
                   Ajouter au calendrier
                 </button>
 
               )}
 
-              {/* CONTACT SUPPORT */}
+
+
+
+
+
               <button
-                className="btn btn-outline-dark w-100 mb-2"
-                onClick={() => {
-
-                  const subject = encodeURIComponent(
-                    `Support essai routier ${testDrive.id}`
-                  );
-
-                  const body = encodeURIComponent(
-                    `Bonjour,\n\nJ’ai une question concernant mon essai routier du ${new Date(
-                      testDrive.appointment_date
-                    ).toLocaleString()}.\n\nMerci.`
-                  );
-
-                  window.location.href =
-                    `mailto:support@mmotors.com?subject=${subject}&body=${body}`;
-                }}
+                className="
+                  btn
+                  btn-outline-dark
+                  w-100
+                  mb-2
+                "
+                onClick={contactSupport}
               >
                 Contacter le support
               </button>
 
-              {/* CANCEL */}
+
+
+
+
               {testDrive.status === "pending" && (
 
-                <button className="btn btn-outline-danger w-100"  onClick={cancelTestDrive}>
+                <button
+                  className="
+                    btn
+                    btn-outline-danger
+                    w-100
+                  "
+                  onClick={cancelTestDrive}
+                >
                   Annuler la demande
                 </button>
 
-
-
               )}
+
+
 
             </div>
 
+
           </div>
+
+
 
         </div>
 
+
       </div>
 
+
     </div>
-  );
-}
+
+
+  </DetailLayout>
+
+);}

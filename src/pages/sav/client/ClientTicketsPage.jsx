@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 import apiFetch from "../../../services/apiFetch";
 
-import ClientTicketsTable from "../components/ClientTicketsTable";
+import ClientTicketsTable from "../../../components/sav/ClientTicketsTable";
 
 export default function ClientTicketsPage() {
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import apiFetch from "../../services/apiFetch";
+import apiFetch from "../../../services/apiFetch";
 import { toast } from "react-toastify";
-import LeadCard from "../components/LeadCard";
+import LeadCard from "../../../components/sales/LeadCard";
 
 
 export default function AvailableLeadsPage() {
@@ -311,6 +311,7 @@ export default function AvailableLeadsPage() {
                     }
 
                   />
+                  
 
 
                 </div>

@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import apiFetch from "../../services/apiFetch";
-import QuoteFormPage from "../components/QuoteForm";
+import apiFetch from "../../../services/apiFetch";
+import QuoteFormPage from "../../../components/sales/QuoteForm";
 export default function QuoteCreatePage() {
 
   const navigate = useNavigate();

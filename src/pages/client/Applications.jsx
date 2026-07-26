@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
-import ConfirmActionModal from "../admin/ConfirmActionModal";
-import { STATUS, VEHICLE_TYPE } from "../../utilis/status";
+import ConfirmActionModal from "../../components/common/ConfirmActionModal";
+import { STATUS, VEHICLE_TYPE } from "../../utils/status";
 
 export default function AdminDossiers() {
 

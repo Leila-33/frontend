@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import apiFetch from "../../../services/apiFetch";
-import { useDebounce } from "../../../hooks/debounce";
+import { useDebounce } from "../../../hooks/useDebounce";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import { updateSupportTicketStatus } from "../service/supportTicketService";
-import TicketTabs from "../components/TicketTabs";
-import TicketToolbar from "../components/TicketToolbar";
-import TicketTable from "../components/TicketTable";
-import Pagination from "../components/Pagination";
+import { updateSupportTicketStatus } from "../../../services/supportTicketService";
+import TicketTabs from "../../../components/sav/TicketTabs";
+import TicketToolbar from "../../../components/sav/TicketToolbar";
+import TicketTable from "../../../components/sav/TicketTable";
+import Pagination from "../../../components/sav/Pagination";
 
 export default function SavTicketsPage() {
 const location = useLocation();

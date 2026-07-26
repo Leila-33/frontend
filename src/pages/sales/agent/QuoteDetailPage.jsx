@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import ConfirmModal from "../components/ConfirmModal";
-import { quoteStatusConfig } from "../../utilis/status";
+import ConfirmModal from "../../../components/sales/ConfirmModal";
+import { quoteStatusConfig } from "../../../utils/status";
 
-import apiFetch from "../../services/apiFetch";
+import apiFetch from "../../../services/apiFetch";
 
 export default function QuoteDetailPage() {
 

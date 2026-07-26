@@ -1,10 +1,9 @@
 import { useParams } from "react-router-dom";
 
-import useSupportTicket from "../hooks/useSupportTicket";
-
-import TicketHeader from "../components/chat/TicketHeader";
-import TicketMessages from "../components/chat/TicketMessages";
-import TicketReplyBox from "../components/chat/TicketReplyBox";
+import useSupportTicket from "../../../hooks/useSupportTicket";
+import TicketHeader from "../../../components/sav/chat/TicketHeader";
+import TicketMessages from "../../../components/sav/chat/TicketMessages";
+import TicketReplyBox from "../../../components/sav/chat/TicketReplyBox";
 
 export default function ClientTicketDetailPage() {
   const { id } = useParams();

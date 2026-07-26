@@ -8,13 +8,13 @@ import Register from "../pages/Register";
 import Login from "../pages/Login";
 import VerifyEmail from "../pages/VerifyEmail";
 import ApplicationDeleted from "../pages/ApplicationDeleted";
-import ActivateAccountPage from "../sales/client/ActivateAccountPage.jsx";
+import ActivateAccountPage from "../pages/sales/client/ActivateAccountPage.jsx";
 
 // CLIENT
 import Applications from "../pages/client/Applications";
 import ApplicationDetails from "../pages/client/ApplicationDetails";
 import MyTestDrives from "../pages/client/MyTestDrives";
-import TestDriveDetailsClient from "../pages/client/TestDriveDetails"
+import TestDriveDetailsClient from "../pages/client/TestDriveDetails.jsx";
 import DashboardPage from "../pages/client/Dashboard";
 import FavoritesPage from "../pages/client/Favorites";
 import PaymentSuccessPage from "../pages/client/PaymentSuccessPage";
@@ -22,8 +22,8 @@ import PaymentCancelPage from "../pages/client/PaymentCancelPage";
 import ClientTicketsPage from "../pages/sav/client/ClientTicketsPage.jsx";
 import CreateTicketPage from "../pages/sav/client/CreateTicketPage.jsx";
 import ClientTicketDetailPage from "../pages/sav/client/ClientTicketDetailPage.jsx";
-import CustomerQuotesPage from "../sales/client/CustomerQuotesPage.jsx";
-import CustomerQuoteDetailPage from "../sales/client/CustomerQuoteDetailPage.jsx";
+import CustomerQuotesPage from "../pages/sales/client/CustomerQuotesPage.jsx";
+import CustomerQuoteDetailPage from "../pages/sales/client/CustomerQuoteDetailPage.jsx";
 
 // ADMIN
 import AdminApplications from "../pages/admin/Applications";
@@ -40,18 +40,18 @@ import AdminCreateUserPage from "../pages/admin/AdminCreateUserPage";
 
 
 // SAV AGENT
-import SavTicketsPage from "../pages/sav/savagent/SavTicketsPage.jsx";
-import SavDashboardPage from "../pages/sav/savagent/SavDashboardPage.jsx";
-import SavStatisticsPage from "../pages/sav/savagent/SavStatisticsPage.jsx";
-import AgentTicketDetailsPage from "../pages/sav/savagent/AgentTicketDetailsPage.jsx";
+import SavTicketsPage from "../pages/sav/agent/SavTicketsPage.jsx";
+import SavDashboardPage from "../pages/sav/agent/SavDashboardPage.jsx";
+import SavStatisticsPage from "../pages/sav/agent/SavStatisticsPage.jsx";
+import AgentTicketDetailsPage from "../pages/sav/agent/AgentTicketDetailsPage.jsx";
 
 // SALES AGENT
-import SalesDashboard from "../sales/agent/SalesDashboard.jsx";
-import QuoteDetailPage from "../sales/agent/QuoteDetailPage.jsx";
-import LeadsPage from "../sales/agent/LeadsPage.jsx";
-import LeadDetailPage from "../sales/agent/LeadDetailPage.jsx";
-import QuoteCreatePage from "../sales/agent/QuoteCreatePage.jsx";
-import QuoteEditPage from "../sales/agent/QuoteEditPage.jsx";
+import SalesDashboard from "../pages/sales/agent/SalesDashboard.jsx";
+import QuoteDetailPage from "../pages/sales/agent/QuoteDetailPage.jsx";
+import LeadsPage from "../pages/sales/agent/LeadsPage.jsx";
+import LeadDetailPage from "../pages/sales/agent/LeadDetailPage.jsx";
+import QuoteCreatePage from "../pages/sales/agent/QuoteCreatePage.jsx";
+import QuoteEditPage from "../pages/sales/agent/QuoteEditPage.jsx";
 
 // SHARED
 import NotificationsPage from "../pages/client/NotificationsPage";

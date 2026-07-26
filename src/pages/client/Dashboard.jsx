@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import apiFetch from "../../services/apiFetch";
-import { STATUS } from "../../utilis/status";
+import { STATUS } from "../../utils/status";
 
 export default function DashboardPage() {
   const [applications, setApplications] = useState([]);

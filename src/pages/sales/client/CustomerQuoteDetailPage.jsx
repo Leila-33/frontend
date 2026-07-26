@@ -9,8 +9,8 @@ import {
 } from "react-router-dom";
 
 
-import apiFetch from "../../services/apiFetch"
-import QuoteDecisionModal from "../components/QuoteDecisionModal";
+import apiFetch from "../../../services/apiFetch"
+import QuoteDecisionModal from "../../../components/sales/QuoteDecisionModal";
 
 import {
   toast

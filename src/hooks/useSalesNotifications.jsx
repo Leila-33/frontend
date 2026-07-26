@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import apiFetch from "../../services/apiFetch";
+import apiFetch from "../services/apiFetch";
 
 export default function useSalesNotifications() {
 
@@ -25,6 +25,7 @@ export default function useSalesNotifications() {
     }
   };
 
+  
   useEffect(() => {
     fetchSalesStats();
   }, []);

@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import apiFetch from "../../services/apiFetch";
 import { toast } from "react-toastify";
 import {useNavigate} from "react-router-dom";
+import TestDriveStatusModal from "../../components/test-drives/TestDriveStatusModal";
+import { testDriveStatusConfig } from "../../utils/status";
+
 
 export default function AdminTestDrives() {
   const navigate = useNavigate();
@@ -13,26 +16,97 @@ export default function AdminTestDrives() {
     open: false,
     type: null // confirm | reject | cancel | complete
   });
+const [filters, setFilters] = useState({
+  status: "",
+  search: ""
+});
 
+const [pagination, setPagination] = useState({
+  page: 1,
+  limit: 20,
+  total: 0
+});
   // =========================
   // FETCH DATA
   // =========================
-  const fetchTestDrives = async () => {
-    try {
-      const data = await apiFetch("/admin/test-drives", {
-        method: "GET",
-      });
+const fetchTestDrives = useCallback(async () => {
 
-      setTestDrives(data);
+  try {
 
-    } catch (err) {
-      toast.error("Erreur chargement des essais routiers");
+    const params = new URLSearchParams();
+
+
+    if (filters.status) {
+      params.append(
+        "status",
+        filters.status
+      );
     }
-  };
 
-  useEffect(() => {
-    fetchTestDrives();
-  }, []);
+
+    if (filters.search) {
+      params.append(
+        "search",
+        filters.search
+      );
+    }
+
+
+    params.append(
+      "page",
+      pagination.page
+    );
+
+
+    params.append(
+      "limit",
+      pagination.limit
+    );
+
+
+    const data = await apiFetch(
+      `/admin/test-drives?${params.toString()}`,
+      {
+        method: "GET"
+      }
+    );
+
+
+    setTestDrives(data.items);
+
+
+    setPagination(prev => ({
+      ...prev,
+      page: data.page,
+      limit: data.limit,
+      total: data.total
+    }));
+
+
+  } catch (err) {
+
+    toast.error(
+      "Erreur chargement des essais routiers"
+    );
+
+  }
+
+}, [
+  filters.status,
+  filters.search,
+  pagination.page,
+  pagination.limit
+]);
+
+useEffect(() => {
+
+  fetchTestDrives();
+
+}, [fetchTestDrives]);
+
+const totalPages = Math.ceil(
+  pagination.total / pagination.limit
+);
 
   // =========================
   // ACTION HANDLER
@@ -89,11 +163,116 @@ export default function AdminTestDrives() {
       <div className="d-flex justify-content-between align-items-center mb-4">
 
         <h3 className="fw-bold">
-          Test Drives Admin
+          Essai routiers admin
         </h3>
 
       </div>
+<div className="row g-3 mb-4">
 
+
+  {/* SEARCH */}
+  <div className="col-md-6">
+
+    <input
+      type="text"
+      className="form-control"
+      placeholder="Rechercher utilisateur ou véhicule..."
+      value={filters.search}
+      onChange={(e) => {
+
+        setPagination(prev => ({
+          ...prev,
+          page: 1
+        }));
+
+        setFilters(prev => ({
+          ...prev,
+          search: e.target.value
+        }));
+
+      }}
+    />
+
+  </div>
+
+
+  {/* STATUS */}
+  <div className="col-md-3">
+
+    <select
+      className="form-select"
+      value={filters.status}
+      onChange={(e)=>{
+
+        setPagination(prev => ({
+          ...prev,
+          page:1
+        }));
+
+        setFilters(prev=>({
+          ...prev,
+          status:e.target.value
+        }));
+
+      }}
+    >
+
+      <option value="">
+        Tous les statuts
+      </option>
+
+      <option value="pending">
+        En attente
+      </option>
+
+      <option value="confirmed">
+        Confirmés
+      </option>
+
+      <option value="completed">
+        Terminés
+      </option>
+
+      <option value="cancelled">
+        Annulés
+      </option>
+
+      <option value="rejected">
+        Refusés
+      </option>
+
+
+    </select>
+
+  </div>
+
+
+  {/* RESET */}
+  <div className="col-md-3">
+
+    <button
+      className="btn btn-outline-secondary w-100"
+      onClick={()=>{
+
+        setFilters({
+          status:"",
+          search:""
+        });
+
+        setPagination(prev=>({
+          ...prev,
+          page:1
+        }));
+
+      }}
+    >
+      Réinitialiser
+    </button>
+
+  </div>
+
+
+</div>
       {/* =========================
           TABLE
       ========================= */}
@@ -132,11 +311,22 @@ export default function AdminTestDrives() {
                       .toLocaleString()}
                   </td>
 
-                  <td>
-                    <span className={getBadge(td.status)}>
-                      {td.status}
-                    </span>
-                  </td>
+ <td>
+
+  {(() => {
+
+    const status =
+      testDriveStatusConfig[td.status] || testDriveStatusConfig.pending;
+
+    return (
+      <span className={status.className}>
+        {status.label}
+      </span>
+    );
+
+  })()}
+
+</td>
 
                   <td className="d-flex gap-2">
 
@@ -224,86 +414,62 @@ export default function AdminTestDrives() {
 
           </table>
 
+          
+<div className="d-flex justify-content-between align-items-center mt-3">
+
+  <span className="text-muted">
+    Page {pagination.page} / {totalPages}
+  </span>
+
+
+  <div className="btn-group">
+
+    <button
+      className="btn btn-outline-primary"
+      disabled={pagination.page === 1}
+      onClick={() =>
+        setPagination(prev => ({
+          ...prev,
+          page: prev.page - 1
+        }))
+      }
+    >
+      ← Précédent
+    </button>
+
+
+    <button
+      className="btn btn-outline-primary"
+      disabled={pagination.page === totalPages}
+      onClick={() =>
+        setPagination(prev => ({
+          ...prev,
+          page: prev.page + 1
+        }))
+      }
+    >
+      Suivant →
+    </button>
+
+  </div>
+
+</div>
         </div>
 
       </div>
 
-      {/* =========================
-          MODAL
-      ========================= */}
-      {actionModal.open && (
-
-        <div className="modal d-block bg-dark bg-opacity-50">
-
-          <div className="modal-dialog">
-
-            <div className="modal-content">
-
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  Confirmation
-                </h5>
-              </div>
-
-              <div className="modal-body">
-
-                <p>
-                  Action :{" "}
-                  <strong>
-                    {actionModal.type}
-                  </strong>
-                </p>
-
-                <p>
-                  Utilisateur :{" "}
-                  <strong>
-                    {selected?.user_name}
-                  </strong>
-                </p>
-
-                <p>
-                  Véhicule :{" "}
-                  <strong>
-                    {selected?.vehicle_name}
-                  </strong>
-                </p>
-
-              </div>
-
-              <div className="modal-footer">
-
-                <button
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    setActionModal({
-                      open: false,
-                      type: null
-                    })
-                  }
-                >
-                  Annuler
-                </button>
-
-                <button
-                  className={`btn ${actionModal.type === "reject"
-                      ? "btn-danger"
-                      : "btn-success"
-                    }`}
-                  onClick={handleAction}
-                >
-                  Confirmer
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
+<TestDriveStatusModal
+  open={actionModal.open}
+  type={actionModal.type}
+  testDrive={selected}
+  onClose={() =>
+    setActionModal({
+      open:false,
+      type:null
+    })
+  }
+  onConfirm={handleAction}
+/>
     </div>
   );
 }

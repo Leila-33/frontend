@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import apiFetch from "../../services/apiFetch";
+import apiFetch from "../../../services/apiFetch";
 import { toast } from "react-toastify";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 
 
 export default function ActivateAccountPage() {

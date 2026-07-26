@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import apiFetch from "../../services/apiFetch";
-import { leadStatusConfig, quoteStatusConfig } from "../../utilis/status";
-import ConfirmModal from "../components/ConfirmModal";
+import apiFetch from "../../../services/apiFetch";
+import { leadStatusConfig, quoteStatusConfig } from "../../../utils/status";
+import ConfirmModal from "../../../components/sales/ConfirmModal";
 
 export default function LeadDetailPage() {
 

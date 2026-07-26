@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 import SalesSidebar from "../components/layout/SalesSidebar";
-import useSalesNotifications from "../sales/hooks/useSalesNotifications";
+import useSalesNotifications from "../hooks/useSalesNotifications";
 import { useNotifications } from "../context/NotificationContext";
 
 export default function SalesLayout() {

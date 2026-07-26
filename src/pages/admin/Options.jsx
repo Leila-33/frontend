@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
-import ConfirmModal from "../../sales/components/ConfirmModal";
+import ConfirmActionModal from "../../components/common/ConfirmActionModal";
 
 export default function AdminOptions() {
   const [options, setOptions] = useState([]);
@@ -857,7 +857,7 @@ onClick={()=>openModal(o)}
         </div>
       )}
 
-<ConfirmModal
+<ConfirmActionModal
   show={disableModal}
   title={
     <>

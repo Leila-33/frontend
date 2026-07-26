@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import apiFetch from "../../services/apiFetch";
 import { toast } from "react-toastify";
+import TestDriveStatusModal from "../../components/test-drives/TestDriveStatusModal";
+import { testDriveStatusConfig } from "../../utils/status";
 
 export default function TestDriveDetails() {
 
@@ -9,7 +11,10 @@ export default function TestDriveDetails() {
   const navigate = useNavigate();
 
   const [testDrive, setTestDrive] = useState(null);
-
+const [actionModal, setActionModal] = useState({
+  open: false,
+  type: null
+});
   // =========================
   // FETCH
   // =========================
@@ -41,28 +46,39 @@ export default function TestDriveDetails() {
   // =========================
   // ACTION
   // =========================
-  const updateStatus = async (action) => {
+const handleAction = async () => {
 
-    try {
+  try {
 
-        await apiFetch(
-        `/admin/test-drives/${id}/status`,
-        {
-          method: "POST",
-          body: {
-            status: action
-          }
+    await apiFetch(
+      `/admin/test-drives/${id}/status`,
+      {
+        method: "POST",
+        body: {
+          status: actionModal.type
         }
-      );
+      }
+    );
 
-      toast.success("Statut mis à jour");
+    toast.success("Statut mis à jour");
 
-      fetchTestDrive();
+    setActionModal({
+      open: false,
+      type: null
+    });
 
-    } catch (err) {
-      toast.error("Erreur action");
-    }
-  };
+    fetchTestDrive();
+
+  } catch (err) {
+
+    toast.error(
+      "Erreur lors de la mise à jour du statut"
+    );
+
+  }
+};
+
+
 
   if (!testDrive) {
     return (
@@ -71,6 +87,7 @@ export default function TestDriveDetails() {
       </div>
     );
   }
+const status = testDriveStatusConfig[testDrive.status] || testDriveStatusConfig.pending;
 
   return (
     <div className="container py-4">
@@ -90,17 +107,9 @@ export default function TestDriveDetails() {
           </small>
         </div>
 
-        <span className={`badge px-3 py-2 ${
-          testDrive.status === "pending"
-            ? "bg-warning text-dark"
-            : testDrive.status === "confirmed"
-              ? "bg-primary"
-              : testDrive.status === "completed"
-                ? "bg-success"
-                : "bg-danger"
-        }`}>
-          {testDrive.status}
-        </span>
+<span className={`${status.className} px-3 py-2`}>
+  {status.label}
+</span>
 
       </div>
 
@@ -206,36 +215,60 @@ export default function TestDriveDetails() {
               {testDrive.status === "pending" && (
                 <>
                   <button
-                    className="btn btn-success w-100 mb-2"
-                    onClick={() => updateStatus("confirmed")}
-                  >
-                    Confirmer
-                  </button>
+ className="btn btn-success w-100 mb-2"
+ onClick={() =>
+   setActionModal({
+     open:true,
+     type:"confirmed"
+   })
+ }
+>
+ <i className="bi bi-check-circle me-2"/>
+ Confirmer
+</button>
 
-                  <button
-                    className="btn btn-danger w-100"
-                    onClick={() => updateStatus("rejected")}
-                  >
-                    Refuser
-                  </button>
+                 <button
+ className="btn btn-danger w-100"
+ onClick={() =>
+   setActionModal({
+     open:true,
+     type:"rejected"
+   })
+ }
+>
+ <i className="bi bi-x-circle me-2"/>
+ Refuser
+</button>
                 </>
               )}
 
               {testDrive.status === "confirmed" && (
                 <>
                   <button
-                    className="btn btn-warning w-100 mb-2"
-                    onClick={() => updateStatus("cancelled")}
-                  >
-                    Annuler
-                  </button>
+ className="btn btn-warning w-100 mb-2"
+ onClick={() =>
+   setActionModal({
+     open:true,
+     type:"cancelled"
+   })
+ }
+>
+ <i className="bi bi-calendar-x me-2"/>
+ Annuler
+</button>
 
                   <button
-                    className="btn btn-primary w-100"
-                    onClick={() => updateStatus("completed")}
-                  >
-                    Terminer
-                  </button>
+ className="btn btn-primary w-100"
+ onClick={() =>
+   setActionModal({
+     open:true,
+     type:"completed"
+   })
+ }
+>
+ <i className="bi bi-flag me-2"/>
+ Terminer
+</button>
                 </>
               )}
 
@@ -289,6 +322,19 @@ export default function TestDriveDetails() {
         </div>
 
       </div>
+
+      <TestDriveStatusModal
+  open={actionModal.open}
+  type={actionModal.type}
+  testDrive={testDrive}
+  onClose={() =>
+    setActionModal({
+      open:false,
+      type:null
+    })
+  }
+  onConfirm={handleAction}
+/>
 
     </div>
   );

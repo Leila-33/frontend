@@ -5,11 +5,11 @@ import apiFetch from "../../services/apiFetch";
 import { uploadToS3 } from "../../services/uploadService";
 import { ENGINE_LABELS } from "../../constants/vehicleLabels"
 import { useAuth } from "../../context/AuthContext";
-import ApplicationTimeline from "../../components/ApplicationTimeline";
-import { STATUS } from "../../utilis/status";
+import ApplicationTimeline from "../../components/applications/ApplicationTimeline";
+import { STATUS } from "../../utils/status";
 import { BsCheckCircleFill } from "react-icons/bs";
 import PaymentStatus from "../../components/applications/PaymentStatus";
-import { computePricing } from "../../utilis/pricing";
+import { computePricing } from "../../utils/pricing";
 
 export default function Application() {
 

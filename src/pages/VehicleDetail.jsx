@@ -5,13 +5,13 @@ import apiFetch from "../services/apiFetch";
 import { ENGINE_LABELS } from "../constants/vehicleLabels"
 import { BsCalendar, BsSpeedometer2, BsFuelPump } from "react-icons/bs";
 import { useAuth } from "../context/AuthContext";
-import TestDriveModal from "../components/TestDriveModal";
-import LeadFormModal from "./client/LeadFormModal";
+import TestDriveModal from "../components/test-drives/TestDriveModal";
+import LeadFormModal from "../components/sales/LeadFormModal";
 import "../styles/badges.css";
 import Calendar from "../components/Calendar";
 import { useCalendar } from "../hooks/useCalendar";
 import "../styles/modalvehicledetail.css";
-import { computePricing } from "../utilis/pricing";
+import { computePricing } from "../utils/pricing";
 import InspectionStepper from "../components/InspectionStepper";
 import DetailLayout from "../layouts/DetailLayout";
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import apiFetch from "../../services/apiFetch";
-import KanbanBoard from "../components/KanbanBoard";
+import apiFetch from "../../../services/apiFetch";
+import KanbanBoard from "../../../components/sales/KanbanBoard";
 import { toast } from "react-toastify";
 
 export default function MyLeadsPage() {

@@ -90,3 +90,36 @@ export const quoteStatusConfig = {
   },
 
 };
+
+export const testDriveStatusConfig = {
+  pending: {
+    label: "En attente",
+    className: "badge bg-warning text-dark",
+    step: 0,
+    progress: 25
+  },
+  confirmed: {
+    label: "Confirmé",
+    className: "badge bg-primary",
+    step: 1,
+    progress: 60
+  },
+  rejected: {
+    label: "Refusé",
+    className: "badge bg-danger",
+    step: -1,
+    progress: 0
+  },
+  cancelled: {
+    label: "Annulé",
+    className: "badge bg-danger",
+    step: -1,
+    progress: 0
+  },
+  completed: {
+    label: "Terminé",
+    className: "badge bg-success",
+    step: 2,
+    progress: 100
+  }
+};

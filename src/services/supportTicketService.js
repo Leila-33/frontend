@@ -1,4 +1,4 @@
-import apiFetch from "../../../services/apiFetch";
+import apiFetch from "./apiFetch";
 /**
  * Récupère une page de tickets
  */

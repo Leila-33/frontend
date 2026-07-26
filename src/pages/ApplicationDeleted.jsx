@@ -29,6 +29,8 @@ export default function ApplicationDeleted() {
             {/* TITLE */}
             <h2 className="fw-bold mb-2">
               Application supprimée
+
+              
             </h2>
 
             {/* SUBTITLE */}
