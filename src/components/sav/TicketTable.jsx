@@ -1,6 +1,6 @@
 import TicketRow from "./TicketRow";
 
-export default function TicketTable({ tickets = [], basePath, onArchive, onTakeOwnership }) {
+export default function TicketTable({ tickets = [], basePath, filter, onArchive, onTakeOwnership}) {
   if (!tickets.length) {
     return <div className="text-center text-muted py-4">Aucun ticket</div>;
   }
@@ -26,6 +26,7 @@ export default function TicketTable({ tickets = [], basePath, onArchive, onTakeO
     key={t.id}
     ticket={t}
     basePath={basePath}
+    filter={filter}
     onArchive={onArchive}
     onTakeOwnership={onTakeOwnership}
 />

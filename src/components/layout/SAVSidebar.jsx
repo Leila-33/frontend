@@ -13,7 +13,9 @@ export default function SavSidebar({
   const params = new URLSearchParams(location.search);
 
   const currentFilter = params.get("filter") ?? "all";
-
+  const isTicketsPage =
+  location.pathname.startsWith("/sav/tickets");
+  
   const navItemClass = (active) =>
     `nav-link d-flex align-items-center gap-3 px-3 py-3 rounded-4 transition ${
       active
@@ -38,20 +40,30 @@ export default function SavSidebar({
 
       {/* DASHBOARD */}
       <NavLink
-        to="/sav/dashboard"
-        className={({ isActive }) => navItemClass(isActive)}
-        onClick={onClickLink}
-      >
-        <i className="bi bi-speedometer2 fs-5" />
-        <span>Dashboard</span>
-      </NavLink>
-
+  to="/sav/dashboard"
+  end
+  className={({ isActive }) =>
+    navItemClass(isActive)
+  }
+  onClick={onClickLink}
+>
+  <i className="bi bi-speedometer2 fs-5" />
+  <span>Dashboard</span>
+</NavLink>
       {/* TOUS LES TICKETS */}
       <NavLink
-        to="/sav/tickets"
-        className={() => navItemClass(currentFilter === "all")}
-        onClick={onClickLink}
-      >
+  to="/sav/tickets"
+  end
+  className={() =>
+    navItemClass(
+      isTicketsPage &&
+      currentFilter === "all"
+    )
+  }
+          onClick={onClickLink}
+
+>
+
         <i className="bi bi-headset fs-5" />
         <span className="d-flex align-items-center gap-2">
           Tickets SAV
@@ -66,8 +78,12 @@ export default function SavSidebar({
       {/* OUVERTS */}
       <NavLink
         to="/sav/tickets?filter=open"
-        className={() => navItemClass(currentFilter === "open")}
-        onClick={onClickLink}
+className={() =>
+  navItemClass(
+    isTicketsPage &&
+    currentFilter === "open"
+  )
+}        onClick={onClickLink}
       >
         <i className="bi bi-folder2-open fs-5" />
         <span className="d-flex align-items-center gap-2">
@@ -83,8 +99,12 @@ export default function SavSidebar({
       {/* URGENTS */}
       <NavLink
         to="/sav/tickets?filter=urgent"
-        className={() => navItemClass(currentFilter === "urgent")}
-        onClick={onClickLink}
+className={() =>
+  navItemClass(
+    isTicketsPage &&
+    currentFilter === "urgent"
+  )
+}        onClick={onClickLink}
       >
         <i className="bi bi-exclamation-triangle fs-5" />
         <span className="d-flex align-items-center gap-2">

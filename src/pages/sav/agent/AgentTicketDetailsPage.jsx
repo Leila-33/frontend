@@ -1,12 +1,25 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 import useSupportTicket from "../../../hooks/useSupportTicket";
 import TicketHeader from "../../../components/sav/chat/TicketHeader";
 import TicketMessages from "../../../components/sav/chat/TicketMessages";
 import TicketReplyBox from "../../../components/sav/chat/TicketReplyBox";
+import DetailLayout from "../../../layouts/DetailLayout";
+import { useAuth } from "../../../context/AuthContext";
+import { getTicketBreadcrumb } from "../../../utils/breadcrumb";
 
 export default function AgentTicketDetailsPage() {
+
   const { id } = useParams();
+
+  const { user } = useAuth();
+
+  const location = useLocation();
+
+
+  const filter =
+    location.state?.filter || "all";
+
 
   const {
     ticket,
@@ -17,7 +30,10 @@ export default function AgentTicketDetailsPage() {
     canReply,
   } = useSupportTicket(id);
 
+
+
   if (!ticket) {
+
     return (
       <div className="container py-5 text-center text-muted">
         Chargement...
@@ -25,54 +41,130 @@ export default function AgentTicketDetailsPage() {
     );
   }
 
+
+
   const isClosed =
     ticket.status === "RESOLVED" ||
     ticket.status === "CLOSED";
 
+
+
   return (
-    <div className="container-fluid py-4">
 
-      {/* HEADER */}
-      <TicketHeader
-        ticket={ticket}
-        showStatusSelector={!isClosed}
-        onStatusChange={updateStatus}
-      />
+    <DetailLayout
 
-      {/* DESCRIPTION */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <h5>Description</h5>
-          <p className="mb-0">{ticket.subject}</p>
-        </div>
-      </div>
+      breadcrumb={
+        getTicketBreadcrumb({
+          role: user?.role,
+          ticketId: ticket.id,
+          filter
+        })
+      }
 
-      {/* MESSAGES */}
-      <div
-        className="card shadow-sm mb-4"
-        style={{ height: "60vh", overflowY: "auto" }}
-      >
-        <div className="card-body">
-          <TicketMessages
-            messages={messages}
-            currentRole="sav_agent"
-            messagesEndRef={messagesEndRef}
-          />
-        </div>
-      </div>
+    >
 
-      {/* REPLY */}
-      {canReply ? (
-        <TicketReplyBox
-          onSend={sendMessage}
-          placeholder="Répondre au client..."
+      <div className="container-fluid py-4">
+
+
+        {/* HEADER */}
+
+        <TicketHeader
+
+          ticket={ticket}
+
+          showStatusSelector={!isClosed}
+
+          onStatusChange={updateStatus}
+
         />
-      ) : (
-        <div className="alert alert-secondary">
-          Ce ticket est clôturé. Il n'est plus possible d'envoyer de message.
-        </div>
-      )}
 
-    </div>
+
+
+        {/* DESCRIPTION */}
+
+        <div className="card shadow-sm mb-4">
+
+          <div className="card-body">
+
+            <h5 className="fw-bold">
+              Description
+            </h5>
+
+
+            <p className="mb-0 text-muted">
+              {ticket.subject}
+            </p>
+
+          </div>
+
+        </div>
+
+
+
+        {/* MESSAGES */}
+
+        <div
+
+          className="card shadow-sm mb-4"
+
+          style={{
+            height: "60vh",
+            overflowY: "auto"
+          }}
+
+        >
+
+          <div className="card-body">
+
+
+            <TicketMessages
+
+              messages={messages}
+
+              currentRole="sav_agent"
+
+              messagesEndRef={messagesEndRef}
+
+            />
+
+
+          </div>
+
+        </div>
+
+
+
+
+        {/* REPLY */}
+
+        {canReply ? (
+
+          <TicketReplyBox
+
+            onSend={sendMessage}
+
+            placeholder="Répondre au client..."
+
+          />
+
+
+        ) : (
+
+          <div className="alert alert-secondary">
+
+            Ce ticket est clôturé.
+            Il n'est plus possible d'envoyer de message.
+
+          </div>
+
+        )}
+
+
+
+      </div>
+
+
+    </DetailLayout>
+
   );
 }

@@ -51,7 +51,7 @@ export function updateSupportTicketStatus(
   status,
 ) {
   return apiFetch(
-    `/support-tickets/${ticketId}/status`,
+    `/agent/support-tickets/${ticketId}/status`,
     {
       method: "PATCH",
       body: { status },
@@ -66,7 +66,7 @@ export function archiveSupportTicket(
   ticketId,
 ) {
   return apiFetch(
-    `/support-tickets/${ticketId}/archive`,
+    `/agent/support-tickets/${ticketId}/archive`,
     {
       method: "PATCH",
     }

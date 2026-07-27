@@ -64,7 +64,7 @@ const filter = params.get("filter") || "all";
   const archiveTicket = async (ticketId) => {
     try {
       await apiFetch(
-        `/support-tickets/${ticketId}/archive`,
+        `/agent/support-tickets/${ticketId}/archive`,
         {
           method: "PATCH",
         }
@@ -122,16 +122,18 @@ const showArchiveTabs = filter === "all";
 )}
 
       <TicketToolbar
-        filters={filters}
-        setFilters={setFilters}
-      />
+    filters={filters}
+    setFilters={setFilters}
+    filter={filter}
+/>
 
       <TicketTable
-        tickets={data.items}
-        basePath="/support-tickets"
-        onArchive={archiveTicket}
-        onTakeOwnership={takeOwnership}
-      />
+  tickets={data.items}
+  basePath="/sav/tickets"
+  filter={filter}
+  onArchive={archiveTicket}
+  onTakeOwnership={takeOwnership}
+/>
 
       <Pagination
         page={data.page}
