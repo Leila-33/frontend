@@ -37,7 +37,7 @@ import TestDriveManagement from "../pages/admin/TestDriveManagement";
 import TestDriveDetails from "../pages/admin/TestDriveDetails";
 import WarrantyPlansPage from "../pages/admin/WarrantyPlansPage";
 import AdminCreateUserPage from "../pages/admin/AdminCreateUserPage";
-
+import AdminEventsPage from "../pages/admin/events/AdminEventsPage.jsx";
 
 // SAV AGENT
 import SavTicketsPage from "../pages/sav/agent/SavTicketsPage.jsx";
@@ -213,7 +213,7 @@ export default function AppRoutes() {
             <Route path="test-drives/:id" element={<TestDriveDetails />} />
 
             <Route path="warranty-plans" element={<WarrantyPlansPage />} />
-            
+            <Route path="events" element={<AdminEventsPage />} />
 
           </Route>
         </Route>

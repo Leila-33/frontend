@@ -3,24 +3,30 @@ import apiFetch from "../../services/apiFetch";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-export function getRoleColor(role) {
-  const map = {
+function getRoleColor(role) {
+
+  const colors = {
     admin: "danger",
-    agent: "primary",
+    sav_agent: "primary",
+    sales_agent: "success",
     client: "secondary",
   };
 
-  return map[role] || "dark";
+  return colors[role] ?? "dark";
 }
-export function getRoleLabel(role) {
-  const map = {
-    admin: "Administrateur",
-    agent: "Agent",
+
+function getRoleLabel(role) {
+
+  const labels = {
+    admin: "Admin",
+    sav_agent: "Agent SAV",
+    sales_agent: "Commercial",
     client: "Client",
   };
 
-  return map[role] || role;
+  return labels[role] ?? role;
 }
+
 
 
 
@@ -297,7 +303,7 @@ const fetchUsers = async (page = response.page) => {
 
       await apiFetch(
 
-        "/admin/auth/archive/bulk",
+        "/admin/auth/archive",
 
         {
 
@@ -500,47 +506,84 @@ const fetchUsers = async (page = response.page) => {
         </div>
 
         {/* ROLE FILTER */}
-        <div className="col-lg-2">
+{/* ROLE FILTER */}
+<div className="col-lg-2">
 
-          <select
-            className="form-select"
-            value={filters.role}
-            onChange={(e) =>
-  setFilters((f) => ({
-    ...f,
-    search: e.target.value.trimStart()
-  }))
-}
-          >
+<select
+  className="form-select"
+  value={filters.role}
+  onChange={(e) =>
+    setFilters((f) => ({
+      ...f,
+      role: e.target.value,
+    }))
+  }
+>
 
-            <option value="all">Tous rôles</option>
-            <option value="admin">Admin</option>
-            <option value="agent">Agent</option>
-            <option value="client">Client</option>
+  <option value="all">
+    Tous rôles
+  </option>
 
-          </select>
+  <option value="admin">
+    Admin
+  </option>
 
-        </div>
+  <option value="sav_agent">
+    Agent SAV
+  </option>
+
+  <option value="sales_agent">
+    Commercial
+  </option>
+
+  <option value="client">
+    Client
+  </option>
+
+</select>
+
+</div>
 
         {/* STATUS FILTER */}
         <div className="col-lg-2">
 
-          <select
-            className="form-select"
-            value={filters.status}
-            onChange={(e) =>
-              setFilters(prev => ({
-                ...prev,
-                status: e.target.value,
-              }))
-            }
-          >
+{/* STATUS FILTER */}
+<div className="col-lg-2">
 
-            <option value="all">Tous statuts</option>
-            <option value="active">Actifs</option>
-            <option value="inactive">Inactifs</option>
+  <select
+    className="form-select"
+    value={filters.status}
+    onChange={(e) =>
+      setFilters(prev => ({
+        ...prev,
+        status: e.target.value,
+      }))
+    }
+  >
 
-          </select>
+    <option value="all">
+      Tous statuts
+    </option>
+
+    <option value="active">
+      Actifs
+    </option>
+
+    <option value="pending">
+      En attente
+    </option>
+
+    <option value="inactive">
+      Désactivés
+    </option>
+
+    <option value="archived">
+      Archivés
+    </option>
+
+  </select>
+
+</div>
 
         </div>
 
@@ -670,19 +713,36 @@ const fetchUsers = async (page = response.page) => {
                 {/* ROLE INLINE EDIT */}
                 <td>
                   {editingRole === u.id ? (
-                    <select
-                      className="form-select form-select-sm"
-                      value={u.role}
-                      onChange={(e) =>
-                        updateRole(u.id, e.target.value)
-                      }
-                      onBlur={() => setEditingRole(null)}
-                      autoFocus
-                    >
-                      <option value="ADMIN">Admin</option>
-                      <option value="AGENT">Agent</option>
-                      <option value="CLIENT">Client</option>
-                    </select>
+<select
+  className="form-select form-select-sm"
+  value={u.role}
+  onChange={(e) =>
+    updateRole(
+      u.id,
+      e.target.value
+    )
+  }
+  onBlur={() => setEditingRole(null)}
+  autoFocus
+>
+
+  <option value="ADMIN">
+    Admin
+  </option>
+
+  <option value="SAV_AGENT">
+    Agent SAV
+  </option>
+
+  <option value="SALES_AGENT">
+    Commercial
+  </option>
+
+  <option value="CLIENT">
+    Client
+  </option>
+
+</select>
                   ) : (
                     <span
                       className={`badge bg-${getRoleColor(u.role)}`}
@@ -695,16 +755,35 @@ const fetchUsers = async (page = response.page) => {
                 </td>
 
                 {/* STATUS */}
-                <td>
-                  <button
-                    className={`btn btn-sm ${
-                      u.is_active ? "btn-success" : "btn-secondary"
-                    }`}
-                    onClick={() => toggleActive(u)}
-                  >
-                    {u.is_active ? "Actif" : "Inactif"}
-                  </button>
-                </td>
+<td>
+
+  {u.is_deleted ? (
+
+    <span className="badge bg-dark">
+      Archivé
+    </span>
+
+  ) : !u.is_verified ? (
+
+    <span className="badge bg-warning text-dark">
+      En attente
+    </span>
+
+  ) : u.is_active ? (
+
+    <span className="badge bg-success">
+      Actif
+    </span>
+
+  ) : (
+
+    <span className="badge bg-secondary">
+      Désactivé
+    </span>
+
+  )}
+
+</td>
 
                 {/* CREATED AT */}
                 <td className="text-muted">

@@ -989,7 +989,6 @@ const handleFileChange = (e, type) => {
 
         monthly_income: Number(form.monthly_income || 0),
         monthly_expenses: Number(form.monthly_expenses || 0),
-        selected_dates: form.selected_dates,
         documents: uploadedDocuments,
 
         total_price: pricing.totalPrice,
@@ -1003,7 +1002,10 @@ const handleFileChange = (e, type) => {
         financing: financingPayload,
 
         trade_in: tradeInPayload,
-        application_type: vehicleData?.type
+        application_type: vehicleData?.type,
+         ...(pricing.isRent && {
+    selected_dates: form.selected_dates,
+  }),
       };
 
       let res;
@@ -1156,7 +1158,7 @@ useEffect(() => {
 
       const exists =
         selected.includes(id);
-
+      console.log(prev.optionsSelected)
       return {
         ...prev,
 
@@ -2031,12 +2033,12 @@ const isFormValid =
 
                         <div className="d-flex justify-content-between mb-2">
                           <span>Début</span>
-                          <strong>{new Date(selectedDates.start).toLocaleDateString()}</strong>
+                          <strong>{new Date(selectedDatesData.start).toLocaleDateString()}</strong>
                         </div>
 
                         <div className="d-flex justify-content-between">
                           <span>Fin</span>
-                          <strong>{new Date(selectedDates.end).toLocaleDateString()}</strong>
+                          <strong>{new Date(selectedDatesData.end).toLocaleDateString()}</strong>
                         </div>
 
                       </div>

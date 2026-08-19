@@ -5,6 +5,7 @@ import apiFetch from "../../services/apiFetch";
 import React from "react";
 import ConfirmActionModal from "../../components/common/ConfirmActionModal";
 import { STATUS, VEHICLE_TYPE } from "../../utils/status";
+import ApplicationActions from "../../components/applications/ApplicationActions";
 
 export default function AdminDossiers() {
 
@@ -45,7 +46,7 @@ export default function AdminDossiers() {
 
       const actions = {
   delete: () =>
-    apiFetch(`/admin/applications/soft_delete/${modal.id}`, {
+    apiFetch(`/admin/applications/${modal.id}`, {
       method: "DELETE"
     }),
 
@@ -60,7 +61,7 @@ export default function AdminDossiers() {
     }),
 
   restore_cancelled: () =>
-    apiFetch(`/applications/${modal.id}/restore-cancelled`, {
+    apiFetch(`/admin/applications/${modal.id}/restore-cancelled`, {
       method: "PATCH"
     }),
 
@@ -458,148 +459,11 @@ export default function AdminDossiers() {
                         <i className="bi bi-search" />
                       </button>
 
-                      {/* =========================
-        ACTIVE MODE
-    ========================= */}
-                      {viewMode === "active" && (
-                        <>
-                          {/* ARCHIVE */}
-                          <button
-                            className="btn btn-warning btn-sm rounded-circle shadow-sm"
-                            onClick={() =>
-                              setModal({
-                                open: true,
-                                type: "archive",
-                                id: d.id
-                              })
-                            }
-                            title="Archiver le dossier"
-                          >
-                            <i className="bi bi-archive" />
-                          </button>
-
-                          {/* DELETE */}
-                          <button
-                            className="btn btn-danger btn-sm rounded-circle shadow-sm"
-                            onClick={() =>
-                              setModal({
-                                open: true,
-                                type: "delete",
-                                id: d.id
-                              })
-                            }
-                            title="Supprimer le dossier"
-                          >
-                            <i className="bi bi-trash" />
-                          </button>
-
-
-                          {/* CANCEL */}
-                          {d.can_cancel && (
-                            <button
-                              className="btn btn-warning btn-sm rounded-circle shadow-sm"
-                              onClick={() =>
-                                setModal({
-                                  open: true,
-                                  type: "cancel",
-                                  id: d.id
-                                })
-                              }
-                              title="Annuler le dossier"
-                            >
-                              <i className="bi bi-x-circle" />
-                            </button>
-                          )}
-                        </>
-                      )
-                      }
-
-                      {/* =========================
-        ARCHIVED MODE
-    ========================= */}
-                      {viewMode === "archived" && (
-                        <>
-                          {/* RESTORE */}
-                          <button
-                            className="btn btn-success btn-sm rounded-circle shadow-sm"
-                            onClick={() =>
-                              setModal({
-                                open: true,
-                                type: "restore",
-                                id: d.id
-                              })
-                            }
-                            title="Restaurer le dossier"
-                          >
-                            <i className="bi bi-arrow-counterclockwise" />
-                          </button>
-
-                          {/* DELETE */}
-                          <button
-                            className="btn btn-danger btn-sm rounded-circle shadow-sm"
-                            onClick={() =>
-                              setModal({
-                                open: true,
-                                type: "delete",
-                                id: d.id
-                              })
-                            }
-                            title="Supprimer définitivement"
-                          >
-                            <i className="bi bi-trash" />
-                          </button>
-                        </>
-                      )}
-                      {viewMode === "cancelled" && (
-                        <>
-                          {/* RESTORE CANCELLED (business restore) */}
-                          {d.can_restore_cancelled && (
-                            <button
-                              className="btn btn-success btn-sm rounded-circle shadow-sm"
-                              onClick={() =>
-                                setModal({
-                                  open: true,
-                                  type: "restore_cancelled",
-                                  id: d.id
-                                })
-                              }
-                              title="Restaurer le dossier annulé"
-                            >
-                              <i className="bi bi-arrow-counterclockwise" />
-                            </button>
-                          )}
-
-                          {/* ARCHIVE */}
-                          <button
-                            className="btn btn-warning btn-sm rounded-circle shadow-sm"
-                            onClick={() =>
-                              setModal({
-                                open: true,
-                                type: "archive",
-                                id: d.id
-                              })
-                            }
-                            title="Archiver le dossier"
-                          >
-                            <i className="bi bi-archive" />
-                          </button>
-
-                          {/* DELETE */}
-                          <button
-                            className="btn btn-danger btn-sm rounded-circle shadow-sm"
-                            onClick={() =>
-                              setModal({
-                                open: true,
-                                type: "delete",
-                                id: d.id
-                              })
-                            }
-                            title="Supprimer définitivement"
-                          >
-                            <i className="bi bi-trash" />
-                          </button>
-                        </>
-                      )}
+<ApplicationActions
+    application={d}
+    viewMode={viewMode}
+    onAction={setModal}
+/>
 
                     </div>
 

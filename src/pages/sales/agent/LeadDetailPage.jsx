@@ -59,7 +59,7 @@ const markAsContacted = async () => {
           setLoading(true);
 
     await apiFetch(
-      `/agent/leads/${lead.id}/contact`,
+      `/agent/leads/${lead.id}/contacted`,
       {
         method: "PATCH",
       }

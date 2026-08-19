@@ -277,8 +277,8 @@ const { selectedDays, totalPrice } = computePricing(
           optional_options: vehicle.optional_options
         },
         dates: {
-  start: formatDateForAPI(selectedDates?.start),
-  end: formatDateForAPI(selectedDates?.end)
+  start: formatDate(selectedDates?.start),
+  end: formatDate(selectedDates?.end)
 }
       }
     });
@@ -287,12 +287,18 @@ const { selectedDays, totalPrice } = computePricing(
   }
 };
 
-const formatDateForAPI = (date) =>
-  date ? new Date(date).toISOString() : null;
+const formatDate = (date) => {
+    if (!date) return null;
+
+    return new Intl.DateTimeFormat("en-CA")
+        .format(date);
+};
+
 const canBuy =
   vehicle.status === "PUBLISHED";
 
-
+console.log(formatDate(selectedDates?.start))
+console.log(selectedDates?.end)
 const handleApplication = () => {
   if (!vehicle) return;
 
@@ -311,8 +317,8 @@ const handleApplication = () => {
         optional_options: vehicle.optional_options
       },
       dates: {
-  start: formatDateForAPI(selectedDates?.start),
-  end: formatDateForAPI(selectedDates?.end)
+  start: formatDate(selectedDates?.start),
+  end: formatDate(selectedDates?.end)
 }
     }
   });

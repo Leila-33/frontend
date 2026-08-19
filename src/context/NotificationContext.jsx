@@ -49,7 +49,7 @@ export function NotificationProvider({ children }) {
 
 
       const data = await apiFetch(
-        "/notifications/unread/count"
+        "/notifications/unread-count"
       );
 
       setUnreadNotificationCount(

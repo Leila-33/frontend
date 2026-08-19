@@ -121,7 +121,7 @@ export default function AdminDossiers() {
           filters.type &&
           filters.type !== "all"
         ) {
-          params.append("type", filters.type);
+          params.append("application_type", filters.type);
         }
 
         if (filters.search?.trim()) {

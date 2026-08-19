@@ -27,15 +27,23 @@ export const computePricing = (
       ? Number(vehicleData?.price || 0) * selectedDays
       : Number(vehicleData?.price || 0);
 
-  const optionalPrice =
-  (form?.optionsSelected ?? []).reduce((sum, opt) => {
-    const price = Number(opt?.price ?? 0);
+const selectedOptionIds = form?.optionsSelected ?? [];
 
-    if (isRent && opt?.billing_type === "daily") {
+const optionalPrice =
+  (vehicleData?.optional_options ?? []).reduce((sum, option) => {
+
+    if (!selectedOptionIds.includes(option.id)) {
+      return sum;
+    }
+
+    const price = Number(option.price ?? 0);
+
+    if (isRent && option.billing_type === "daily") {
       return sum + price * selectedDays;
     }
 
     return sum + price;
+
   }, 0);
 
   const totalPrice = basePrice + optionalPrice;
