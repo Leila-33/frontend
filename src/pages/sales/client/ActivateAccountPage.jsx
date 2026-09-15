@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import apiFetch from "../../../services/apiFetch";
 import { toast } from "react-toastify";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 
 export default function ActivateAccountPage() {
@@ -142,7 +142,7 @@ const handleChange = (e) => {
 
       const data = await apiFetch(
 
-        `/auth/activation/check?token=${token}`
+        `/auth/check-activation-token?token=${token}`
 
       );
 

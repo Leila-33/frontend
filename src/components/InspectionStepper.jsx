@@ -7,7 +7,9 @@ export default function InspectionStepper({
   vehicle,
   setVehicle,
   vehicleId,
-  user
+  user,
+  loadVehicle,
+
 }) {
   const [inspection, setInspection] = useState(null);
   const [reconditioning, setReconditioning] = useState(null);
@@ -155,7 +157,7 @@ const publishVehicle = async () => {
 
     toast.success("Véhicule publié");
 
-    setVehicle(updatedVehicle);
+    loadVehicle();
 
   } catch (err) {
     toast.error(err.message || "Erreur publication");

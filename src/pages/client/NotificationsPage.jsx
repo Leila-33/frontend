@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { useNotifications } from "../../context/NotificationContext";
+import { useNotifications } from "../../contexts/NotificationContext";
 import { useMemo } from "react";
 import "../../styles/notifications.css";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function NotificationsPage() {
 

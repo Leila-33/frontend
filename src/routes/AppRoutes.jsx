@@ -14,7 +14,6 @@ import ActivateAccountPage from "../pages/sales/client/ActivateAccountPage.jsx";
 import Applications from "../pages/client/Applications";
 import ApplicationDetails from "../pages/client/ApplicationDetails";
 import MyTestDrives from "../pages/client/MyTestDrives";
-import TestDriveDetailsClient from "../pages/client/TestDriveDetails.jsx";
 import DashboardPage from "../pages/client/Dashboard";
 import FavoritesPage from "../pages/client/Favorites";
 import PaymentSuccessPage from "../pages/client/PaymentSuccessPage";
@@ -34,7 +33,6 @@ import Dashboard from "../pages/admin/Dashboard";
 import Analytics from "../pages/admin/Analytics";
 import Users from "../pages/admin/Users";
 import TestDriveManagement from "../pages/admin/TestDriveManagement";
-import TestDriveDetails from "../pages/admin/TestDriveDetails";
 import WarrantyPlansPage from "../pages/admin/WarrantyPlansPage";
 import AdminCreateUserPage from "../pages/admin/AdminCreateUserPage";
 import AdminEventsPage from "../pages/admin/events/AdminEventsPage.jsx";
@@ -56,6 +54,7 @@ import QuoteEditPage from "../pages/sales/agent/QuoteEditPage.jsx";
 // SHARED
 import NotificationsPage from "../pages/client/NotificationsPage";
 import NotFound from "../pages/NotFound";
+import TestDriveDetails from "../pages/client/TestDriveDetails.jsx";
 
 // COMPONENTS
 import Navbar from "../components/Navbar";
@@ -169,7 +168,7 @@ export default function AppRoutes() {
             <Route path="applications/new/:vehicleId" element={<ApplicationDetails />} />
 
             <Route path="mytestdrives" element={<MyTestDrives />} />
-            <Route path="test-drives/:id" element={<TestDriveDetailsClient />} />
+            <Route path="test-drives/:id" element={<TestDriveDetails />} />
 
             <Route path="support-tickets" element={<ClientTicketsPage />} />
             <Route path="support-tickets/create" element={<CreateTicketPage />} />

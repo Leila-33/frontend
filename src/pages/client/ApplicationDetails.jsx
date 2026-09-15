@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import { uploadToS3 } from "../../services/uploadService";
 import { ENGINE_LABELS } from "../../constants/vehicleLabels"
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import ApplicationTimeline from "../../components/applications/ApplicationTimeline";
 import { STATUS } from "../../utils/status";
 import { BsCheckCircleFill } from "react-icons/bs";
@@ -813,8 +813,9 @@ const handleFileChange = (e, type) => {
 
             application_id: application.id,
 
-            amount:
-              application.vehicle.price,
+                      amount: pricing.isSale
+            ? pricing.downPayment
+            : pricing.totalPrice,
 
             product_name:
               `${application.vehicle.brand} ${application.vehicle.model}`,
@@ -822,7 +823,8 @@ const handleFileChange = (e, type) => {
             email:
               form.email,
 
-            user_id: user.id
+            user_id: user.id,
+            customer_name:user.first_name + " " + user.last_name,
 
           }
         }
@@ -971,42 +973,48 @@ const handleFileChange = (e, type) => {
       // =========================
       // COMMON PAYLOAD
       // =========================
-      const payload = {
+const payload = {
+  // IMPORTANT: always include id (draft OR submit)
+  id: applicationId || undefined,
 
-        // IMPORTANT: always include id (draft OR submit)
-        id: applicationId || undefined,
+  vehicle_id: form.vehicle?.id,
 
-        vehicle_id: form.vehicle?.id,
+  first_name: form.first_name,
+  last_name: form.last_name,
+  email: form.email,
+  phone: form.phone,
+  address: form.address,
+  birth_date: form.birth_date,
 
-        first_name: form.first_name,
-        last_name: form.last_name,
-        email: form.email,
-        phone: form.phone,
-        address: form.address,
-        birth_date: form.birth_date,
+  total_price: pricing.totalPrice,
 
-        employment_status: form.employment_status,
+  selected_option_ids: pricing.isRent
+    ? form.optionsSelected || []
+    : [],
 
-        monthly_income: Number(form.monthly_income || 0),
-        monthly_expenses: Number(form.monthly_expenses || 0),
-        documents: uploadedDocuments,
+  optional_price: pricing.isRent
+    ? pricing.optionalPrice
+    : 0,
 
-        total_price: pricing.totalPrice,
+  financing: financingPayload,
+  trade_in: tradeInPayload,
 
-        selected_option_ids: pricing.isRent
-          ? form.optionsSelected || []
-          : [],
+  application_type: vehicleData?.type,
 
-        optional_price: pricing.isRent ? pricing.optionalPrice : 0,
-
-        financing: financingPayload,
-
-        trade_in: tradeInPayload,
-        application_type: vehicleData?.type,
-         ...(pricing.isRent && {
+  // RENT uniquement
+  ...(pricing.isRent && {
     selected_dates: form.selected_dates,
   }),
-      };
+
+  // SALE uniquement
+  ...(!pricing.isRent && {
+    employment_status: form.employment_status,
+    monthly_income: Number(form.monthly_income || 0),
+    monthly_expenses: Number(form.monthly_expenses || 0),
+  }),
+
+  documents: uploadedDocuments,
+};
 
       let res;
 
@@ -2209,7 +2217,17 @@ const isFormValid =
                         </strong>
                       </div>
                     )}
+                    {form.discount > 0 && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span className="text-muted">
+                          Remise
+                        </span>
 
+                        <strong>
+                          -{form.discount.toLocaleString()} €
+                        </strong>
+                      </div>
+                    )}
                     <hr />
 
                     {pricing.isCash ? (

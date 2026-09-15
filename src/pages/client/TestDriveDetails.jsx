@@ -1,45 +1,99 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import apiFetch from "../../services/apiFetch";
+import {
+  useCallback,
+  useEffect,
+  useState
+} from "react";
+
+import {
+  useParams,
+  useNavigate
+} from "react-router-dom";
+
 import { toast } from "react-toastify";
+
 import DetailLayout from "../../layouts/DetailLayout";
-import { testDriveStatusConfig } from "../../utils/status";
 
-const eventIcons = {
+import {
+  TEST_DRIVE_ACTION_MESSAGES,
+  testDriveStatusConfig,
+  TEST_DRIVE_EVENT_ICONS
+} from "../../utils/testDrive";
 
-  TEST_DRIVE_CREATED: "bi bi-calendar-plus",
+import { formatDate } from "../../utils/date";
 
-  TEST_DRIVE_CONFIRMED: "bi bi-check-circle-fill",
+import {
+  getTestDrive,
+  cancelTestDrive as cancelTestDriveRequest,
+  updateTestDriveStatus
+} from "../../services/testDriveService";
 
-  TEST_DRIVE_REJECTED: "bi bi-x-circle-fill",
+import { useAuth } from "../../contexts/AuthContext";
 
-  TEST_DRIVE_CANCELLED: "bi bi-calendar-x-fill",
+import TestDriveStatusModal
+  from "../../components/test-drives/TestDriveStatusModal";
 
-  TEST_DRIVE_COMPLETED: "bi bi-flag-fill",
 
-};
+// ============================================================
+// COMPOSANT
+// ============================================================
 
-export default function TestDriveDetailsClient() {
+export default function TestDriveDetails() {
 
   const { id } = useParams();
+
   const navigate = useNavigate();
 
+  // Récupération de l'utilisateur connecté afin
+  // de déterminer s'il s'agit d'un client ou d'un administrateur.
+  const { user } = useAuth();
 
+
+  // ==========================================================
+  // STATE
+  // ==========================================================
+
+  // Informations détaillées de l'essai routier.
   const [testDrive, setTestDrive] = useState(null);
 
-  // =========================
-  // FETCH
-  // =========================
-  const fetchDetails = async () => {
+  // Essai routier actuellement sélectionné
+  // pour une action administrateur.
+  const [selected, setSelected] = useState(null);
+
+  // Gestion de la modale de changement de statut.
+  //
+  // open :
+  // indique si la modale est ouverte.
+  //
+  // type :
+  // indique l'action demandée :
+  // - confirmed
+  // - rejected
+  // - cancelled
+  // - completed
+  const [actionModal, setActionModal] = useState({
+    open: false,
+    type: null
+  });
+
+
+  // ==========================================================
+  // RÔLE UTILISATEUR
+  // ==========================================================
+
+  const isAdmin = user?.role === "admin";
+
+  const isClient = user?.role === "client";
+
+
+  // ==========================================================
+  // CHARGEMENT DES DÉTAILS DE L'ESSAI ROUTIER
+  // ==========================================================
+
+  const fetchDetails = useCallback(async () => {
 
     try {
 
-      const data = await apiFetch(
-        `/test-drives/${id}`,
-        {
-          method: "GET",
-        }
-      );
+      const data = await getTestDrive(id);
 
       setTestDrive(data);
 
@@ -51,605 +105,1119 @@ export default function TestDriveDetailsClient() {
 
       navigate("/mytestdrives");
     }
-  };
+
+  }, [id, navigate]);
+
+
+  // ==========================================================
+  // CHARGEMENT INITIAL
+  // ==========================================================
 
   useEffect(() => {
+
     fetchDetails();
-  }, [id]);
-  
-const cancelTestDrive = async () => {
 
-  try {
+  }, [fetchDetails]);
 
-    await apiFetch(`/test-drives/${id}/cancel`, {
-      method: "POST"
+
+  // ==========================================================
+  // ANNULER L'ESSAI CÔTÉ CLIENT
+  // ==========================================================
+
+  /**
+   * Permet au client d'annuler sa demande d'essai.
+   *
+   * Cette action utilise la route dédiée :
+   *
+   * POST /test-drives/{id}/cancel
+   */
+  const handleCancelTestDrive = async () => {
+
+    try {
+
+      await cancelTestDriveRequest(id);
+
+      toast.success(
+        "Essai routier annulé avec succès"
+      );
+
+      // Recharge le détail pour afficher
+      // le nouveau statut.
+      await fetchDetails();
+
+    } catch (err) {
+
+      toast.error(
+        err?.message ||
+        "Erreur dans l'annulation"
+      );
+    }
+  };
+
+
+  // ==========================================================
+  // OUVRIR LA MODALE D'ACTION ADMIN
+  // ==========================================================
+
+  /**
+   * Prépare une action administrateur.
+   *
+   * action peut prendre les valeurs :
+   *
+   * - confirmed
+   * - rejected
+   * - cancelled
+   * - completed
+   *
+   * L'action est stockée dans actionModal puis
+   * transmise au composant TestDriveStatusModal.
+   */
+  const openActionModal = (
+    testDrive,
+    action
+  ) => {
+
+    setSelected(testDrive);
+
+    setActionModal({
+      open: true,
+      type: action
+    });
+  };
+
+
+  // ==========================================================
+  // FERMER LA MODALE
+  // ==========================================================
+
+  /**
+   * Ferme la modale et réinitialise l'essai sélectionné.
+   */
+  const closeActionModal = () => {
+
+    setActionModal({
+      open: false,
+      type: null
     });
 
-    toast.success("Essai routier annulé avec succès");
-    fetchDetails();
+    setSelected(null);
+  };
 
 
-  } catch (err) {
+  // ==========================================================
+  // ACTION ADMIN : CHANGEMENT DE STATUT
+  // ==========================================================
 
-    toast.error("Erreur dans l'annulation");
-  }
-};
+  /**
+   * Exécute l'action administrative confirmée
+   * depuis TestDriveStatusModal.
+   *
+   * Les différentes actions possibles sont :
+   *
+   * confirmed
+   * rejected
+   * cancelled
+   * completed
+   */
+  const handleAction = async () => {
 
-const addToCalendar = () => {
+    // Sécurité : aucune action ne peut être exécutée
+    // sans essai sélectionné ni type d'action.
+    if (
+      !selected ||
+      !actionModal.type
+    ) {
+      return;
+    }
 
- const startDate = new Date(
-   testDrive.appointment_date
- );
+    try {
 
- const endDate = new Date(
-   startDate.getTime() + 60 * 60 * 1000
- );
-
-
- const formatGoogleDate = (date)=>
-   date
-   .toISOString()
-   .replace(/-|:|\.\d+/g,"");
-
-
- const url =
- `https://calendar.google.com/calendar/render?action=TEMPLATE`
- +
- `&text=${encodeURIComponent(
-   `Essai routier ${testDrive.vehicle.brand} ${testDrive.vehicle.model}`
- )}`
- +
- `&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`
- +
- `&details=${encodeURIComponent(
-   "Essai routier Mmotors"
- )}`
- +
- `&location=Mmotors`;
-
-
- window.open(url,"_blank");
-
-};
-
-const contactSupport = () => {
-
- const subject = encodeURIComponent(
-   `Support essai routier ${testDrive.id}`
- );
+      /**
+       * Le backend reste responsable de la validation
+       * des droits et des transitions de statut.
+       *
+       * Exemple :
+       *
+       * PATCH /test-drives/123/status
+       *
+       * {
+       *   "status": "confirmed"
+       * }
+       */
+      await updateTestDriveStatus(
+        selected.id,
+        actionModal.type
+      );
 
 
- const body = encodeURIComponent(
- `Bonjour,
+      // Message affiché après chaque action.
+      toast.success(
+        TEST_DRIVE_ACTION_MESSAGES[
+          actionModal.type
+        ] ||
+        "Statut mis à jour avec succès"
+      );
 
-J’ai une question concernant mon essai routier du ${new Date(
- testDrive.appointment_date
- ).toLocaleString()}.
+
+      // Fermeture de la modale.
+      closeActionModal();
+
+
+      // Recharge du détail afin de récupérer
+      // le nouveau statut et le nouvel historique.
+      await fetchDetails();
+
+    } catch (err) {
+
+      toast.error(
+        err?.message ||
+        "Impossible de modifier le statut de l'essai routier"
+      );
+    }
+  };
+
+
+  // ==========================================================
+  // AJOUTER AU CALENDRIER
+  // ==========================================================
+
+  /**
+   * Ajoute l'essai routier dans Google Calendar.
+   *
+   * Cette action est proposée au client uniquement
+   * lorsque l'essai a été confirmé.
+   */
+  const addToCalendar = () => {
+
+    const startDate = new Date(
+      testDrive.appointment_date
+    );
+
+    // Durée estimée de l'essai : 1 heure.
+    const endDate = new Date(
+      startDate.getTime()
+      + 60 * 60 * 1000
+    );
+
+
+    /**
+     * Google Calendar attend une date
+     * au format :
+     *
+     * YYYYMMDDTHHMMSSZ
+     */
+    const formatGoogleDate = (date) => {
+
+      return date
+        .toISOString()
+        .replace(/[-:]/g, "")
+        .replace(/\.\d{3}/, "");
+    };
+
+
+    // Nom du véhicule affiché dans le calendrier.
+    const vehicleName =
+      `${testDrive.vehicle?.brand || ""} ${
+        testDrive.vehicle?.model || ""
+      }`.trim();
+
+
+    const url =
+      "https://calendar.google.com/calendar/render?action=TEMPLATE"
+      +
+      `&text=${encodeURIComponent(
+        `Essai routier ${vehicleName}`
+      )}`
+      +
+      `&dates=${formatGoogleDate(startDate)}`
+      +
+      "/"
+      +
+      `${formatGoogleDate(endDate)}`
+      +
+      `&details=${encodeURIComponent(
+        "Essai routier M-Motors"
+      )}`
+      +
+      `&location=${encodeURIComponent(
+        "M-Motors"
+      )}`;
+
+
+    // Ouverture de Google Calendar dans un nouvel onglet.
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+
+  // ==========================================================
+  // CONTACTER LE SUPPORT
+  // ==========================================================
+
+  /**
+   * Prépare un email destiné au support.
+   *
+   * L'identifiant et la date de l'essai sont
+   * automatiquement ajoutés au message.
+   */
+  const contactSupport = () => {
+
+    const subject = encodeURIComponent(
+      `Support essai routier ${testDrive.id}`
+    );
+
+
+    const body = encodeURIComponent(
+      `Bonjour,
+
+J’ai une question concernant mon essai routier du ${formatDate(
+        testDrive.appointment_date
+      )}.
 
 Merci.`
- );
+    );
 
 
- window.location.href =
- `mailto:support@mmotors.com?subject=${subject}&body=${body}`;
+    window.location.href =
+      "mailto:support@mmotors.com"
+      + `?subject=${subject}`
+      + `&body=${body}`;
+  };
 
-};
 
-if (!testDrive) {
+  // ==========================================================
+  // CHARGEMENT
+  // ==========================================================
+
+  if (!testDrive) {
+
+    return (
+      <div className="container py-5 text-center">
+
+        <div
+          className="spinner-border text-primary"
+        />
+
+        <p className="mt-3 text-muted">
+          Chargement de l'essai routier...
+        </p>
+
+      </div>
+    );
+  }
+
+
+  // ==========================================================
+  // STATUT
+  // ==========================================================
+
+  const status =
+    testDriveStatusConfig[testDrive.status]
+    || testDriveStatusConfig.pending;
+
+
+  // ==========================================================
+  // RENDU
+  // ==========================================================
+
   return (
-    <div className="container py-5 text-center">
-      <div className="spinner-border text-primary" />
-      <p className="mt-3 text-muted">
-        Chargement de l'essai routier...
-      </p>
-    </div>
-  );
-}
-const status = testDriveStatusConfig[testDrive] || testDriveStatusConfig.pending;
+    <>
+
+      <DetailLayout
+        showBackButton
+        breadcrumb={[
+          {
+            label: "Mes essais routiers",
+            path: "/mytestdrives"
+          },
+          {
+            label:
+              `${testDrive.vehicle?.brand || ""} ${
+                testDrive.vehicle?.model || ""
+              }`
+          }
+        ]}
+      >
+
+        <div className="container py-4">
+
+          <div className="row g-4">
 
 
-return (
+            {/* ==================================================
+                LEFT SIDE
+            ================================================== */}
 
-  <DetailLayout
-    showBackButton
-    breadcrumb={[
-      {
-        label: "Mes essais routiers",
-        path: "/mytestdrives"
-      },
-      {
-        label: `${testDrive.vehicle?.brand || ""} ${testDrive.vehicle?.model || ""}`
-      }
-    ]}
-  >
-
-    <div className="container py-4">
-
-      <div className="row g-4">
+            <div className="col-lg-8">
 
 
-        {/* =========================
-            LEFT SIDE
-        ========================= */}
-        <div className="col-lg-8">
+              {/* =================================================
+                  VEHICLE CARD
+              ================================================= */}
 
+              <div
+                className="
+                  card
+                  border-0
+                  shadow-sm
+                  rounded-4
+                  overflow-hidden
+                "
+              >
 
-          {/* VEHICLE CARD */}
-          <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
+                {/* ===============================================
+                    IMAGE DU VÉHICULE
+                =============================================== */}
 
-
-            {/* IMAGE */}
-            <div
-              className="
-                d-flex
-                align-items-center
-                justify-content-center
-                bg-light
-              "
-              style={{
-
-                height: "320px",
-
-                backgroundImage:
-                  testDrive.vehicle?.images?.[0]
-                    ? `url(${testDrive.vehicle.images[0]})`
-                    : "none",
-
-                backgroundSize: "cover",
-                backgroundPosition: "center"
-              }}
-            >
-
-
-              {!testDrive.vehicle?.images?.[0] && (
-
-                <div className="text-center">
-
-                  <div style={{fontSize:"64px"}}>
-                    🚗
-                  </div>
-
-                  <div className="text-muted fw-semibold">
-                    Aucune image disponible
-                  </div>
-
-                </div>
-
-              )}
-
-            </div>
-
-
-
-            <div className="card-body p-4">
-
-
-              <div className="
-                d-flex
-                justify-content-between
-                align-items-start
-                mb-3
-              ">
-
-
-                <div>
-
-                  <h2 className="fw-bold mb-1">
-
-                    {testDrive.vehicle?.brand}{" "}
-                    {testDrive.vehicle?.model}
-
-                  </h2>
-
-
-                  <p className="text-muted mb-0">
-                    Essai routier
-                  </p>
-
-
-                </div>
-
-
-
-                <span
-                  className={`badge ${status.className} px-3 py-2`}
+                <div
+                  className="
+                    d-flex
+                    align-items-center
+                    justify-content-center
+                    bg-light
+                  "
+                  style={{
+                    height: "320px",
+                    backgroundImage:
+                      testDrive.vehicle?.images?.[0]
+                        ? `url(${testDrive.vehicle.images[0]})`
+                        : "none",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center"
+                  }}
                 >
-                  {status.label}
-                </span>
 
+                  {/* Message affiché lorsqu'aucune image
+                      du véhicule n'est disponible. */}
+
+                  {!testDrive.vehicle?.images?.[0] && (
+
+                    <div className="text-center">
+
+                      <div
+                        style={{
+                          fontSize: "64px"
+                        }}
+                      >
+                        🚗
+                      </div>
+
+                      <div
+                        className="
+                          text-muted
+                          fw-semibold
+                        "
+                      >
+                        Aucune image disponible
+                      </div>
+
+                    </div>
+                  )}
+
+                </div>
+
+
+                {/* ===============================================
+                    INFORMATIONS DU VÉHICULE
+                =============================================== */}
+
+                <div className="card-body p-4">
+
+                  <div
+                    className="
+                      d-flex
+                      justify-content-between
+                      align-items-start
+                      mb-3
+                    "
+                  >
+
+                    <div>
+
+                      <h2 className="fw-bold mb-1">
+
+                        {testDrive.vehicle?.brand}
+
+                        {" "}
+
+                        {testDrive.vehicle?.model}
+
+                      </h2>
+
+                      <p className="text-muted mb-0">
+                        Essai routier
+                      </p>
+
+                    </div>
+
+
+                    {/* ===========================================
+                        STATUT
+                    =========================================== */}
+
+                    <span
+                      className={
+                        `badge ${status.className} px-3 py-2`
+                      }
+                    >
+                      {status.label}
+                    </span>
+
+                  </div>
+
+
+                  {/* =============================================
+                      DATE DU RENDEZ-VOUS
+                  ============================================= */}
+
+                  <div className="mb-4">
+
+                    <small
+                      className="
+                        text-muted
+                        d-block
+                      "
+                    >
+                      Date du rendez-vous
+                    </small>
+
+                    <div
+                      className="
+                        fw-semibold
+                        fs-5
+                      "
+                    >
+                      {formatDate(
+                        testDrive.appointment_date
+                      )}
+                    </div>
+
+                  </div>
+
+
+                  {/* =============================================
+                      COMMENTAIRE
+                  ============================================= */}
+
+                  {testDrive.comment && (
+
+                    <div className="mb-4">
+
+                      <small
+                        className="
+                          text-muted
+                          d-block
+                          mb-1
+                        "
+                      >
+                        Commentaire
+                      </small>
+
+                      <div
+                        className="
+                          bg-light
+                          rounded-3
+                          p-3
+                        "
+                      >
+                        {testDrive.comment}
+                      </div>
+
+                    </div>
+                  )}
+
+
+                  {/* =============================================
+                      PROGRESSION
+                  ============================================= */}
+
+                  <div>
+
+                    <div
+                      className="
+                        d-flex
+                        justify-content-between
+                        mb-2
+                      "
+                    >
+
+                      <small className="text-muted">
+                        Progression
+                      </small>
+
+                      <small className="fw-semibold">
+                        {status.progress}%
+                      </small>
+
+                    </div>
+
+
+                    <div
+                      className="progress"
+                      style={{
+                        height: "8px"
+                      }}
+                    >
+
+                      <div
+                        className="progress-bar"
+                        style={{
+                          width: `${status.progress}%`
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+
+                </div>
 
               </div>
 
 
+              {/* =================================================
+                  HISTORIQUE
+              ================================================= */}
+
+              <div
+                className="
+                  card
+                  border-0
+                  shadow-sm
+                  rounded-4
+                  mt-4
+                "
+              >
+
+                <div className="card-body p-4">
+
+                  <h4 className="fw-bold mb-4">
+                    Historique
+                  </h4>
 
 
-              {/* DATE */}
+                  {testDrive.timeline?.length ? (
 
-              <div className="mb-4">
-
-                <small className="text-muted d-block">
-                  Date du rendez-vous
-                </small>
+                    <div className="position-relative">
 
 
-                <div className="fw-semibold fs-5">
+                      {/* =========================================
+                          LIGNE VERTICALE
+                      ========================================= */}
 
-                  {new Date(
-                    testDrive.appointment_date
-                  ).toLocaleString(
-                    "fr-FR"
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "18px",
+                          top: 0,
+                          bottom: 0,
+                          width: "2px",
+                          background: "#e9ecef"
+                        }}
+                      />
+
+
+                      {/* =========================================
+                          ÉVÉNEMENTS
+                      ========================================= */}
+
+                      {testDrive.timeline.map(
+                        (event, index) => (
+
+                          <div
+                            key={index}
+                            className="
+                              d-flex
+                              mb-4
+                              position-relative
+                            "
+                          >
+
+
+                            {/* ===================================
+                                ICÔNE
+                            =================================== */}
+
+                            <div
+                              className="
+                                rounded-circle
+                                bg-white
+                                border
+                                shadow-sm
+                                d-flex
+                                align-items-center
+                                justify-content-center
+                              "
+                              style={{
+                                width: "38px",
+                                height: "38px",
+                                zIndex: 2
+                              }}
+                            >
+
+                              <i
+                                className={
+                                  TEST_DRIVE_EVENT_ICONS[
+                                    event.type
+                                  ]
+                                  || "bi bi-info-circle"
+                                }
+                              />
+
+                            </div>
+
+
+                            {/* ===================================
+                                INFORMATIONS
+                            =================================== */}
+
+                            <div className="ms-3">
+
+                              <div className="fw-semibold">
+                                {event.message}
+                              </div>
+
+                              <small className="text-muted">
+
+                                {formatDate(
+                                  event.date
+                                )}
+
+                              </small>
+
+                            </div>
+
+                          </div>
+                        )
+                      )}
+
+                    </div>
+
+                  ) : (
+
+                    <p className="text-muted">
+                      Aucun historique disponible.
+                    </p>
+
                   )}
 
                 </div>
 
               </div>
 
+            </div>
 
 
+            {/* ==================================================
+                RIGHT SIDE
+            ================================================== */}
 
-              {/* COMMENT */}
+            <div className="col-lg-4">
 
-              {testDrive.comment && (
 
-                <div className="mb-4">
+              {/* =================================================
+                  INFORMATIONS UTILISATEUR
+              ================================================= */}
 
-                  <small className="text-muted d-block mb-1">
-                    Commentaire
+              <div
+                className="
+                  card
+                  border-0
+                  shadow-sm
+                  rounded-4
+                  mb-4
+                "
+              >
+
+                <div className="card-body p-4">
+
+                  <h5 className="fw-bold mb-3">
+                    Mes informations
+                  </h5>
+
+
+                  <small
+                    className="
+                      text-muted
+                      d-block
+                    "
+                  >
+                    Nom
                   </small>
 
-
-                  <div className="
-                    bg-light
-                    rounded-3
-                    p-3
-                  ">
-                    {testDrive.comment}
+                  <div
+                    className="
+                      fw-semibold
+                      mb-3
+                    "
+                  >
+                    {testDrive.user?.name}
                   </div>
 
 
-                </div>
-
-              )}
-
-
-
-
-
-
-              {/* PROGRESS */}
-
-              <div>
-
-
-                <div className="
-                  d-flex
-                  justify-content-between
-                  mb-2
-                ">
-
-                  <small className="text-muted">
-                    Progression
+                  <small
+                    className="
+                      text-muted
+                      d-block
+                    "
+                  >
+                    Email
                   </small>
 
-
-                  <small className="fw-semibold">
-                    {status.progress}%
-                  </small>
-
+                  <div className="fw-semibold">
+                    {testDrive.user?.email}
+                  </div>
 
                 </div>
-
-
-
-                <div
-                  className="progress"
-                  style={{
-                    height:"8px"
-                  }}
-                >
-
-                  <div
-                    className="progress-bar"
-                    style={{
-                      width:`${status.progress}%`
-                    }}
-                  />
-
-                </div>
-
 
               </div>
 
 
+              {/* =================================================
+                  ACTIONS
+              ================================================= */}
 
-            </div>
+              <div
+                className="
+                  card
+                  border-0
+                  shadow-sm
+                  rounded-4
+                "
+              >
 
+                <div className="card-body p-4">
 
-          </div>
-
-
-
-
-
-          {/* TIMELINE */}
-
-          <div className="
-            card
-            border-0
-            shadow-sm
-            rounded-4
-            mt-4
-          ">
-
-
-            <div className="card-body p-4">
+                  <h5 className="fw-bold mb-3">
+                    Actions
+                  </h5>
 
 
-              <h4 className="fw-bold mb-4">
-                Historique
-              </h4>
+                  {/* =================================================
+                      ACTIONS CLIENT
+                  ================================================= */}
+
+                  {isClient && (
+
+                    <>
 
 
+                      {/* =============================================
+                          AJOUTER AU CALENDRIER
+                          Disponible uniquement lorsque l'essai
+                          est confirmé.
+                      ============================================= */}
 
-              {
-                testDrive.timeline?.length ? (
+                      {testDrive.status === "confirmed" && (
 
-                  <div className="position-relative">
+                        <button
+                          type="button"
+                          className="
+                            btn
+                            btn-primary
+                            w-100
+                            mb-2
+                          "
+                          onClick={addToCalendar}
+                        >
+
+                          <i
+                            className="
+                              bi
+                              bi-calendar-plus
+                              me-2
+                            "
+                          />
+
+                          Ajouter au calendrier
+
+                        </button>
+                      )}
 
 
-                    <div
-                      style={{
-                        position:"absolute",
-                        left:"18px",
-                        top:0,
-                        bottom:0,
-                        width:"2px",
-                        background:"#e9ecef"
-                      }}
-                    />
+                      {/* =============================================
+                          CONTACTER LE SUPPORT
+                      ============================================= */}
 
-
-
-                    {testDrive.timeline.map(
-                      (event,index)=>(
-
-
-                      <div
-                        key={index}
+                      <button
+                        type="button"
                         className="
-                          d-flex
-                          mb-4
-                          position-relative
+                          btn
+                          btn-outline-dark
+                          w-100
+                          mb-2
                         "
+                        onClick={contactSupport}
                       >
 
+                        <i
+                          className="
+                            bi
+                            bi-headset
+                            me-2
+                          "
+                        />
+
+                        Contacter le support
+
+                      </button>
+
+
+                      {/* =============================================
+                          ANNULER LA DEMANDE
+                          Le client peut annuler uniquement
+                          lorsque la demande est encore en attente.
+                      ============================================= */}
+
+                      {testDrive.status === "pending" && (
+
+                        <button
+                          type="button"
+                          className="
+                            btn
+                            btn-outline-danger
+                            w-100
+                          "
+                          onClick={handleCancelTestDrive}
+                        >
+
+                          <i
+                            className="
+                              bi
+                              bi-x-circle
+                              me-2
+                            "
+                          />
+
+                          Annuler la demande
+
+                        </button>
+                      )}
+
+                    </>
+                  )}
+
+
+                  {/* =================================================
+                      ACTIONS ADMIN
+                  ================================================= */}
+
+                  {isAdmin && (
+
+                    <>
+
+                      {/* =============================================
+                          ESSAI EN ATTENTE
+                          Actions disponibles :
+                          - Confirmer
+                          - Refuser
+                      ============================================= */}
+
+                      {testDrive.status === "pending" && (
+
+                        <div className="d-grid gap-2">
+
+                          <button
+                            type="button"
+                            className="btn btn-success"
+                            onClick={() =>
+                              openActionModal(
+                                testDrive,
+                                "confirmed"
+                              )
+                            }
+                          >
+
+                            <i
+                              className="
+                                bi
+                                bi-check-circle
+                                me-2
+                              "
+                            />
+
+                            Confirmer
+
+                          </button>
+
+
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            onClick={() =>
+                              openActionModal(
+                                testDrive,
+                                "rejected"
+                              )
+                            }
+                          >
+
+                            <i
+                              className="
+                                bi
+                                bi-x-circle
+                                me-2
+                              "
+                            />
+
+                            Refuser
+
+                          </button>
+
+                        </div>
+                      )}
+
+
+                      {/* =============================================
+                          ESSAI CONFIRMÉ
+                          Actions disponibles :
+                          - Annuler
+                          - Terminer
+                      ============================================= */}
+
+                      {testDrive.status === "confirmed" && (
+
+                        <div className="d-grid gap-2">
+
+                          <button
+                            type="button"
+                            className="btn btn-warning"
+                            onClick={() =>
+                              openActionModal(
+                                testDrive,
+                                "cancelled"
+                              )
+                            }
+                          >
+
+                            <i
+                              className="
+                                bi
+                                bi-calendar-x
+                                me-2
+                              "
+                            />
+
+                            Annuler
+
+                          </button>
+
+
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() =>
+                              openActionModal(
+                                testDrive,
+                                "completed"
+                              )
+                            }
+                          >
+
+                            <i
+                              className="
+                                bi
+                                bi-flag
+                                me-2
+                              "
+                            />
+
+                            Terminer
+
+                          </button>
+
+                        </div>
+                      )}
+
+
+                      {/* =============================================
+                          AUTRES STATUTS
+                          Une fois l'essai :
+                          - refusé
+                          - annulé
+                          - terminé
+                          aucune nouvelle action n'est disponible.
+                      ============================================= */}
+
+                      {[
+                        "rejected",
+                        "cancelled",
+                        "completed"
+                      ].includes(testDrive.status) && (
 
                         <div
                           className="
-                            rounded-circle
-                            bg-white
+                            alert
+                            alert-light
                             border
-                            shadow-sm
-                            d-flex
-                            align-items-center
-                            justify-content-center
+                            mb-0
                           "
-                          style={{
-                            width:"38px",
-                            height:"38px",
-                            zIndex:2
-                          }}
                         >
 
-                          <i className={eventIcons[event.type] || "bi bi-info-circle"}></i>
+                          <i
+                            className="
+                              bi
+                              bi-info-circle
+                              me-2
+                            "
+                          />
+
+                          Aucune action supplémentaire
+                          n'est disponible pour cet essai.
 
                         </div>
+                      )}
 
+                    </>
+                  )}
 
-
-                        <div className="ms-3">
-
-
-                          <div className="fw-semibold">
-                            {event.message}
-                          </div>
-
-
-                          <small className="text-muted">
-
-                            {
-                              new Date(
-                                event.date
-                              ).toLocaleString(
-                                "fr-FR"
-                              )
-                            }
-
-                          </small>
-
-
-                        </div>
-
-
-
-                      </div>
-
-
-                    ))}
-
-
-
-                  </div>
-
-
-                ) : (
-
-                  <p className="text-muted">
-                    Aucun historique disponible.
-                  </p>
-
-                )
-              }
-
-
-
-            </div>
-
-
-          </div>
-
-
-
-        </div>
-
-
-
-
-
-        {/* RIGHT SIDE */}
-
-        <div className="col-lg-4">
-
-
-
-          {/* USER */}
-
-          <div className="
-            card
-            border-0
-            shadow-sm
-            rounded-4
-            mb-4
-          ">
-
-
-            <div className="card-body p-4">
-
-
-              <h5 className="fw-bold mb-3">
-                Mes informations
-              </h5>
-
-
-
-              <small className="text-muted d-block">
-                Nom
-              </small>
-
-              <div className="fw-semibold mb-3">
-
-                {testDrive.user?.name}
+                </div>
 
               </div>
 
-
-
-              <small className="text-muted d-block">
-                Email
-              </small>
-
-              <div className="fw-semibold">
-
-                {testDrive.user?.email}
-
-              </div>
-
-
-
             </div>
 
-
           </div>
-
-
-
-
-
-          {/* ACTIONS */}
-
-          <div className="
-            card
-            border-0
-            shadow-sm
-            rounded-4
-          ">
-
-
-            <div className="card-body p-4">
-
-
-              <h5 className="fw-bold mb-3">
-                Actions
-              </h5>
-
-
-
-
-              {testDrive.status === "confirmed" && (
-
-                <button
-                  className="btn btn-primary w-100 mb-2"
-                  onClick={addToCalendar}
-                >
-                  Ajouter au calendrier
-                </button>
-
-              )}
-
-
-
-
-
-
-              <button
-                className="
-                  btn
-                  btn-outline-dark
-                  w-100
-                  mb-2
-                "
-                onClick={contactSupport}
-              >
-                Contacter le support
-              </button>
-
-
-
-
-
-              {testDrive.status === "pending" && (
-
-                <button
-                  className="
-                    btn
-                    btn-outline-danger
-                    w-100
-                  "
-                  onClick={cancelTestDrive}
-                >
-                  Annuler la demande
-                </button>
-
-              )}
-
-
-
-            </div>
-
-
-          </div>
-
-
 
         </div>
 
-
-      </div>
-
-
-    </div>
+      </DetailLayout>
 
 
-  </DetailLayout>
+      {/* ========================================================
+          MODALE DES ACTIONS ADMIN
+      ========================================================
 
-);}
+          La modale reçoit :
+
+          open :
+          indique si elle doit être affichée.
+
+          type :
+          indique l'action à confirmer.
+
+          testDrive :
+          contient l'essai concerné.
+
+          onConfirm :
+          exécute réellement la modification du statut.
+
+          onClose :
+          ferme la modale.
+
+      ======================================================== */}
+
+      <TestDriveStatusModal
+        open={actionModal.open}
+        type={actionModal.type}
+        testDrive={selected}
+        onConfirm={handleAction}
+        onClose={closeActionModal}
+      />
+
+    </>
+  );
+}

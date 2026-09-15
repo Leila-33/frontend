@@ -12,7 +12,7 @@ export default function MyLeadsPage() {
         method: "GET",
       });
 
-      setLeads(data);
+      setLeads(data.items);
     } catch (err) {
       toast.error("Erreur lors du chargement de mes prospects");
     }

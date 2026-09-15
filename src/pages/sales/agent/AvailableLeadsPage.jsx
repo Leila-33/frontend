@@ -52,7 +52,7 @@ export default function AvailableLeadsPage() {
       );
 
 
-      setLeads(data);
+      setLeads(data.items);
 
 
     }

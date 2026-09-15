@@ -17,31 +17,111 @@ import {
   Cell
 } from "recharts";
 
-export default function AdminAnalytics() {
+import { STATUS } from "../../utils/status";
 
+// =========================
+// CONFIGURATION GRAPHIQUES
+// =========================
+
+const COLORS = [
+  "#0d6efd",
+  "#198754",
+  "#ffc107",
+  "#dc3545",
+  "#6c757d"
+];
+
+// =========================
+// FORMATTERS
+// =========================
+
+const formatChartDate = (date) => {
+  if (!date) return "";
+
+  return new Date(`${date}T00:00:00`).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit"
+  });
+};
+
+const formatMonth = (month) => {
+  if (!month) return "";
+
+  const [year, monthNumber] = month.split("-");
+
+  return new Date(
+    Number(year),
+    Number(monthNumber) - 1,
+    1
+  ).toLocaleDateString("fr-FR", {
+    month: "short",
+    year: "numeric"
+  });
+};
+
+export default function AdminAnalytics() {
 
   const [data, setData] = useState({
     applications_by_day: [],
     status_distribution: [],
-    conversion: [],
-    revenue: []
+    revenue: [],
+    stats: {
+      total: 0,
+      approved: 0,
+      rejected: 0,
+      submitted: 0,
+      draft: 0
+    }
   });
+
+  const [loading, setLoading] = useState(true);
 
   // =========================
   // FETCH ANALYTICS
   // =========================
+
   const fetchAnalytics = async () => {
+
+    setLoading(true);
 
     try {
 
-      const res = await apiFetch("/admin/analytics", {
+      const res = await apiFetch("/admin/analytics");
+
+      setData({
+        applications_by_day: Array.isArray(res?.applications_by_day)
+          ? res.applications_by_day
+          : [],
+
+        status_distribution: Array.isArray(res?.status_distribution)
+          ? res.status_distribution
+          : [],
+
+        revenue: Array.isArray(res?.revenue)
+          ? res.revenue
+          : [],
+
+        stats: {
+          total: res?.stats?.total ?? 0,
+          approved: res?.stats?.approved ?? 0,
+          rejected: res?.stats?.rejected ?? 0,
+          submitted: res?.stats?.submitted ?? 0,
+          draft: res?.stats?.draft ?? 0
+        }
       });
 
-      setData(res);
-
     } catch (err) {
-      console.error(err);
-      toast.error("Erreur analytics");
+
+      console.error("fetchAnalytics error:", err);
+
+      toast.error(
+        err?.message || "Erreur lors du chargement des analytics"
+      );
+
+    } finally {
+
+      setLoading(false);
+
     }
   };
 
@@ -50,67 +130,255 @@ export default function AdminAnalytics() {
   }, []);
 
   // =========================
-  // COLORS PIE CHART
+  // PRÉPARATION DES STATUTS
   // =========================
-  const COLORS = ["#0d6efd", "#198754", "#ffc107", "#dc3545", "#6c757d"];
+
+  const statusData = data.status_distribution.map((item) => ({
+    ...item,
+
+    // Le backend conserve le code technique :
+    // "paid", "cancelled", "processing", etc.
+    //
+    // STATUS fournit le libellé affiché :
+    // "Payé", "Annulé", "Pris en charge", etc.
+    displayName: STATUS[item.name]?.label || item.name
+  }));
 
   return (
 
     <div className="container py-4">
 
-      {/* HEADER */}
-      <div className="mb-4">
+      {/* =========================
+          HEADER
+      ========================= */}
 
-        <h2 className="fw-bold mb-1">
-          Analytics Dashboard
-        </h2>
+      <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
 
-        <p className="text-muted">
-          Performance globale du système
-        </p>
+        <div>
+
+          <h2 className="fw-bold mb-1">
+            Statistiques
+          </h2>
+
+          <p className="text-muted mb-0">
+            Performance globale du système
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          className="btn btn-light border rounded-pill"
+          onClick={fetchAnalytics}
+          disabled={loading}
+        >
+
+          {loading ? (
+
+            <>
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                role="status"
+                aria-hidden="true"
+              />
+
+              Actualisation...
+            </>
+
+          ) : (
+
+            <>
+              <i className="bi bi-arrow-clockwise me-2" />
+              Actualiser
+            </>
+
+          )}
+
+        </button>
 
       </div>
 
-      {/* GRID */}
-      <div className="row g-4">
+      {/* =========================
+          STATISTIQUES
+      ========================= */}
 
-        {/* LINE CHART */}
-        <div className="col-lg-8">
+      <div className="row g-3 mb-4">
 
-          <div className="card border-0 shadow-sm rounded-4 p-3">
+        {/* TOTAL */}
 
-            <h5 className="fw-semibold mb-3">
-              Dossiers créés (30 jours)
-            </h5>
+        <div className="col-md">
 
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="card border-0 shadow-sm rounded-4 h-100">
 
-              <LineChart data={data.applications_by_day}>
+            <div className="card-body">
 
-                <CartesianGrid strokeDasharray="3 3" />
+              <div className="text-muted small">
+                Total dossiers
+              </div>
 
-                <XAxis dataKey="date" />
+              <div className="fs-3 fw-bold">
+                {data.stats.total}
+              </div>
 
-                <YAxis />
-
-                <Tooltip />
-
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#0d6efd"
-                  strokeWidth={3}
-                />
-
-              </LineChart>
-
-            </ResponsiveContainer>
+            </div>
 
           </div>
 
         </div>
 
-        {/* PIE CHART */}
+        {/* SOUMIS */}
+
+        <div className="col-md">
+
+          <div className="card border-0 shadow-sm rounded-4 h-100">
+
+            <div className="card-body">
+
+              <div className="text-muted small">
+                Soumis
+              </div>
+
+              <div className={`fs-3 fw-bold text-${STATUS.submitted.color}`}>
+                {data.stats.submitted}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* VALIDÉS */}
+
+        <div className="col-md">
+
+          <div className="card border-0 shadow-sm rounded-4 h-100">
+
+            <div className="card-body">
+
+              <div className="text-muted small">
+                Validés
+              </div>
+
+              <div className={`fs-3 fw-bold text-${STATUS.approved.color}`}>
+                {data.stats.approved}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* REFUSÉS */}
+
+        <div className="col-md">
+
+          <div className="card border-0 shadow-sm rounded-4 h-100">
+
+            <div className="card-body">
+
+              <div className="text-muted small">
+                Refusés
+              </div>
+
+              <div className={`fs-3 fw-bold text-${STATUS.rejected.color}`}>
+                {data.stats.rejected}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* BROUILLONS */}
+
+        <div className="col-md">
+
+          <div className="card border-0 shadow-sm rounded-4 h-100">
+
+            <div className="card-body">
+
+              <div className="text-muted small">
+                Brouillons
+              </div>
+
+              <div className={`fs-3 fw-bold text-${STATUS.draft.color}`}>
+                {data.stats.draft}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* =========================
+          GRAPHIQUES
+      ========================= */}
+
+      <div className="row g-4">
+
+        {/* =========================
+            DOSSIERS CRÉÉS
+        ========================= */}
+
+        <div className="col-lg-8">
+
+          <div className="card border-0 shadow-sm rounded-4 p-3">
+
+            <h5 className="fw-semibold mb-3">
+              Dossiers créés
+            </h5>
+
+            {data.applications_by_day.length === 0 ? (
+
+              <div className="text-muted text-center py-5">
+                Aucune donnée disponible
+              </div>
+
+            ) : (
+
+              <ResponsiveContainer width="100%" height={300}>
+
+                <LineChart data={data.applications_by_day}>
+
+                  <CartesianGrid strokeDasharray="3 3" />
+
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={formatChartDate}
+                  />
+
+                  <YAxis allowDecimals={false} />
+
+                  <Tooltip />
+
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#0d6efd"
+                    strokeWidth={3}
+                    dot
+                  />
+
+                </LineChart>
+
+              </ResponsiveContainer>
+
+            )}
+
+          </div>
+
+        </div>
+
+        {/* =========================
+            RÉPARTITION DES STATUTS
+        ========================= */}
+
         <div className="col-lg-4">
 
           <div className="card border-0 shadow-sm rounded-4 p-3">
@@ -119,38 +387,53 @@ export default function AdminAnalytics() {
               Statuts des dossiers
             </h5>
 
-            <ResponsiveContainer width="100%" height={300}>
+            {statusData.length === 0 ? (
 
-              <PieChart>
+              <div className="text-muted text-center py-5">
+                Aucune donnée disponible
+              </div>
 
-                <Pie
-                  data={data.status_distribution}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={100}
-                  label
-                >
+            ) : (
 
-                  {data.status_distribution.map((_, index) => (
-                    <Cell
-                      key={index}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
+              <ResponsiveContainer width="100%" height={300}>
 
-                </Pie>
+                <PieChart>
 
-                <Tooltip />
+                  <Pie
+                    data={statusData}
+                    dataKey="value"
+                    nameKey="displayName"
+                    outerRadius={100}
+                    label
+                  >
 
-              </PieChart>
+                    {statusData.map((item, index) => (
 
-            </ResponsiveContainer>
+                      <Cell
+                        key={item.name}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+
+                    ))}
+
+                  </Pie>
+
+                  <Tooltip />
+
+                </PieChart>
+
+              </ResponsiveContainer>
+
+            )}
 
           </div>
 
         </div>
 
-        {/* BAR CHART */}
+        {/* =========================
+            REVENUS
+        ========================= */}
+
         <div className="col-lg-12">
 
           <div className="card border-0 shadow-sm rounded-4 p-3">
@@ -159,23 +442,39 @@ export default function AdminAnalytics() {
               Revenus estimés / mois
             </h5>
 
-            <ResponsiveContainer width="100%" height={300}>
+            {data.revenue.length === 0 ? (
 
-              <BarChart data={data.revenue}>
+              <div className="text-muted text-center py-5">
+                Aucune donnée disponible
+              </div>
 
-                <CartesianGrid strokeDasharray="3 3" />
+            ) : (
 
-                <XAxis dataKey="month" />
+              <ResponsiveContainer width="100%" height={300}>
 
-                <YAxis />
+                <BarChart data={data.revenue}>
 
-                <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" />
 
-                <Bar dataKey="amount" fill="#198754" />
+                  <XAxis
+                    dataKey="month"
+                    tickFormatter={formatMonth}
+                  />
 
-              </BarChart>
+                  <YAxis />
 
-            </ResponsiveContainer>
+                  <Tooltip />
+
+                  <Bar
+                    dataKey="amount"
+                    fill="#198754"
+                  />
+
+                </BarChart>
+
+              </ResponsiveContainer>
+
+            )}
 
           </div>
 

@@ -5,6 +5,8 @@ export default function ApplicationActions({
   viewMode,
   onAction,
 }) {
+  // Ouvre la modale de confirmation avec
+  // le type d'action et l'identifiant du dossier.
   const openModal = (type) => {
     onAction({
       open: true,
@@ -20,6 +22,19 @@ export default function ApplicationActions({
       ========================= */}
       {viewMode === "active" && (
         <>
+          {/* Prendre en charge le dossier.
+              Cette action est disponible uniquement
+              si le backend autorise sa prise en charge. */}
+          {application.can_process && (
+            <ActionButton
+              color="primary"
+              icon="bi-check2-circle"
+              title="Prendre en charge"
+              onClick={() => openModal("process")}
+            />
+          )}
+
+          {/* Archiver le dossier */}
           {application.can_archive && (
             <ActionButton
               color="warning"
@@ -29,6 +44,7 @@ export default function ApplicationActions({
             />
           )}
 
+          {/* Annuler le dossier */}
           {application.can_cancel && (
             <ActionButton
               color="warning"
@@ -38,6 +54,7 @@ export default function ApplicationActions({
             />
           )}
 
+          {/* Supprimer définitivement le dossier */}
           {application.can_delete && (
             <ActionButton
               color="danger"
@@ -108,3 +125,4 @@ export default function ApplicationActions({
     </>
   );
 }
+

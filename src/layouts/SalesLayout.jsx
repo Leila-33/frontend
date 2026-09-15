@@ -1,91 +1,64 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React from "react";
 
-import SalesSidebar from "../components/layout/SalesSidebar";
+import DashboardLayout from "./DashboardLayout";
+import SalesSidebar from "../components/layout/sidebars/SalesSidebar";
+
 import useSalesNotifications from "../hooks/useSalesNotifications";
-import { useNotifications } from "../context/NotificationContext";
+import { useNotifications } from "../contexts/NotificationContext";
+
+// ==========================================================
+// LAYOUT ESPACE COMMERCIAL
+// ==========================================================
+// Ce layout contient uniquement les données spécifiques
+// à l'espace commercial :
+// - nouveaux leads
+// - mes leads
+// - notifications non lues
+//
+// La structure desktop/mobile est centralisée dans
+// DashboardLayout.jsx.
+// ==========================================================
 
 export default function SalesLayout() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // ========================================================
+  // COMPTEURS COMMERCIAUX
+  // ========================================================
 
   const {
     newLeadsCount,
-    myLeadsCount,
-    quotesCount,
-    applicationsCount,
+    myLeadsCount
   } = useSalesNotifications();
 
-const { notifications, unreadNotificationCount } = useNotifications();
 
-  
+  // ========================================================
+  // NOTIFICATIONS
+  // ========================================================
+
+  const {
+    unreadNotificationCount
+  } = useNotifications();
+
+
+  // ========================================================
+  // SIDEBAR
+  // ========================================================
+
+  const renderSidebar = (mobile, onClickLink) => (
+    <SalesSidebar
+      mobile={mobile}
+      newLeadsCount={newLeadsCount}
+      myLeadsCount={myLeadsCount}
+      unreadNotificationCount={unreadNotificationCount}
+      onClickLink={onClickLink}
+    />
+  );
+
+
   return (
-    <div className="d-flex">
-
-      {/* =========================
-          DESKTOP SIDEBAR
-      ========================= */}
-      <SalesSidebar
-        mobile={false}
-        newLeadsCount={newLeadsCount}
-        myLeadsCount={myLeadsCount}
-        quotesCount={quotesCount}
-        applicationsCount={applicationsCount}
-        unreadNotificationCount={unreadNotificationCount}
-
-      />
-
-      {/* =========================
-          MOBILE SIDEBAR OVERLAY
-      ========================= */}
-      {mobileOpen && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-          style={{ zIndex: 1040 }}
-          onClick={() => setMobileOpen(false)}
-        >
-          <div
-            className="position-absolute top-0 start-0 bg-white h-100 shadow"
-            style={{ width: 280 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SalesSidebar
-              mobile={true}
-              newLeadsCount={newLeadsCount}
-              myLeadsCount={myLeadsCount}
-              quotesCount={quotesCount}
-              applicationsCount={applicationsCount}
-              unreadNotificationCount={unreadNotificationCount}
-              onClickLink={() => setMobileOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* =========================
-          MAIN CONTENT
-      ========================= */}
-      <div className="flex-grow-1">
-
-        {/* MOBILE TOP BAR */}
-        <div className="d-lg-none p-3 border-bottom d-flex align-items-center justify-content-between">
-          <button
-            className="btn btn-outline-dark btn-sm"
-            onClick={() => setMobileOpen(true)}
-          >
-            <i className="bi bi-list fs-5"></i>
-          </button>
-
-          <h5 className="mb-0 fw-bold">Mmotors • Espace commercial</h5>
-
-          <div />
-        </div>
-
-        {/* PAGE CONTENT */}
-        <div className="p-3 p-lg-4">
-          <Outlet />
-        </div>
-
-      </div>
-    </div>
+    <DashboardLayout
+      sidebar={renderSidebar}
+      mobileTitle="Mmotors • Espace commercial"
+    />
   );
 }

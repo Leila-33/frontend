@@ -1,16 +1,98 @@
-// utils/status.js
-
 export const STATUS = {
-  draft: { label: "Brouillon", color: "secondary" },
-  submitted: { label: "Soumis", color: "warning" },
-  approved: { label: "Validé", color: "success" },
-  rejected: { label: "Refusé", color: "danger" },
-  paid: { label: "Payé", color: "info" },
-  completed: { label: "Terminé", color: "primary" },
-  cancelled: { label: "Annulé", color: "dark" },
-  archived: { label: "Archivé", color: "dark" }
+
+  draft: {
+    label: "Brouillon",
+    color: "secondary"
+  },
+
+  submitted: {
+    label: "Soumis",
+    color: "warning"
+  },
+
+  processing: {
+    label: "Pris en charge",
+    color: "primary"
+  },
+
+  approved: {
+    label: "Validé",
+    color: "success"
+  },
+
+  rejected: {
+    label: "Refusé",
+    color: "danger"
+  },
+
+  paid: {
+    label: "Payé",
+    color: "info"
+  },
+
+  completed: {
+    label: "Terminé",
+    color: "success"
+  },
+
+  cancelled: {
+    label: "Annulé",
+    color: "dark"
+  },
+
+  archived: {
+    label: "Archivé",
+    color: "dark"
+  }
+
+};
+// Configuration des différents statuts de document.
+export const DOCUMENT_STATUS = {
+  pending: {
+    label: "En attente",
+    description: "En attente de validation",
+    color: "warning",
+    icon: "bi-file-earmark"
+  },
+
+  validated: {
+    label: "Validé",
+    description: "Document validé",
+    color: "success",
+    icon: "bi-check-lg"
+  },
+
+  rejected: {
+    label: "Refusé",
+    description: "Document refusé",
+    color: "danger",
+    icon: "bi-x-lg"
+  }
 };
 
+// Libellés des différents types de documents utilisés dans l'application.
+export const DOCUMENT_LABELS = {
+  identity: "Pièce d'identité",
+  address_proof: "Justificatif de domicile",
+  payslip: "Bulletin de salaire",
+  rib: "RIB",
+};
+
+export const EVENT_ICONS = {
+  application_created: "bi-plus-circle",
+  application_submitted: "bi-send",
+  application_approved: "bi-check-circle",
+  application_rejected: "bi-x-circle",
+  application_archived: "bi-archive",
+  application_restored: "bi-arrow-counterclockwise",
+  document_validated: "bi-file-check",
+  document_rejected: "bi-file-x"
+};
+
+export const DEFAULT_STATUS = {
+  label: "Inconnu",
+  color: "secondary",
+};
 export const VEHICLE_TYPE = {
   sale: { label: "Vente", color: "primary" },
   rent: { label: "Location", color: "info" }
@@ -89,37 +171,4 @@ export const quoteStatusConfig = {
     className: "bg-secondary",
   },
 
-};
-
-export const testDriveStatusConfig = {
-  pending: {
-    label: "En attente",
-    className: "badge bg-warning text-dark",
-    step: 0,
-    progress: 25
-  },
-  confirmed: {
-    label: "Confirmé",
-    className: "badge bg-primary",
-    step: 1,
-    progress: 60
-  },
-  rejected: {
-    label: "Refusé",
-    className: "badge bg-danger",
-    step: -1,
-    progress: 0
-  },
-  cancelled: {
-    label: "Annulé",
-    className: "badge bg-danger",
-    step: -1,
-    progress: 0
-  },
-  completed: {
-    label: "Terminé",
-    className: "badge bg-success",
-    step: 2,
-    progress: 100
-  }
 };

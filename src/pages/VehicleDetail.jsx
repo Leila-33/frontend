@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import apiFetch from "../services/apiFetch";
 import { ENGINE_LABELS } from "../constants/vehicleLabels"
 import { BsCalendar, BsSpeedometer2, BsFuelPump } from "react-icons/bs";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import TestDriveModal from "../components/test-drives/TestDriveModal";
 import LeadFormModal from "../components/sales/LeadFormModal";
 import "../styles/badges.css";
@@ -29,31 +29,25 @@ export default function VehicleDetail() {
   const [showModal, setShowModal] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
 const [showLeadModal, setShowLeadModal] = useState(false);
+
+const loadVehicle = async () => {
+  try {
+    const data = await apiFetch(
+      `/vehicles/${id}`
+    );
+
+    setVehicle(data);
+
+  } catch (err) {
+    console.error(err);
+
+    toast.error(
+      err.message || "Erreur chargement véhicule"
+    );
+  }
+};
+
 useEffect(() => {
-
-  const loadVehicle = async () => {
-
-    try {
-
-      const data = await apiFetch(
-        `/vehicles/${id}`
-      );
-
-      setVehicle(data);
-
-    } catch (err) {
-
-      console.error(err);
-
-      toast.error(
-        err.message || "Erreur chargement véhicule"
-      );
-
-    }
-
-  };
-
-
 
   const loadFavoriteStatus = async () => {
 
@@ -297,8 +291,6 @@ const formatDate = (date) => {
 const canBuy =
   vehicle.status === "PUBLISHED";
 
-console.log(formatDate(selectedDates?.start))
-console.log(selectedDates?.end)
 const handleApplication = () => {
   if (!vehicle) return;
 
@@ -715,6 +707,7 @@ const handleInterestedClick = () => {
       setVehicle={setVehicle}
       vehicleId={vehicle.id}
       user={user}
+      loadVehicle={loadVehicle}
     />
 
 )}

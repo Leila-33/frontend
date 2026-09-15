@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useNotifications } from "../context/NotificationContext";
+import { useNotifications } from "../contexts/NotificationContext";
 
 export default function NotificationBell() {
 

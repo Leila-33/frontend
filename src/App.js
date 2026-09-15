@@ -3,8 +3,8 @@ import "./App.css";
 
 import GlobalLoader from "./components/GlobalLoader";
 
-import { NotificationProvider } from "./context/NotificationContext";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";

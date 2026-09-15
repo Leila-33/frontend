@@ -113,7 +113,8 @@ export default function AdminCreateUserPage() {
             onChange={handleChange}
           >
             <option value="client">Client</option>
-            <option value="agent">Agent</option>
+            <option value="sales_agent">Commercial</option>
+            <option value="sav_agent">Agent SAV</option>
             <option value="admin">Admin</option>
           </select>
         </div>

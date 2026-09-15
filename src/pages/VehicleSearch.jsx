@@ -5,7 +5,7 @@ import apiFetch from "../services/apiFetch";
 import { BsSpeedometer2, BsFuelPump, BsImage, BsCheckCircle, BsXCircle, BsCalendarCheck } from "react-icons/bs";
 import {ENGINE_LABELS} from "../constants/vehicleLabels"
 import AvailabilityModal from "../components/AvailabilityModal";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 /* ================= CAROUSEL ================= */
 

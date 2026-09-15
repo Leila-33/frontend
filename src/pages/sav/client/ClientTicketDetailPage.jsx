@@ -4,7 +4,7 @@ import useSupportTicket from "../../../hooks/useSupportTicket";
 import TicketHeader from "../../../components/sav/chat/TicketHeader";
 import TicketMessages from "../../../components/sav/chat/TicketMessages";
 import TicketReplyBox from "../../../components/sav/chat/TicketReplyBox";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { getTicketBreadcrumb } from "../../../utils/breadcrumb";
 import DetailLayout from "../../../layouts/DetailLayout";
 

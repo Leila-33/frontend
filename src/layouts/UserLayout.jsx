@@ -1,68 +1,52 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
-import UserSidebar from "../components/layout/UserSidebar";
-import { useNotifications } from "../context/NotificationContext";
+import React from "react";
+
+import DashboardLayout from "./DashboardLayout";
+import UserSidebar from "../components/layout/sidebars/UserSidebar";
+
+import { useNotifications } from "../contexts/NotificationContext";
+
+// ==========================================================
+// LAYOUT ESPACE CLIENT
+// ==========================================================
+// Ce layout contient uniquement les compteurs spécifiques
+// à l'espace client.
+//
+// La structure desktop/mobile est centralisée dans
+// DashboardLayout.jsx.
+// ==========================================================
 
 export default function UserLayout() {
 
-  const [mobileOpen, setMobileOpen] = useState(false);
+  // ========================================================
+  // NOTIFICATIONS / COMPTEURS
+  // ========================================================
 
-  const { notifications, unreadNotificationCount, unreadTicketCount, actionRequiredQuoteCount } = useNotifications();
+  const {
+    unreadNotificationCount,
+    unreadTicketCount,
+    actionRequiredQuoteCount
+  } = useNotifications();
 
+
+  // ========================================================
+  // SIDEBAR
+  // ========================================================
+
+  const renderSidebar = (mobile, onClickLink) => (
+    <UserSidebar
+      mobile={mobile}
+      unreadTicketCount={unreadTicketCount}
+      unreadNotificationCount={unreadNotificationCount}
+      actionRequiredQuoteCount={actionRequiredQuoteCount}
+      onClickLink={onClickLink}
+    />
+  );
 
 
   return (
-    <div className="d-flex">
-
-      <UserSidebar
-        mobile={false}
-        unreadTicketCount={unreadTicketCount}
-        unreadNotificationCount={unreadNotificationCount}
-        actionRequiredQuoteCount={actionRequiredQuoteCount}
-      />
-
-      {mobileOpen && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-          style={{ zIndex: 1040 }}
-          onClick={() => setMobileOpen(false)}
-        >
-          <div
-            className="position-absolute top-0 start-0 bg-white h-100 shadow"
-            style={{ width: 280 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <UserSidebar
-              mobile={true}
-              unreadTicketCount={unreadTicketCount}
-              unreadNotificationCount={unreadNotificationCount}
-              actionRequiredQuoteCount={actionRequiredQuoteCount}
-              onClickLink={() => setMobileOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="flex-grow-1">
-
-        <div className="d-lg-none p-3 border-bottom d-flex align-items-center justify-content-between">
-          <button
-            className="btn btn-outline-dark btn-sm"
-            onClick={() => setMobileOpen(true)}
-          >
-            <i className="bi bi-list fs-5"></i>
-          </button>
-
-          <h5 className="mb-0 fw-bold">Mmotors</h5>
-
-          <div />
-        </div>
-
-        <div className="p-3 p-lg-4">
-          <Outlet />
-        </div>
-
-      </div>
-    </div>
+    <DashboardLayout
+      sidebar={renderSidebar}
+      mobileTitle="Mmotors"
+    />
   );
 }

@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import { uploadImages } from "../../services/uploadService";
 import { BsTag, BsCarFront, BsPlusLg, BsCalendar3, BsSpeedometer2, BsCarFrontFill, BsImage, BsCheckCircleFill, BsShieldCheck, BsFuelPump, BsCheckCircle, BsPlusCircle, BsXCircle, BsPencil, BsTrash } from "react-icons/bs";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import "../../styles/form_check.css";
 /* ================= CAROUSEL ================= */
@@ -75,7 +75,7 @@ function ImageCarousel({ images = [] }) {
 
 /* ================= CARD ================= */
 
-function VehicleCard({ v, setVehicles, openModal, askDelete }) {
+function VehicleCard({ v, fetchVehicles, openModal, askDelete }) {
   const { isClient, isAdmin } = useAuth();
   const navigate = useNavigate();
   const goToDetail = () => {
@@ -169,7 +169,7 @@ function VehicleCard({ v, setVehicles, openModal, askDelete }) {
  const setAvailabilityFunction = async (vehicle, value) => {
   try {
 
-    const updated = await apiFetch(
+    await apiFetch(
       `/admin/vehicles/${vehicle.id}/availability`,
       {
         method: "PATCH",
@@ -177,11 +177,7 @@ function VehicleCard({ v, setVehicles, openModal, askDelete }) {
       }
     );
 
-    setVehicles(prev =>
-      prev.map(v =>
-        v.id === vehicle.id ? updated : v
-      )
-    );
+    fetchVehicles(); // refresh list
 
     toast.success(
       value
@@ -590,7 +586,7 @@ export default function AdminVehicles() {
   const [options, setOptions] = useState([]);
 
   const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState(""); // ✅ important
+  const [filterType, setFilterType] = useState("");
 
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -654,7 +650,7 @@ export default function AdminVehicles() {
   const fetchOptions = async () => {
     try {
       const data = await apiFetch("/admin/options/active");
-      setOptions(data);
+      setOptions(data.options || []);
     } catch (err) {
       toast.error(err.message);
     }
@@ -1040,6 +1036,7 @@ const isFormValid =
             <VehicleCard
               key={v.id}
               v={v}
+              fetchVehicles={fetchVehicles}
               setVehicles={setVehicles}
               openModal={openModal}
               askDelete={handleDelete} // à remplacer

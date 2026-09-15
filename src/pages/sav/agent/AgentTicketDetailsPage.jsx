@@ -5,7 +5,7 @@ import TicketHeader from "../../../components/sav/chat/TicketHeader";
 import TicketMessages from "../../../components/sav/chat/TicketMessages";
 import TicketReplyBox from "../../../components/sav/chat/TicketReplyBox";
 import DetailLayout from "../../../layouts/DetailLayout";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { getTicketBreadcrumb } from "../../../utils/breadcrumb";
 
 export default function AgentTicketDetailsPage() {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
-import SavSidebar from "../components/layout/SAVSidebar";
-import { useNotifications } from "../context/NotificationContext";
+import SavSidebar from "../components/layout/sidebars/SAVSidebar";
+import { useNotifications } from "../contexts/NotificationContext";
 
 export default function SavLayout() {
 

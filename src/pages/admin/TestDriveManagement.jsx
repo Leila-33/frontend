@@ -1,475 +1,1195 @@
-import { useEffect, useState, useCallback } from "react";
-import apiFetch from "../../services/apiFetch";
+import {
+  useEffect,
+  useState,
+  useCallback
+} from "react";
+
 import { toast } from "react-toastify";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 import TestDriveStatusModal from "../../components/test-drives/TestDriveStatusModal";
-import { testDriveStatusConfig } from "../../utils/status";
+
+
+import {
+  TEST_DRIVE_ADMIN_ACTIONS,
+  TEST_DRIVE_ADMIN_ACTION_CONFIG,
+  TEST_DRIVE_ACTION_MESSAGES,
+  DEFAULT_TEST_DRIVE_STATS,
+  testDriveStatusConfig
+} from "../../utils/testDrive";
+
+import {
+  formatDate,
+  isToday
+} from "../../utils/date";
+
+import {
+  getAdminTestDrives,
+  updateTestDriveStatus
+} from "../../services/testDriveService";
 
 
 export default function AdminTestDrives() {
+
   const navigate = useNavigate();
 
+
+  // =========================
+  // ÉTAT DE LA PAGE
+  // =========================
+
+  // Liste des essais routiers récupérés depuis l'API
   const [testDrives, setTestDrives] = useState([]);
 
+  // Essai routier actuellement sélectionné
+  // pour effectuer une action
   const [selected, setSelected] = useState(null);
+
+  // État du modal de changement de statut
   const [actionModal, setActionModal] = useState({
     open: false,
-    type: null // confirm | reject | cancel | complete
+    type: null
   });
-const [filters, setFilters] = useState({
-  status: "",
-  search: ""
-});
-
-const [pagination, setPagination] = useState({
-  page: 1,
-  limit: 20,
-  total: 0
-});
-  // =========================
-  // FETCH DATA
-  // =========================
-const fetchTestDrives = useCallback(async () => {
-
-  try {
-
-    const params = new URLSearchParams();
 
 
-    if (filters.status) {
-      params.append(
-        "status",
-        filters.status
-      );
-    }
+  // Statistiques globales retournées par le backend.
+  // Elles ne sont pas limitées à la page courante.
+  const [stats, setStats] = useState(
+    DEFAULT_TEST_DRIVE_STATS
+  );
 
-
-    if (filters.search) {
-      params.append(
-        "search",
-        filters.search
-      );
-    }
-
-
-    params.append(
-      "page",
-      pagination.page
-    );
-
-
-    params.append(
-      "limit",
-      pagination.limit
-    );
-
-
-    const data = await apiFetch(
-      `/admin/test-drives?${params.toString()}`,
-      {
-        method: "GET"
-      }
-    );
-
-
-    setTestDrives(data.items);
-
-
-    setPagination(prev => ({
-      ...prev,
-      page: data.page,
-      limit: data.limit,
-      total: data.total
-    }));
-
-
-  } catch (err) {
-
-    toast.error(
-      "Erreur chargement des essais routiers"
-    );
-
-  }
-
-}, [
-  filters.status,
-  filters.search,
-  pagination.page,
-  pagination.limit
-]);
-
-useEffect(() => {
-
-  fetchTestDrives();
-
-}, [fetchTestDrives]);
-
-const totalPages = Math.ceil(
-  pagination.total / pagination.limit
-);
 
   // =========================
-  // ACTION HANDLER
+  // FILTRES
   // =========================
-  const handleAction = async () => {
 
-    if (!selected) return;
+  const [filters, setFilters] = useState({
+    status: "",
+    search: "",
+    date: ""
+  });
+
+
+  // =========================
+  // TRI
+  // =========================
+
+  // Par défaut, les rendez-vous les plus proches
+  // sont affichés en premier.
+  const [sort, setSort] = useState({
+    field: "appointment_date",
+    direction: "asc"
+  });
+
+
+  // =========================
+  // PAGINATION
+  // =========================
+
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0
+  });
+
+
+  // =========================
+  // CHARGEMENT DES ESSAIS
+  // =========================
+
+  const fetchTestDrives = useCallback(async () => {
 
     try {
 
-      await apiFetch(
-        `/admin/test-drives/${selected.id}/status`,
-        {
-          method: "POST",
-          body: {
-            status: actionModal.type // "confirm" | "reject" | etc
-          }
-        }
+      // Création des paramètres de requête
+      // à partir des filtres, du tri et de la pagination.
+      const params = new URLSearchParams();
+
+
+      // -------------------------
+      // FILTRE PAR STATUT
+      // -------------------------
+
+      if (filters.status) {
+        params.append(
+          "status",
+          filters.status
+        );
+      }
+
+
+      // -------------------------
+      // RECHERCHE
+      // -------------------------
+
+      if (filters.search) {
+        params.append(
+          "search",
+          filters.search
+        );
+      }
+
+
+      // -------------------------
+      // FILTRE PAR DATE
+      // -------------------------
+
+      if (filters.date) {
+        params.append(
+          "date",
+          filters.date
+        );
+      }
+
+
+      // -------------------------
+      // TRI
+      // -------------------------
+
+      params.append(
+        "sort_by",
+        sort.field
       );
 
-      toast.success("Action effectuée ✔");
+      params.append(
+        "sort_order",
+        sort.direction
+      );
 
-      setActionModal({ open: false, type: null });
-      setSelected(null);
 
-      fetchTestDrives();
+      // -------------------------
+      // PAGINATION
+      // -------------------------
+
+      params.append(
+        "page",
+        pagination.page
+      );
+
+      params.append(
+        "limit",
+        pagination.limit
+      );
+
+
+      // Appel du service centralisé
+      const data = await getAdminTestDrives(
+        params
+      );
+
+
+      // Mise à jour de la liste
+      setTestDrives(
+        data.items
+      );
+
+
+      // Récupération des statistiques globales
+      setStats(
+        data.stats ||
+        DEFAULT_TEST_DRIVE_STATS
+      );
+
+
+      // Mise à jour des informations de pagination
+      setPagination((prev) => ({
+        ...prev,
+        page: data.page,
+        limit: data.limit,
+        total: data.total
+      }));
+
 
     } catch (err) {
-      toast.error(err?.data?.detail || "Erreur action");
+
+      toast.error(
+        "Erreur chargement des essais routiers"
+      );
+    }
+
+  }, [
+    filters.status,
+    filters.search,
+    filters.date,
+    sort.field,
+    sort.direction,
+    pagination.page,
+    pagination.limit
+  ]);
+
+
+  // Recharge les essais lorsque :
+  // - un filtre change
+  // - le tri change
+  // - la page change
+  useEffect(() => {
+
+    fetchTestDrives();
+
+  }, [fetchTestDrives]);
+
+
+  // =========================
+  // PAGINATION
+  // =========================
+
+  // Calcul du nombre total de pages
+  const totalPages = Math.ceil(
+    pagination.total /
+    pagination.limit
+  );
+
+
+  // =========================
+  // GESTION DES FILTRES
+  // =========================
+
+  const handleFilterChange = (
+    field,
+    value
+  ) => {
+
+    // Mise à jour du filtre concerné
+    setFilters((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+
+
+    // Lorsqu'un filtre change,
+    // on revient automatiquement à la première page.
+    setPagination((prev) => ({
+      ...prev,
+      page: 1
+    }));
+  };
+
+
+  // =========================
+  // RÉINITIALISATION DES FILTRES
+  // =========================
+
+  const resetFilters = () => {
+
+    // Réinitialise tous les filtres
+    setFilters({
+      status: "",
+      search: "",
+      date: ""
+    });
+
+
+    // Réinitialise également le tri
+    setSort({
+      field: "appointment_date",
+      direction: "asc"
+    });
+
+
+    // Retour à la première page
+    setPagination((prev) => ({
+      ...prev,
+      page: 1
+    }));
+  };
+
+
+  // Permet de savoir si au moins un filtre est actif
+  const hasActiveFilters =
+    filters.status ||
+    filters.search ||
+    filters.date;
+
+
+  // =========================
+  // GESTION DU TRI
+  // =========================
+
+  const handleSort = (field) => {
+
+    setSort((prev) => ({
+
+      field,
+
+      // Si on clique une nouvelle fois
+      // sur la même colonne, on inverse le tri.
+      direction:
+        prev.field === field &&
+        prev.direction === "asc"
+          ? "desc"
+          : "asc"
+
+    }));
+
+
+    // Retour à la première page après changement du tri
+    setPagination((prev) => ({
+      ...prev,
+      page: 1
+    }));
+  };
+
+
+  // Retourne l'icône correspondant au sens du tri
+  const getSortIcon = (field) => {
+
+    // Aucune icône si cette colonne n'est pas triée
+    if (sort.field !== field) {
+      return "";
+    }
+
+
+    // Flèche vers le haut = ordre croissant
+    // Flèche vers le bas = ordre décroissant
+    return sort.direction === "asc"
+      ? " ↑"
+      : " ↓";
+  };
+
+
+  // =========================
+  // OUVERTURE DU MODAL D'ACTION
+  // =========================
+
+  const openActionModal = (
+    testDrive,
+    action
+  ) => {
+
+    // Mémorise l'essai concerné
+    setSelected(testDrive);
+
+
+    // Ouvre le modal avec l'action demandée
+    setActionModal({
+      open: true,
+      type: action
+    });
+  };
+
+
+  // =========================
+  // FERMETURE DU MODAL
+  // =========================
+
+  const closeActionModal = () => {
+
+    setActionModal({
+      open: false,
+      type: null
+    });
+
+    setSelected(null);
+  };
+
+
+  // =========================
+  // CHANGEMENT DE STATUT
+  // =========================
+
+  const handleAction = async () => {
+
+    // Sécurité : aucune action si aucun essai
+    // ou aucune action n'est sélectionné.
+    if (
+      !selected ||
+      !actionModal.type
+    ) {
+      return;
+    }
+
+
+    try {
+
+      // Envoie le nouveau statut au backend
+      // via le service centralisé.
+      await updateTestDriveStatus(
+        selected.id,
+        actionModal.type
+      );
+
+
+      // Message correspondant à l'action effectuée.
+      toast.success(
+        TEST_DRIVE_ACTION_MESSAGES[
+          actionModal.type
+        ] ||
+        "Statut mis à jour avec succès"
+      );
+
+
+      // Ferme le modal
+      closeActionModal();
+
+
+      // Recharge la liste
+      // pour afficher le nouveau statut
+      // et mettre à jour les statistiques.
+      await fetchTestDrives();
+
+
+    } catch (err) {
+
+      // Affiche le message d'erreur retourné
+      // par le backend si disponible.
+      toast.error(
+        err?.data?.detail ||
+        err?.message ||
+        "Erreur lors de l'action"
+      );
     }
   };
 
-  // =========================
-  // STATUS BADGE
-  // =========================
-  const getBadge = (status) => {
 
-    const map = {
-      pending: "badge bg-warning text-dark",
-      confirmed: "badge bg-primary",
-      cancelled: "badge bg-danger",
-      completed: "badge bg-success"
-    };
-
-    return map[status] || "badge bg-secondary";
-  };
+  // =========================
+  // RENDU DE LA PAGE
+  // =========================
 
   return (
-    <div className="container py-4">
+    <div className="container-fluid py-4">
+
 
       {/* =========================
-          HEADER
+          EN-TÊTE DE LA PAGE
       ========================= */}
+
       <div className="d-flex justify-content-between align-items-center mb-4">
 
-        <h3 className="fw-bold">
-          Essai routiers admin
-        </h3>
+        <div>
 
-      </div>
-<div className="row g-3 mb-4">
+          <h1 className="h3 mb-1">
+            Essais routiers
+          </h1>
 
+          <p className="text-muted mb-0">
+            Gestion des demandes d'essais routiers
+          </p>
 
-  {/* SEARCH */}
-  <div className="col-md-6">
-
-    <input
-      type="text"
-      className="form-control"
-      placeholder="Rechercher utilisateur ou véhicule..."
-      value={filters.search}
-      onChange={(e) => {
-
-        setPagination(prev => ({
-          ...prev,
-          page: 1
-        }));
-
-        setFilters(prev => ({
-          ...prev,
-          search: e.target.value
-        }));
-
-      }}
-    />
-
-  </div>
-
-
-  {/* STATUS */}
-  <div className="col-md-3">
-
-    <select
-      className="form-select"
-      value={filters.status}
-      onChange={(e)=>{
-
-        setPagination(prev => ({
-          ...prev,
-          page:1
-        }));
-
-        setFilters(prev=>({
-          ...prev,
-          status:e.target.value
-        }));
-
-      }}
-    >
-
-      <option value="">
-        Tous les statuts
-      </option>
-
-      <option value="pending">
-        En attente
-      </option>
-
-      <option value="confirmed">
-        Confirmés
-      </option>
-
-      <option value="completed">
-        Terminés
-      </option>
-
-      <option value="cancelled">
-        Annulés
-      </option>
-
-      <option value="rejected">
-        Refusés
-      </option>
-
-
-    </select>
-
-  </div>
-
-
-  {/* RESET */}
-  <div className="col-md-3">
-
-    <button
-      className="btn btn-outline-secondary w-100"
-      onClick={()=>{
-
-        setFilters({
-          status:"",
-          search:""
-        });
-
-        setPagination(prev=>({
-          ...prev,
-          page:1
-        }));
-
-      }}
-    >
-      Réinitialiser
-    </button>
-
-  </div>
-
-
-</div>
-      {/* =========================
-          TABLE
-      ========================= */}
-      <div className="card shadow-sm">
-
-        <div className="card-body">
-
-          <table className="table align-middle">
-
-            <thead>
-              <tr>
-                <th>Utilisateur</th>
-                <th>Véhicule</th>
-                <th>Date</th>
-                <th>Statut</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {testDrives.map((td) => (
-
-                <tr key={td.id}>
-
-                  <td>
-                    {td.user_name}
-                  </td>
-
-                  <td>
-                    {td.vehicle_name}
-                  </td>
-
-                  <td>
-                    {new Date(td.appointment_date)
-                      .toLocaleString()}
-                  </td>
-
- <td>
-
-  {(() => {
-
-    const status =
-      testDriveStatusConfig[td.status] || testDriveStatusConfig.pending;
-
-    return (
-      <span className={status.className}>
-        {status.label}
-      </span>
-    );
-
-  })()}
-
-</td>
-
-                  <td className="d-flex gap-2">
-
-                    {/* VIEW */}
-                    <button
-                      className="btn btn-sm btn-outline-secondary"
-                      onClick={() =>
-                        navigate(`/admin/test-drives/${td.id}`)
-                      }
-                    >
-                      Voir
-                    </button>
-
-                    {/* CONFIRM */}
-                    {td.status === "pending" && (
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => {
-                          setSelected(td);
-                          setActionModal({
-                            open: true,
-                            type: "confirmed"
-                          });
-                        }}
-                      >
-                        Confirmer
-                      </button>
-                    )}
-
-                    {/* REJECT */}
-                    {td.status === "pending" && (
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => {
-                          setSelected(td);
-                          setActionModal({
-                            open: true,
-                            type: "rejected"
-                          });
-                        }}
-                      >
-                        Refuser
-                      </button>
-                    )}
-
-                    {/* CANCEL */}
-                    {td.status === "confirmed" && (
-                      <button
-                        className="btn btn-sm btn-warning"
-                        onClick={() => {
-                          setSelected(td);
-                          setActionModal({
-                            open: true,
-                            type: "cancelled"
-                          });
-                        }}
-                      >
-                        Annuler
-                      </button>
-                    )}
-
-                    {/* COMPLETE */}
-                    {td.status === "confirmed" && (
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => {
-                          setSelected(td);
-                          setActionModal({
-                            open: true,
-                            type: "completed"
-                          });
-                        }}
-                      >
-                        Terminer
-                      </button>
-                    )}
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-          
-<div className="d-flex justify-content-between align-items-center mt-3">
-
-  <span className="text-muted">
-    Page {pagination.page} / {totalPages}
-  </span>
-
-
-  <div className="btn-group">
-
-    <button
-      className="btn btn-outline-primary"
-      disabled={pagination.page === 1}
-      onClick={() =>
-        setPagination(prev => ({
-          ...prev,
-          page: prev.page - 1
-        }))
-      }
-    >
-      ← Précédent
-    </button>
-
-
-    <button
-      className="btn btn-outline-primary"
-      disabled={pagination.page === totalPages}
-      onClick={() =>
-        setPagination(prev => ({
-          ...prev,
-          page: prev.page + 1
-        }))
-      }
-    >
-      Suivant →
-    </button>
-
-  </div>
-
-</div>
         </div>
 
       </div>
 
-<TestDriveStatusModal
-  open={actionModal.open}
-  type={actionModal.type}
-  testDrive={selected}
-  onClose={() =>
-    setActionModal({
-      open:false,
-      type:null
-    })
-  }
-  onConfirm={handleAction}
-/>
+
+      {/* =========================
+          CARTES STATISTIQUES
+      ========================= */}
+
+      <div className="row g-3 mb-4">
+
+
+        {/* -------------------------
+            ESSAIS EN ATTENTE
+        ------------------------- */}
+
+        <div className="col-md-6 col-xl-3">
+
+          <div className="card shadow-sm border-0 h-100">
+
+            <div className="card-body">
+
+              <div className="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                  <p className="text-muted mb-1">
+                    En attente
+                  </p>
+
+                  <h2 className="mb-0">
+                    {stats.pending}
+                  </h2>
+
+                </div>
+
+                <div className="fs-2 text-warning">
+                  🕐
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* -------------------------
+            ESSAIS CONFIRMÉS
+        ------------------------- */}
+
+        <div className="col-md-6 col-xl-3">
+
+          <div className="card shadow-sm border-0 h-100">
+
+            <div className="card-body">
+
+              <div className="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                  <p className="text-muted mb-1">
+                    Confirmés
+                  </p>
+
+                  <h2 className="mb-0">
+                    {stats.confirmed}
+                  </h2>
+
+                </div>
+
+                <div className="fs-2 text-primary">
+                  ✓
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* -------------------------
+            ESSAIS TERMINÉS
+        ------------------------- */}
+
+        <div className="col-md-6 col-xl-3">
+
+          <div className="card shadow-sm border-0 h-100">
+
+            <div className="card-body">
+
+              <div className="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                  <p className="text-muted mb-1">
+                    Terminés
+                  </p>
+
+                  <h2 className="mb-0">
+                    {stats.completed}
+                  </h2>
+
+                </div>
+
+                <div className="fs-2 text-success">
+                  ✓
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* -------------------------
+            ESSAIS ANNULÉS / REFUSÉS
+        ------------------------- */}
+
+        <div className="col-md-6 col-xl-3">
+
+          <div className="card shadow-sm border-0 h-100">
+
+            <div className="card-body">
+
+              <div className="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                  <p className="text-muted mb-1">
+                    Annulés / refusés
+                  </p>
+
+                  <h2 className="mb-0">
+                    {stats.cancelled}
+                  </h2>
+
+                </div>
+
+                <div className="fs-2 text-danger">
+                  ✕
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* =========================
+          FILTRES
+      ========================= */}
+
+      <div className="card shadow-sm border-0 mb-4">
+
+        <div className="card-body">
+
+          <div className="row g-3 align-items-end">
+
+
+            {/* -------------------------
+                RECHERCHE
+            ------------------------- */}
+
+            <div className="col-md-4">
+
+              <label className="form-label">
+                Recherche
+              </label>
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Client, véhicule..."
+                value={filters.search}
+                onChange={(e) =>
+                  handleFilterChange(
+                    "search",
+                    e.target.value
+                  )
+                }
+              />
+
+            </div>
+
+
+            {/* -------------------------
+                FILTRE PAR STATUT
+            ------------------------- */}
+
+            <div className="col-md-3">
+
+              <label className="form-label">
+                Statut
+              </label>
+
+              <select
+                className="form-select"
+                value={filters.status}
+                onChange={(e) =>
+                  handleFilterChange(
+                    "status",
+                    e.target.value
+                  )
+                }
+              >
+
+                <option value="">
+                  Tous les statuts
+                </option>
+
+                <option value="pending">
+                  En attente
+                </option>
+
+                <option value="confirmed">
+                  Confirmé
+                </option>
+
+                <option value="rejected">
+                  Refusé
+                </option>
+
+                <option value="cancelled">
+                  Annulé
+                </option>
+
+                <option value="completed">
+                  Terminé
+                </option>
+
+              </select>
+
+            </div>
+
+
+            {/* -------------------------
+                FILTRE PAR DATE
+            ------------------------- */}
+
+            <div className="col-md-3">
+
+              <label className="form-label">
+                Date du rendez-vous
+              </label>
+
+              <select
+                className="form-select"
+                value={filters.date}
+                onChange={(e) =>
+                  handleFilterChange(
+                    "date",
+                    e.target.value
+                  )
+                }
+              >
+
+                <option value="">
+                  Toutes les dates
+                </option>
+
+                <option value="today">
+                  Aujourd'hui
+                </option>
+
+                <option value="week">
+                  Cette semaine
+                </option>
+
+                <option value="month">
+                  Ce mois
+                </option>
+
+              </select>
+
+            </div>
+
+
+            {/* -------------------------
+                RÉINITIALISATION
+            ------------------------- */}
+
+            <div className="col-md-2">
+
+              <button
+                type="button"
+                className="btn btn-outline-secondary w-100"
+                onClick={resetFilters}
+                disabled={!hasActiveFilters}
+              >
+                Réinitialiser
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* =========================
+          TABLEAU DES ESSAIS
+      ========================= */}
+
+      <div className="card shadow-sm border-0">
+
+        <div className="card-body p-0">
+
+          <div className="table-responsive">
+
+            <table className="table table-hover align-middle mb-0">
+
+
+              {/* =========================
+                  EN-TÊTE DU TABLEAU
+              ========================= */}
+
+              <thead className="table-light">
+
+                <tr>
+
+                  <th>
+                    Client
+                  </th>
+
+                  <th>
+                    Véhicule
+                  </th>
+
+                  {/* Colonne triable */}
+                  <th
+                    role="button"
+                    onClick={() =>
+                      handleSort(
+                        "appointment_date"
+                      )
+                    }
+                  >
+                    Rendez-vous
+
+                    {getSortIcon(
+                      "appointment_date"
+                    )}
+
+                  </th>
+
+                  <th>
+                    Statut
+                  </th>
+
+                  <th className="text-end">
+                    Actions
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              {/* =========================
+                  CORPS DU TABLEAU
+              ========================= */}
+
+              <tbody>
+
+
+                {/* =========================
+                    ÉTAT VIDE
+                ========================= */}
+
+                {testDrives.length === 0 && (
+
+                  <tr>
+
+                    <td
+                      colSpan="5"
+                      className="text-center py-5"
+                    >
+
+                      <div className="fs-1 mb-2">
+                        🚗
+                      </div>
+
+                      <h5>
+                        Aucun essai routier trouvé
+                      </h5>
+
+                      <p className="text-muted mb-0">
+                        Aucun essai ne correspond
+                        aux critères sélectionnés.
+                      </p>
+
+                    </td>
+
+                  </tr>
+
+                )}
+
+
+                {/* =========================
+                    LISTE DES ESSAIS
+                ========================= */}
+
+                {testDrives.map((td) => {
+
+                  // Récupération de la configuration
+                  // correspondant au statut de l'essai.
+                  const status =
+                    testDriveStatusConfig[
+                      td.status
+                    ] ||
+                    testDriveStatusConfig.pending;
+
+
+                  // Vérifie si le rendez-vous
+                  // a lieu aujourd'hui.
+                  const today =
+                    isToday(
+                      td.appointment_date
+                    );
+
+
+                  // Récupère les actions autorisées
+                  // pour le statut actuel.
+                  const actions =
+                    TEST_DRIVE_ADMIN_ACTIONS[
+                      td.status
+                    ] || [];
+
+
+                  return (
+
+                    <tr
+                      key={td.id}
+
+                      // Mise en évidence légère
+                      // des rendez-vous du jour.
+                      className={
+                        today
+                          ? "table-warning"
+                          : ""
+                      }
+                    >
+
+
+                      {/* =========================
+                          CLIENT
+                      ========================= */}
+
+                      <td>
+
+                        <div className="fw-semibold">
+                          {td.user_name}
+                        </div>
+
+                      </td>
+
+
+                      {/* =========================
+                          VÉHICULE
+                      ========================= */}
+
+                      <td>
+
+                        <div className="fw-semibold">
+                          {td.vehicle_name}
+                        </div>
+
+                      </td>
+
+
+                      {/* =========================
+                          DATE DU RENDEZ-VOUS
+                      ========================= */}
+
+                      <td>
+
+                        <div className="fw-semibold">
+                          {formatDate(
+                            td.appointment_date
+                          )}
+                        </div>
+
+
+                        {/* Badge supplémentaire
+                            pour les rendez-vous du jour */}
+
+                        {today && (
+
+                          <span className="badge bg-warning text-dark mt-1">
+                            Aujourd'hui
+                          </span>
+
+                        )}
+
+                      </td>
+
+
+                      {/* =========================
+                          STATUT
+                      ========================= */}
+
+                      <td>
+
+                        <span
+                          className={
+                            status.className
+                          }
+                        >
+                          {status.label}
+                        </span>
+
+                      </td>
+
+
+                      {/* =========================
+                          ACTIONS
+                      ========================= */}
+
+                      <td>
+
+                        <div className="d-flex justify-content-end gap-2">
+
+
+                          {/* -------------------------
+                              VOIR LE DÉTAIL
+                          ------------------------- */}
+
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() =>
+                              navigate(
+                                `/admin/test-drives/${td.id}`
+                              )
+                            }
+                          >
+                            Voir
+                          </button>
+
+
+                          {/* =========================
+                              ACTIONS ADMIN
+                          ========================= */}
+
+                          {actions.map((action) => {
+
+                            const config =
+                              TEST_DRIVE_ADMIN_ACTION_CONFIG[
+                                action
+                              ];
+
+
+                            // Sécurité : ignore une action
+                            // dont la configuration serait absente.
+                            if (!config) {
+                              return null;
+                            }
+
+
+                            return (
+
+                              <button
+                                key={action}
+                                type="button"
+                                className={`btn btn-sm ${config.buttonClass}`}
+                                onClick={() =>
+                                  openActionModal(
+                                    td,
+                                    action
+                                  )
+                                }
+                              >
+
+                                <i
+                                  className={`${config.icon} me-1`}
+                                />
+
+                                {config.label}
+
+                              </button>
+
+                            );
+
+                          })}
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  );
+
+                })}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+
+        {/* =========================
+            PAGINATION
+        ========================= */}
+
+        {pagination.total > 0 && (
+
+          <div className="card-footer bg-white">
+
+            <div className="d-flex justify-content-between align-items-center">
+
+
+              {/* Nombre total de résultats */}
+
+              <span className="text-muted">
+
+                {pagination.total} essai
+                {pagination.total > 1
+                  ? "s"
+                  : ""}{" "}
+                au total
+
+              </span>
+
+
+              {/* Boutons de pagination */}
+
+              <div className="d-flex gap-2">
+
+
+                {/* Page précédente */}
+
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  disabled={
+                    pagination.page <= 1
+                  }
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      page: prev.page - 1
+                    }))
+                  }
+                >
+                  ← Précédent
+                </button>
+
+
+                {/* Page courante */}
+
+                <span className="btn btn-sm btn-light disabled">
+
+                  Page {pagination.page} /{" "}
+                  {totalPages || 1}
+
+                </span>
+
+
+                {/* Page suivante */}
+
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  disabled={
+                    pagination.page >=
+                    totalPages
+                  }
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      page: prev.page + 1
+                    }))
+                  }
+                >
+                  Suivant →
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )}
+
+      </div>
+
+
+      {/* =========================
+          MODAL DE CHANGEMENT
+          DE STATUT
+      ========================= */}
+
+      <TestDriveStatusModal
+        open={actionModal.open}
+        type={actionModal.type}
+        testDrive={selected}
+
+        // Confirmation de l'action
+        onConfirm={handleAction}
+
+        // Fermeture du modal
+        onClose={closeActionModal}
+      />
+
     </div>
   );
 }

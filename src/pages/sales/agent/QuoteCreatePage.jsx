@@ -9,7 +9,7 @@ export default function QuoteCreatePage() {
 
   const handleCreate = async (payload) => {
 
-    const quote = await apiFetch(
+    const result = await apiFetch(
       "/agent/quotes",
       {
         method: "POST",
@@ -22,7 +22,7 @@ export default function QuoteCreatePage() {
     );
 
     navigate(
-      `/sales/quotes/${quote.id}`
+      `/sales/quotes/${result.quote_id}`
     );
 
   };

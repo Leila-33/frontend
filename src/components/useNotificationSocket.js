@@ -1,30 +1,94 @@
-import { useEffect } from "react";
-const WS_URL =
-  window.location.protocol === "https:"
-    ? "wss://api.mmotors.com"
-    : "ws://localhost:8000/api";
-    
+import { useEffect, useRef } from "react";
+import { WS_URL } from "../config/api";
+
+const RECONNECT_DELAY = 3000;
+
 export default function useNotificationSocket(userId, onMessage) {
-useEffect(() => {
-  if (!userId) return;
 
-  console.log("WS CONNECTING for", userId);
-  const ws = new WebSocket(`${WS_URL}/ws/notifications/${userId}`);
+  const onMessageRef = useRef(onMessage);
 
-  ws.onopen = () => console.log("WS connected");
+  // Garde toujours la dernière version du callback
+  // sans recréer la connexion WebSocket.
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
-  ws.onmessage = (event) => {
-    console.log("RAW WS:", event.data);
+  useEffect(() => {
+    if (!userId) return;
 
-    const data = JSON.parse(event.data);
-    onMessage?.(data);
-  };
+    let ws = null;
+    let reconnectTimer = null;
+    let shouldReconnect = true;
 
-  ws.onerror = (e) => console.log("WS error", e);
+    const connect = () => {
 
-  return () => {
-    console.log("WS closing");
-    ws.close();
-  };
-}, [userId]); // 👈 IMPORTANT
+      if (!shouldReconnect) return;
+
+      console.log("WS CONNECTING for", userId);
+
+      ws = new WebSocket(
+        `${WS_URL}/ws/notifications/${userId}`
+      );
+
+      ws.onopen = () => {
+        console.log("WS connected");
+      };
+
+      ws.onmessage = (event) => {
+
+        try {
+
+          const data = JSON.parse(event.data);
+          console.log("WS EVENT TYPE:", data.type);
+          console.log("WS DATA:", data);
+          onMessageRef.current?.(data);
+
+        } catch (error) {
+
+          console.error(
+            "Erreur parsing message WebSocket :",
+            error
+          );
+
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error("WS error", error);
+      };
+
+      ws.onclose = (event) => {
+
+        console.log(
+          "WS closed",
+          event.code,
+          event.reason
+        );
+
+        if (!shouldReconnect) return;
+
+        reconnectTimer = setTimeout(() => {
+          connect();
+        }, RECONNECT_DELAY);
+      };
+    };
+
+    connect();
+
+    return () => {
+
+      shouldReconnect = false;
+
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+
+      if (ws) {
+        ws.close();
+      }
+
+      console.log("WS cleanup");
+    };
+
+  }, [userId]);
 }
