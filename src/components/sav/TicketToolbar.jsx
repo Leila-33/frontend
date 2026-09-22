@@ -1,245 +1,282 @@
-import React from "react";
+import {
+  TICKET_CATEGORIES,
+  TICKET_PRIORITIES,
+  TICKET_STATUSES,
+} from "../../constants/supportTicketOptions";
 
+/**
+ * Barre de recherche et de filtrage des tickets SAV.
+ *
+ * Responsabilités :
+ * - gérer la recherche ;
+ * - gérer les filtres de statut, priorité et catégorie ;
+ * - gérer le tri ;
+ * - réinitialiser la pagination lors d'une modification.
+ *
+ * La récupération des données reste gérée par la page parente.
+ */
 export default function TicketToolbar({
   filters,
   setFilters,
-  filter
+  filter,
 }) {
+  // =====================================================
+  // MISE À JOUR D'UN FILTRE
+  // =====================================================
 
+  /**
+   * Met à jour un filtre et revient à la première page.
+   *
+   * La forme fonctionnelle de `setFilters` garantit que
+   * la modification utilise toujours l'état le plus récent.
+   */
   const updateFilter = (key, value) => {
-    setFilters({
-      ...filters,
+    setFilters((previousFilters) => ({
+      ...previousFilters,
       [key]: value,
-      page: 1
-    });
+      page: 1,
+    }));
   };
 
+  // =====================================================
+  // AFFICHAGE
+  // =====================================================
 
   return (
-    <div className="card shadow-sm p-3 mb-3">
+    <div className="card border-0 shadow-sm p-3 mb-3">
 
+      {/* =================================================
+          RECHERCHE
+      ================================================= */}
 
-      {/* =====================
-          SEARCH
-      ===================== */}
       <div className="position-relative mb-3">
+        <label
+          htmlFor="ticket-search"
+          className="visually-hidden"
+        >
+          Rechercher un ticket
+        </label>
 
         <input
+          id="ticket-search"
+          type="search"
           className="form-control ps-5"
           placeholder="Rechercher un ticket..."
-          value={filters.search}
-          onChange={(e) =>
+          value={filters.search ?? ""}
+          onChange={(event) =>
             updateFilter(
               "search",
-              e.target.value
+              event.target.value
             )
           }
+          aria-label="Rechercher un ticket"
         />
 
+        {/* -------------------------------------------------
+            ICÔNE DE RECHERCHE
+        ------------------------------------------------- */}
 
         <i
-          className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
+          className="
+            bi
+            bi-search
+            position-absolute
+            top-50
+            start-0
+            translate-middle-y
+            ms-3
+            text-muted
+          "
+          aria-hidden="true"
         />
 
+        {/* -------------------------------------------------
+            EFFACEMENT DE LA RECHERCHE
+        ------------------------------------------------- */}
 
         {filters.search && (
-
           <button
-            className="btn btn-sm btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
+            type="button"
+            className="
+              btn
+              btn-sm
+              btn-outline-secondary
+              position-absolute
+              top-50
+              end-0
+              translate-middle-y
+              me-2
+            "
             onClick={() =>
-              updateFilter(
-                "search",
-                ""
-              )
+              updateFilter("search", "")
             }
+            aria-label="Effacer la recherche"
+            title="Effacer la recherche"
           >
-            <i className="bi bi-x-lg"/>
+            <i
+              className="bi bi-x-lg"
+              aria-hidden="true"
+            />
           </button>
-
         )}
-
       </div>
 
-
+      {/* =================================================
+          FILTRES
+      ================================================= */}
 
       <div className="row g-2">
 
+        {/* =================================================
+            STATUT
+        ================================================= */}
 
-        {/* =====================
-            STATUS
-            caché sur OPEN
-        ===================== */}
         {filter !== "open" && (
-
           <div className="col-md">
+            <label
+              htmlFor="ticket-status-filter"
+              className="visually-hidden"
+            >
+              Statut
+            </label>
 
             <select
+              id="ticket-status-filter"
               className="form-select"
-              value={filters.status}
-              onChange={(e)=>
+              value={filters.status ?? "ALL"}
+              onChange={(event) =>
                 updateFilter(
                   "status",
-                  e.target.value
+                  event.target.value
                 )
               }
             >
-
               <option value="ALL">
                 Tous les statuts
               </option>
 
-              <option value="OPEN">
-                Ouvert
-              </option>
-
-              <option value="IN_PROGRESS">
-                En cours
-              </option>
-
-              <option value="WAITING_CUSTOMER">
-                En attente client
-              </option>
-
-              <option value="RESOLVED">
-                Résolu
-              </option>
-
-              <option value="CLOSED">
-                Fermé
-              </option>
-
+              {Object.entries(
+                TICKET_STATUSES
+              ).map(([value, option]) => (
+                <option
+                  key={value}
+                  value={value}
+                >
+                  {option.label}
+                </option>
+              ))}
             </select>
-
           </div>
-
         )}
 
+        {/* =================================================
+            PRIORITÉ
+        ================================================= */}
 
-
-        {/* =====================
-            PRIORITY
-            caché sur URGENT
-        ===================== */}
         {filter !== "urgent" && (
-
           <div className="col-md">
+            <label
+              htmlFor="ticket-priority-filter"
+              className="visually-hidden"
+            >
+              Priorité
+            </label>
 
             <select
+              id="ticket-priority-filter"
               className="form-select"
-              value={filters.priority}
-              onChange={(e)=>
+              value={filters.priority ?? "ALL"}
+              onChange={(event) =>
                 updateFilter(
                   "priority",
-                  e.target.value
+                  event.target.value
                 )
               }
             >
-
               <option value="ALL">
                 Toutes les priorités
               </option>
 
-              <option value="LOW">
-                Faible
-              </option>
-
-              <option value="MEDIUM">
-                Moyenne
-              </option>
-
-              <option value="HIGH">
-                Haute
-              </option>
-
-              <option value="URGENT">
-                Urgente
-              </option>
-
+              {Object.entries(
+                TICKET_PRIORITIES
+              ).map(([value, option]) => (
+                <option
+                  key={value}
+                  value={value}
+                >
+                  {option.label}
+                </option>
+              ))}
             </select>
-
           </div>
-
         )}
 
-
-
-        {/* =====================
-            CATEGORY
-            toujours utile
-        ===================== */}
+        {/* =================================================
+            CATÉGORIE
+        ================================================= */}
 
         <div className="col-md">
+          <label
+            htmlFor="ticket-category-filter"
+            className="visually-hidden"
+          >
+            Catégorie
+          </label>
 
           <select
+            id="ticket-category-filter"
             className="form-select"
-            value={filters.category}
-            onChange={(e)=>
+            value={filters.category ?? "ALL"}
+            onChange={(event) =>
               updateFilter(
                 "category",
-                e.target.value
+                event.target.value
               )
             }
           >
-
             <option value="ALL">
               Toutes les catégories
             </option>
 
-            <option value="GENERAL">
-              Général
-            </option>
-
-            <option value="FINANCING">
-              Financement
-            </option>
-
-            <option value="DELIVERY">
-              Livraison
-            </option>
-
-            <option value="WARRANTY">
-              Garantie
-            </option>
-
-            <option value="VEHICLE_ISSUE">
-              Problème véhicule
-            </option>
-
-            <option value="DOCUMENTS">
-              Documents
-            </option>
-
-            <option value="PAYMENT">
-              Paiement
-            </option>
-
-            <option value="OTHER">
-              Autre
-            </option>
-
+            {Object.entries(
+              TICKET_CATEGORIES
+            ).map(([value, option]) => (
+              <option
+                key={value}
+                value={value}
+              >
+                {option.label}
+              </option>
+            ))}
           </select>
-
         </div>
 
-
-
-        {/* =====================
+        {/* =================================================
             TRI
-        ===================== */}
+        ================================================= */}
 
         <div className="col-md">
+          <label
+            htmlFor="ticket-sort-filter"
+            className="visually-hidden"
+          >
+            Trier les tickets
+          </label>
 
           <select
+            id="ticket-sort-filter"
             className="form-select"
-            value={filters.sort}
-            onChange={(e)=>
+            value={
+              filters.sort ??
+              "activity_desc"
+            }
+            onChange={(event) =>
               updateFilter(
                 "sort",
-                e.target.value
+                event.target.value
               )
             }
           >
-
             <option value="activity_desc">
               Dernière activité
             </option>
@@ -251,14 +288,10 @@ export default function TicketToolbar({
             <option value="priority">
               Priorité
             </option>
-
           </select>
-
         </div>
 
-
       </div>
-
     </div>
   );
 }

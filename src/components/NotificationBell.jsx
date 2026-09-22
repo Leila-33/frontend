@@ -1,95 +1,339 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState
+} from "react";
+
 import { Link } from "react-router-dom";
+
 import { useNotifications } from "../contexts/NotificationContext";
+
+
+// ==========================================================
+// CONSTANTES
+// ==========================================================
+
+const MAX_NOTIFICATIONS_DISPLAYED = 5;
+
+
+// ==========================================================
+// COMPOSANT
+// ==========================================================
 
 export default function NotificationBell() {
 
-  const { notifications, unreadNotificationCount } = useNotifications();
+  // ========================================================
+  // ÉTAT ET CONTEXTE
+  // ========================================================
+
+  const {
+    notifications = [],
+    unreadNotificationCount = 0
+  } = useNotifications();
+
   const [open, setOpen] = useState(false);
 
+  // Référence du composant pour détecter les clics extérieurs.
+  const notificationRef = useRef(null);
 
+
+  // ========================================================
+  // FERMETURE AU CLIC EXTÉRIEUR
+  // ========================================================
+
+  useEffect(() => {
+
+    const handleClickOutside = (event) => {
+
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+
+    };
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
+
+    return () => {
+
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+
+    };
+
+  }, []);
+
+
+  // ========================================================
+  // FERMETURE AVEC LA TOUCHE ÉCHAP
+  // ========================================================
+
+  useEffect(() => {
+
+    const handleEscape = (event) => {
+
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+
+    };
+
+    document.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () => {
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape
+      );
+
+    };
+
+  }, []);
+
+
+  // ========================================================
+  // FORMATAGE DE LA DATE
+  // ========================================================
+
+  const formatNotificationDate = (date) => {
+
+    if (!date) {
+      return "";
+    }
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "";
+    }
+
+    return parsedDate.toLocaleDateString(
+      "fr-FR",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }
+    );
+
+  };
+
+
+  // ========================================================
+  // NOTIFICATIONS À AFFICHER
+  // ========================================================
+
+  const displayedNotifications = notifications
+    .slice(0, MAX_NOTIFICATIONS_DISPLAYED);
+
+
+  // ========================================================
+  // AFFICHAGE
+  // ========================================================
 
   return (
-    <li className="nav-item position-relative">
 
-      {/* BELL BUTTON */}
+    <li
+      ref={notificationRef}
+      className="nav-item position-relative"
+    >
+
+      {/* ====================================================
+          BOUTON DE NOTIFICATIONS
+      ==================================================== */}
+
       <button
+        type="button"
         className="btn btn-dark position-relative"
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((previous) => !previous)}
+        aria-label="Afficher les notifications"
+        aria-expanded={open}
+        aria-haspopup="true"
       >
-        <i className="bi bi-bell"></i>
 
+        <i
+          className="bi bi-bell"
+          aria-hidden="true"
+        />
+
+        {/* Badge du nombre de notifications non lues */}
         {unreadNotificationCount > 0 && (
+
           <span
-            className="badge bg-danger"
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              transform: "translate(50%, -50%)",
-              fontSize: 10
-            }}
+            className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
           >
-            {unreadNotificationCount}
+
+            {unreadNotificationCount > 99
+              ? "99+"
+              : unreadNotificationCount}
+
+            <span className="visually-hidden">
+              notifications non lues
+            </span>
+
           </span>
+
         )}
+
       </button>
 
-      {/* DROPDOWN */}
+
+      {/* ====================================================
+          MENU DÉROULANT
+      ==================================================== */}
+
       {open && (
-       <div
-  className="card shadow-sm"
-  style={{
-    position: "absolute",
-    top: "120%",
-    right: window.innerWidth < 768 ? "50%" : 0,
-    transform: window.innerWidth < 768 ? "translateX(50%)" : "none",
-    width: "320px",
-    maxWidth: "95vw",
-    zIndex: 999
-  }}
->
-          <div className="card-body p-2">
 
-            <h6 className="mb-2">Notifications</h6>
+        <div
+          className="card shadow position-absolute end-0 mt-2 notification-dropdown"
+          role="dialog"
+          aria-label="Liste des notifications"
+        >
 
-            {notifications.length === 0 && (
-              <small className="text-muted">
-                Aucune notification
-              </small>
+          <div className="card-body p-3">
+
+            {/* En-tête */}
+            <div className="d-flex justify-content-between align-items-center mb-3">
+
+              <h6 className="mb-0 fw-bold">
+                Notifications
+              </h6>
+
+              {unreadNotificationCount > 0 && (
+
+                <span className="badge bg-primary">
+
+                  {unreadNotificationCount} non lue
+                  {unreadNotificationCount > 1 ? "s" : ""}
+
+                </span>
+
+              )}
+
+            </div>
+
+
+            {/* Liste vide */}
+            {displayedNotifications.length === 0 && (
+
+              <div className="text-center py-3">
+
+                <i
+                  className="bi bi-bell-slash text-muted fs-3"
+                  aria-hidden="true"
+                />
+
+                <p className="text-muted small mb-0 mt-2">
+                  Aucune notification
+                </p>
+
+              </div>
+
             )}
 
-            {notifications.slice(0, 5).map((n) => (
-              <div
-                key={n.id}
-                className={`p-2 border-bottom ${
-                  n.status === "unread" ? "bg-light" : ""
-                }`}
-              >
-                <small className="fw-bold">
-                  {n.title}
-                </small>
 
-                <br />
+            {/* Liste des notifications */}
+            {displayedNotifications.length > 0 && (
 
-                <small className="text-muted">
-                  {n.message?.slice(0, 60)}
-                </small>
+              <div className="notification-list">
+
+                {displayedNotifications.map((notification) => (
+
+                  <div
+                    key={notification.id}
+                    className={`notification-item p-2 border-bottom rounded ${
+                      notification.status === "unread"
+                        ? "bg-light"
+                        : ""
+                    }`}
+                  >
+
+                    {/* Titre */}
+                    <div className="d-flex align-items-start gap-2">
+
+                      {notification.status === "unread" && (
+
+                        <span
+                          className="badge bg-primary rounded-circle p-1 mt-1"
+                          aria-label="Notification non lue"
+                        />
+
+                      )}
+
+                      <div className="flex-grow-1">
+
+                        <p className="fw-semibold small mb-1">
+
+                          {notification.title ||
+                            "Nouvelle notification"}
+
+                        </p>
+
+
+                        {/* Message */}
+                        <p className="text-muted small mb-1">
+
+                          {notification.message
+                            ? notification.message.length > 60
+                              ? `${notification.message.slice(0, 60)}...`
+                              : notification.message
+                            : "Aucun message disponible"}
+
+                        </p>
+
+
+                        {/* Date */}
+                        <small className="text-muted">
+
+                          {formatNotificationDate(
+                            notification.created_at
+                          )}
+
+                        </small>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                ))}
+
               </div>
-            ))}
 
+            )}
+
+
+            {/* Bouton vers toutes les notifications */}
             <Link
               to="/notifications"
-              className="btn btn-sm btn-primary w-100 mt-2"
+              className="btn btn-primary btn-sm w-100 mt-3"
               onClick={() => setOpen(false)}
             >
-              Voir tout
+
+              Voir toutes les notifications
+
             </Link>
 
           </div>
+
         </div>
+
       )}
 
     </li>
+
   );
+
 }

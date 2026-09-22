@@ -1,65 +1,48 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React from "react";
+
+import DashboardLayout from "./DashboardLayout";
 import SavSidebar from "../components/layout/sidebars/SAVSidebar";
+
 import { useNotifications } from "../contexts/NotificationContext";
+
+// ==========================================================
+// LAYOUT ESPACE SERVICE APRÈS-VENTE
+// ==========================================================
+// Ce layout contient uniquement les données spécifiques
+// au SAV.
+//
+// La structure desktop/mobile est centralisée dans
+// DashboardLayout.jsx.
+// ==========================================================
 
 export default function SavLayout() {
 
-  const [mobileOpen, setMobileOpen] = useState(false);
+  // ========================================================
+  // NOTIFICATIONS / COMPTEURS
+  // ========================================================
 
-  const { unreadTicketCount } = useNotifications();
+  const {
+    unreadTicketCount
+  } = useNotifications();
 
 
+  // ========================================================
+  // SIDEBAR
+  // ========================================================
+
+  const renderSidebar = (mobile, onClickLink) => (
+    <SavSidebar
+      mobile={mobile}
+      unreadTicketCount={unreadTicketCount}
+      onClickLink={onClickLink}
+    />
+  );
 
 
   return (
-    <div className="d-flex">
-
-      <SavSidebar
-        mobile={false}
-        unreadTicketCount={unreadTicketCount}
-      />
-
-      {mobileOpen && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
-          style={{ zIndex: 1040 }}
-          onClick={() => setMobileOpen(false)}
-        >
-          <div
-            className="position-absolute top-0 start-0 bg-white h-100 shadow"
-            style={{ width: 280 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SavSidebar
-              mobile={true}
-              unreadTicketCount={unreadTicketCount}
-              onClickLink={() => setMobileOpen(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="flex-grow-1">
-
-        <div className="d-lg-none p-3 border-bottom d-flex align-items-center justify-content-between">
-          <button
-            className="btn btn-outline-dark btn-sm"
-            onClick={() => setMobileOpen(true)}
-          >
-            <i className="bi bi-list fs-5"></i>
-          </button>
-
-          <h5 className="mb-0 fw-bold">Mmotors</h5>
-
-          <div />
-        </div>
-
-        <div className="p-3 p-lg-4">
-          <Outlet />
-        </div>
-
-      </div>
-    </div>
+    <DashboardLayout
+      sidebar={renderSidebar}
+      mobileTitle="Mmotors"
+    />
   );
 }

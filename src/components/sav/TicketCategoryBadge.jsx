@@ -1,54 +1,39 @@
-import React from "react";
+import {
+  TICKET_CATEGORIES,
+} from "../../constants/supportTicketOptions";
 
-export default function TicketCategoryBadge({ category }) {
+/**
+ * Badge permettant d'afficher la catégorie d'un ticket.
+ *
+ * La catégorie reçue par le backend est convertie en :
+ * - un libellé compréhensible pour l'utilisateur ;
+ * - une couleur Bootstrap adaptée.
+ */
+export default function TicketCategoryBadge({
+  category,
+}) {
 
-  const config = {
+  
 
-    GENERAL: {
-      label: "Général",
-      color: "secondary"
-    },
+  // =====================================================
+  // CATÉGORIE COURANTE
+  // =====================================================
 
-    FINANCING: {
-      label: "Financement",
-      color: "info"
-    },
-
-    DELIVERY: {
-      label: "Livraison",
-      color: "primary"
-    },
-
-    WARRANTY: {
-      label: "Garantie",
-      color: "success"
-    },
-
-    VEHICLE_ISSUE: {
-      label: "Problème véhicule",
-      color: "danger"
-    },
-
-    DOCUMENTS: {
-      label: "Documents",
-      color: "dark"
-    },
-
-    PAYMENT: {
-      label: "Paiement",
-      color: "warning"
-    },
-
-    OTHER: {
-      label: "Autre",
-      color: "secondary"
-    },
-
-  };
+  /**
+   * Recherche la configuration correspondant à la catégorie
+   * reçue par le backend.
+   *
+   * Si la catégorie est absente ou inconnue, la catégorie
+   * "OTHER" est utilisée comme valeur de secours.
+   */
+  const current =
+    TICKET_CATEGORIES[category] ||
+    TICKET_CATEGORIES.OTHER;
 
 
-  const current = config[category] || config.OTHER;
-
+  // =====================================================
+  // AFFICHAGE
+  // =====================================================
 
   return (
     <span className={`badge bg-${current.color}`}>

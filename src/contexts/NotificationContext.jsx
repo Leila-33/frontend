@@ -14,7 +14,7 @@ import apiFetch from "../services/apiFetch";
 // Il permet de recevoir en temps réel certains événements
 // liés aux notifications, aux tickets et aux devis.
 import useNotificationSocket
-  from "../components/useNotificationSocket";
+  from "../hooks/useNotificationSocket";
 
 import { toast } from "react-toastify";
 
@@ -46,8 +46,7 @@ export function NotificationProvider({ children }) {
   // ==========================================================
 
   // Récupération de l'utilisateur depuis AuthContext.
-  const { user } = useAuth();
-
+  const { user, isClient, isAdmin, isSavAgent,  } = useAuth();
 
   // ==========================================================
   // ÉTATS
@@ -315,7 +314,7 @@ const [
         // COMPTEUR DE TICKETS MIS À JOUR
         // ====================================================
 
-        case "UNREAD_UPDATED":
+        case "UNREAD_TICKETS_UPDATED":
           setUnreadTicketCount(
             data.count
           );
@@ -412,18 +411,11 @@ const [
   // de l'utilisateur connecté.
   useEffect(() => {
 
-
     // Si aucun utilisateur n'est connecté,
     // on ne charge aucune donnée personnelle.
-    //
-    // On évite donc d'appeler :
-    //
-    // /notifications/me
-    // /notifications/unread-count
-    // etc.
-    if (!user)
+    if (!user) {
       return;
-
+    }
 
     // ========================================================
     // CHARGEMENT INITIAL
@@ -432,22 +424,45 @@ const [
     // Chargement de toutes les notifications.
     fetchNotifications();
 
-
     // Chargement du nombre de notifications non lues.
     loadUnreadCount();
 
+    // ========================================================
+    // TICKETS
+    // ========================================================
 
-    // Chargement du nombre de tickets non lus.
-    fetchUnreadTickets();
+    // Les clients et les agents SAV peuvent avoir
+    // des tickets à consulter.
+    if (isClient || isSavAgent) {
+      fetchUnreadTickets();
+    }
 
+    // ========================================================
+    // DEVIS
+    // ========================================================
 
-    // Chargement du nombre de devis nécessitant une action.
-    fetchActionRequiredQuotes();
+    // Seul le client doit être informé des devis
+    // nécessitant une action de sa part.
+    if (isClient) {
+      fetchActionRequiredQuotes();
+    }
 
-    // Chargement du nombre d'essais routiers nécessitant une action.
-    fetchPendingTestDriveCount();
+    // ========================================================
+    // ESSAIS ROUTIERS
+    // ========================================================
 
-  }, [user]);
+    // Seul l'administrateur doit voir le compteur
+    // des essais routiers nécessitant une action.
+    if (isAdmin) {
+      fetchPendingTestDriveCount();
+    }
+
+  }, [
+    user,
+    isClient,
+    isSavAgent,
+    isAdmin
+  ]);
 
 
   // ==========================================================

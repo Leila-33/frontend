@@ -20,8 +20,6 @@ export default function SavSidebar({
   mobile = false,
   onClickLink,
   unreadTicketCount = 0,
-  openTickets = 0,
-  urgentTickets = 0
 }) {
   const location = useLocation();
 

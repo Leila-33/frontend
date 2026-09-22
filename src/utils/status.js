@@ -47,12 +47,30 @@ export const STATUS = {
 
 };
 // Configuration des différents statuts de document.
+// =========================
+// CONSTANTES
+// =========================
+
+export const REQUIRED_DOCUMENT_TYPES = [
+  "identity",
+  "address_proof",
+  "payslip",
+  "rib"
+];
+
 export const DOCUMENT_STATUS = {
+  missing: {
+    label: "Manquant",
+    description: "Document requis",
+    color: "secondary",
+    icon: "bi-file-earmark"
+  },
+
   pending: {
     label: "En attente",
     description: "En attente de validation",
     color: "warning",
-    icon: "bi-file-earmark"
+    icon: "bi-hourglass-split"
   },
 
   validated: {

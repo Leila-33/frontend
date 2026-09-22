@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import Pagination from "../../components/common/Pagination";
 import apiFetch from "../../services/apiFetch";
 
 
@@ -1319,74 +1319,29 @@ useEffect(() => {
 
       </div>
 
+<div className="d-flex justify-content-between align-items-center mt-4">
 
-      {/* ==================================================
-          PAGINATION
-          ================================================== */}
+  {/* =========================
+      NOMBRE TOTAL D'INSCRITS
+  ========================= */}
 
-      <div
-        className="
-          d-flex
-          justify-content-between
-          align-items-center
-          mt-4
-        "
-      >
-
-        <button
-          type="button"
-          className="
-            btn
-            btn-outline-secondary
-          "
-          disabled={
-            response.page <= 1
-          }
-          onClick={() =>
-            fetchUsers(
-              response.page - 1
-            )
-          }
-        >
-          <i className="bi bi-chevron-left me-1" />
-          Précédent
-        </button>
+  <span className="text-muted">
+    <strong>{response.total}</strong>{" "}
+  {response.total <= 1 ? "inscrit" : "inscrits"}
+  </span>
 
 
-        <div className="text-muted">
+  {/* =========================
+      PAGINATION
+  ========================= */}
 
-          Page{" "}
-          <strong>
-            {response.page}
-          </strong>{" "}
-          / {response.pages}
+  <Pagination
+    page={response.page}
+    totalPages={response.pages}
+    onPageChange={fetchUsers}
+  />
 
-        </div>
-
-
-        <button
-          type="button"
-          className="
-            btn
-            btn-outline-secondary
-          "
-          disabled={
-            response.page >=
-            response.pages
-          }
-          onClick={() =>
-            fetchUsers(
-              response.page + 1
-            )
-          }
-        >
-
-          Suivant
-          <i className="bi bi-chevron-right ms-1" />
-
-        </button>
-
-      </div>
+</div>
 
 
       {/* ==================================================

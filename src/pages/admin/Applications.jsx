@@ -5,6 +5,7 @@ import apiFetch from "../../services/apiFetch";
 import ConfirmActionModal from "../../components/common/ConfirmActionModal";
 import { STATUS, VEHICLE_TYPE } from "../../utils/status";
 import ApplicationActions from "../../components/applications/ApplicationActions";
+import Pagination from "../../components/common/Pagination";
 
 export default function AdminDossiers() {
 
@@ -682,64 +683,11 @@ export default function AdminDossiers() {
           PAGINATION
           ========================= */}
 
-      <div className="d-flex justify-content-between align-items-center mt-4">
-
-
-        {/* Indique la page actuellement affichée
-            et le nombre total de pages. */}
-        <div className="text-muted small">
-
-          Page {pagination.page} sur{" "}
-          {pagination.pages}
-
-        </div>
-
-
-        <div className="d-flex gap-2">
-
-
-          {/* Retour à la page précédente.
-              Le bouton est désactivé lorsque l'on est
-              déjà sur la première page. */}
-          <button
-            className="btn btn-outline-secondary rounded-pill px-4"
-
-            disabled={
-              pagination.page <= 1
-            }
-
-            onClick={() =>
-              fetchApplications(
-                pagination.page - 1
-              )
-            }
-          >
-            Précédent
-          </button>
-
-
-          {/* Passage à la page suivante.
-              Le bouton est désactivé lorsque l'on est
-              déjà sur la dernière page. */}
-          <button
-            className="btn btn-outline-secondary rounded-pill px-4"
-
-            disabled={
-              pagination.page >= pagination.pages
-            }
-
-            onClick={() =>
-              fetchApplications(
-                pagination.page + 1
-              )
-            }
-          >
-            Suivant
-          </button>
-
-        </div>
-
-      </div>
+<Pagination
+  page={pagination.page}
+  totalPages={pagination.pages}
+  onPageChange={fetchApplications}
+/>
 
 
       {/* =========================

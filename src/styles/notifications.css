@@ -6,3 +6,46 @@
 .card:hover .notification-delete {
   opacity: 1;
 }
+
+/* ==========================================================
+   CARTE DE NOTIFICATION
+========================================================== */
+
+.notification-card {
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+
+/* ==========================================================
+   HOVER
+========================================================== */
+
+.notification-card:hover {
+  transform: translateY(-2px);
+}
+
+
+/* ==========================================================
+   NOTIFICATION NON LUE
+========================================================== */
+
+.notification-unread {
+  border-left: 4px solid #ffc107 !important;
+  background-color: #fffdf5;
+}
+
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media (max-width: 576px) {
+
+  .notification-card .card-body {
+    padding: 1rem;
+  }
+
+}

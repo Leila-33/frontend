@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 import TestDriveStatusModal from "../../components/test-drives/TestDriveStatusModal";
-
+import Pagination from "../../components/common/Pagination";
 
 import {
   TEST_DRIVE_ADMIN_ACTIONS,
@@ -86,11 +86,12 @@ export default function AdminTestDrives() {
   // PAGINATION
   // =========================
 
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0
-  });
+const [pagination, setPagination] = useState({
+  page: 1,
+  limit: 20,
+  total: 0,
+  total_pages: 1
+});
 
 
   // =========================
@@ -196,7 +197,8 @@ export default function AdminTestDrives() {
         ...prev,
         page: data.page,
         limit: data.limit,
-        total: data.total
+        total: data.total,
+        total_pages: data.total_pages
       }));
 
 
@@ -233,11 +235,6 @@ export default function AdminTestDrives() {
   // PAGINATION
   // =========================
 
-  // Calcul du nombre total de pages
-  const totalPages = Math.ceil(
-    pagination.total /
-    pagination.limit
-  );
 
 
   // =========================
@@ -1111,58 +1108,16 @@ export default function AdminTestDrives() {
 
               {/* Boutons de pagination */}
 
-              <div className="d-flex gap-2">
-
-
-                {/* Page précédente */}
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-secondary"
-                  disabled={
-                    pagination.page <= 1
-                  }
-                  onClick={() =>
-                    setPagination((prev) => ({
-                      ...prev,
-                      page: prev.page - 1
-                    }))
-                  }
-                >
-                  ← Précédent
-                </button>
-
-
-                {/* Page courante */}
-
-                <span className="btn btn-sm btn-light disabled">
-
-                  Page {pagination.page} /{" "}
-                  {totalPages || 1}
-
-                </span>
-
-
-                {/* Page suivante */}
-
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-secondary"
-                  disabled={
-                    pagination.page >=
-                    totalPages
-                  }
-                  onClick={() =>
-                    setPagination((prev) => ({
-                      ...prev,
-                      page: prev.page + 1
-                    }))
-                  }
-                >
-                  Suivant →
-                </button>
-
-              </div>
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.total_pages}
+        onPageChange={(newPage) =>
+          setPagination((prev) => ({
+            ...prev,
+            page: newPage
+          }))
+        }
+      />
 
             </div>
 

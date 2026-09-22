@@ -22,7 +22,8 @@ export default function AdminLayout() {
   // ========================================================
 
   const {
-    pendingTestDriveCount
+    pendingTestDriveCount,
+    unreadNotificationCount
   } = useNotifications();
 
 
@@ -33,6 +34,7 @@ export default function AdminLayout() {
   const renderSidebar = (mobile, onClickLink) => (
     <AdminSidebar
       mobile={mobile}
+      unreadNotificationCount={unreadNotificationCount}
       pendingCount={pendingTestDriveCount}
       onClickLink={onClickLink}
     />

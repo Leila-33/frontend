@@ -10,7 +10,7 @@ export default function PaymentSuccessPage() {
   useEffect(() => {
 
     const timer = setTimeout(() => {
-      navigate("/my-applications");
+      navigate("/applications");
     }, 4000);
 
     return () => clearTimeout(timer);
@@ -48,7 +48,7 @@ export default function PaymentSuccessPage() {
         {/* BUTTON */}
         <button
           className="btn btn-dark w-100 mt-2"
-          onClick={() => navigate("/my-applications")}
+          onClick={() => navigate("/applications")}
         >
           Voir mes dossiers
         </button>

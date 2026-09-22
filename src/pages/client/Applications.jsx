@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import ConfirmActionModal from "../../components/common/ConfirmActionModal";
 import { STATUS, VEHICLE_TYPE } from "../../utils/status";
+import NumberedPagination from "../../components/common/NumberedPagination";
 
 export default function AdminDossiers() {
 
@@ -30,7 +31,7 @@ export default function AdminDossiers() {
     page: 1,
     limit: 10,
     total: 0,
-    pages: 1
+    total_pages: 1
   });
 
   // Filtres appliqués à la recherche des dossiers.
@@ -172,7 +173,7 @@ export default function AdminDossiers() {
           page: data.page,
           limit: data.limit,
           total: data.total,
-          pages: data.pages
+          total_pages: data.total_pages
         });
 
         return data;
@@ -642,55 +643,11 @@ export default function AdminDossiers() {
           PAGINATION
           ========================= */}
 
-      <div className="d-flex justify-content-between align-items-center mt-4">
-
-        {/* Indique la page actuellement affichée. */}
-        <div className="text-muted small">
-
-          Page {pagination.page} sur{" "}
-          {pagination.pages}
-
-        </div>
-
-
-        <div className="d-flex gap-2">
-
-          {/* Retour à la page précédente. */}
-          <button
-            className="btn btn-outline-secondary rounded-pill px-4"
-
-            disabled={pagination.page <= 1}
-
-            onClick={() =>
-              fetchApplications(
-                pagination.page - 1
-              )
-            }
-          >
-            Précédent
-          </button>
-
-
-          {/* Passage à la page suivante. */}
-          <button
-            className="btn btn-outline-secondary rounded-pill px-4"
-
-            disabled={
-              pagination.page >= pagination.pages
-            }
-
-            onClick={() =>
-              fetchApplications(
-                pagination.page + 1
-              )
-            }
-          >
-            Suivant
-          </button>
-
-        </div>
-
-      </div>
+<NumberedPagination
+  page={pagination.page}
+  totalPages={pagination.total_pages}
+  onPageChange={fetchApplications}
+/>
 
 
       {/* =========================

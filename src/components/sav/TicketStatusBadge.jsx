@@ -1,43 +1,42 @@
-import React from "react";
+import {
+  TICKET_STATUSES,
+} from "../../constants/supportTicketOptions";
 
-export default function TicketStatusBadge({ status }) {
+/**
+ * Badge permettant d'afficher le statut d'un ticket.
+ *
+ * La configuration du statut est centralisée dans
+ * `supportTicketOptions.js` afin d'éviter de dupliquer
+ * les libellés et les couleurs dans les composants.
+ */
+export default function TicketStatusBadge({
+  status,
+}) {
+  // =====================================================
+  // STATUT COURANT
+  // =====================================================
 
-  const map = {
-    OPEN: {
-      label: "Ouvert",
-      color: "primary"
-    },
+  /**
+   * Recherche la configuration correspondant au statut
+   * reçu par le backend.
+   *
+   * Une configuration générique est utilisée si le statut
+   * est absent ou inconnu.
+   */
+  const current =
+    TICKET_STATUSES[status] || {
+      label: status || "Inconnu",
+      color: "secondary",
+    };
 
-    IN_PROGRESS: {
-      label: "En cours",
-      color: "warning"
-    },
-
-    WAITING_CUSTOMER: {
-      label: "En attente client",
-      color: "info"
-    },
-
-    RESOLVED: {
-      label: "Résolu",
-      color: "success"
-    },
-
-    CLOSED: {
-      label: "Fermé",
-      color: "secondary"
-    },
-  };
-
-
-  const current = map[status] || {
-    label: status,
-    color: "secondary"
-  };
-
+  // =====================================================
+  // AFFICHAGE
+  // =====================================================
 
   return (
-    <span className={`badge bg-${current.color}`}>
+    <span
+      className={`badge bg-${current.color}`}
+    >
       {current.label}
     </span>
   );

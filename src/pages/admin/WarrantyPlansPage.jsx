@@ -8,7 +8,7 @@ import apiFetch from "../../services/apiFetch";
 import { toast } from "react-toastify";
 
 import WarrantyPlansComparisonTable
-  from "../../components/WarrantyPlansComparisonTable";
+  from "../../components/warranties/WarrantyPlansComparisonTable";
 
 
 // ==========================================================

@@ -20,6 +20,7 @@ import SidebarNavItem from "../SidebarNavItem";
 export default function AdminSidebar({
   mobile = false,
   onClickLink,
+  unreadNotificationCount = 0,
   pendingCount = 0
 }) {
   return (
@@ -34,9 +35,10 @@ export default function AdminSidebar({
           ====================================================== */}
 
       <SidebarNavItem
-        to="/admin/dashboard"
+        to="/admin"
         icon="bi bi-grid"
         onClick={onClickLink}
+        end
       >
         Tableau de bord
       </SidebarNavItem>
@@ -133,6 +135,26 @@ export default function AdminSidebar({
         onClick={onClickLink}
       >
         Utilisateurs
+      </SidebarNavItem>
+      
+      {/* ======================================================
+          NOTIFICATIONS
+          ====================================================== */}
+
+      <SidebarNavItem
+        to="/admin/notifications"
+        icon="bi bi-bell"
+        onClick={onClickLink}
+      >
+        <span className="d-flex align-items-center gap-2">
+          Notifications
+
+          {unreadNotificationCount > 0 && (
+            <span className="badge bg-danger rounded-pill">
+              {unreadNotificationCount}
+            </span>
+          )}
+        </span>
       </SidebarNavItem>
 
       {/* ======================================================

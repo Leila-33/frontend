@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 import { useNavigate } from "react-router-dom";
 
-import apiFetch from "../services/apiFetch";
+import apiFetch from "../../services/apiFetch";
 
 
 export default function Register() {

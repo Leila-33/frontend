@@ -253,7 +253,7 @@ export default function TestDriveDetails() {
       // Message affiché après chaque action.
       toast.success(
         TEST_DRIVE_ACTION_MESSAGES[
-          actionModal.type
+        actionModal.type
         ] ||
         "Statut mis à jour avec succès"
       );
@@ -317,9 +317,8 @@ export default function TestDriveDetails() {
 
     // Nom du véhicule affiché dans le calendrier.
     const vehicleName =
-      `${testDrive.vehicle?.brand || ""} ${
-        testDrive.vehicle?.model || ""
-      }`.trim();
+      `${testDrive.vehicle?.brand || ""} ${testDrive.vehicle?.model || ""
+        }`.trim();
 
 
     const url =
@@ -435,8 +434,7 @@ Merci.`
           },
           {
             label:
-              `${testDrive.vehicle?.brand || ""} ${
-                testDrive.vehicle?.model || ""
+              `${testDrive.vehicle?.brand || ""} ${testDrive.vehicle?.model || ""
               }`
           }
         ]}
@@ -520,19 +518,20 @@ Merci.`
                 </div>
 
 
-                {/* ===============================================
-                    INFORMATIONS DU VÉHICULE
-                =============================================== */}
+
+                {/* =============================================
+                  INFORMATIONS DU VÉHICULE
+                ============================================= */}
 
                 <div className="card-body p-4">
 
                   <div
                     className="
-                      d-flex
-                      justify-content-between
-                      align-items-start
-                      mb-3
-                    "
+      d-flex
+      justify-content-between
+      align-items-start
+      mb-3
+    "
                   >
 
                     <div>
@@ -547,16 +546,55 @@ Merci.`
 
                       </h2>
 
-                      <p className="text-muted mb-0">
+                      <p className="text-muted mb-2">
                         Essai routier
                       </p>
+
+                      {/* ===========================================
+          IMMATRICULATION
+      =========================================== */}
+
+                      {testDrive.vehicle?.license_plate && (
+                        <div className="mb-1">
+
+                          <small className="text-muted me-2">
+                            Immatriculation :
+                          </small>
+
+                          <span className="fw-semibold">
+                            {testDrive.vehicle.license_plate}
+                          </span>
+
+                        </div>
+                      )}
+
+                      {/* ===========================================
+          PRIX
+      =========================================== */}
+
+                      {testDrive.vehicle?.price !== null &&
+                        testDrive.vehicle?.price !== undefined && (
+                          <div>
+
+                            <small className="text-muted me-2">
+                              Prix :
+                            </small>
+
+                            <span className="fw-semibold">
+                              {Number(
+                                testDrive.vehicle.price
+                              ).toLocaleString("fr-FR")} €
+                            </span>
+
+                          </div>
+                        )}
 
                     </div>
 
 
                     {/* ===========================================
-                        STATUT
-                    =========================================== */}
+        STATUT
+    =========================================== */}
 
                     <span
                       className={
@@ -761,7 +799,7 @@ Merci.`
                               <i
                                 className={
                                   TEST_DRIVE_EVENT_ICONS[
-                                    event.type
+                                  event.type
                                   ]
                                   || "bi bi-info-circle"
                                 }
@@ -1148,28 +1186,28 @@ Merci.`
                         "completed"
                       ].includes(testDrive.status) && (
 
-                        <div
-                          className="
+                          <div
+                            className="
                             alert
                             alert-light
                             border
                             mb-0
                           "
-                        >
+                          >
 
-                          <i
-                            className="
+                            <i
+                              className="
                               bi
                               bi-info-circle
                               me-2
                             "
-                          />
+                            />
 
-                          Aucune action supplémentaire
-                          n'est disponible pour cet essai.
+                            Aucune action supplémentaire
+                            n'est disponible pour cet essai.
 
-                        </div>
-                      )}
+                          </div>
+                        )}
 
                     </>
                   )}

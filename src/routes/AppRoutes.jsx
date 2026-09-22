@@ -2,12 +2,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // PUBLIC
 import Home from "../pages/Home";
-import VehicleSearch from "../pages/VehicleSearch";
-import VehicleDetail from "../pages/VehicleDetail";
-import Register from "../pages/Register";
-import Login from "../pages/Login";
-import VerifyEmail from "../pages/VerifyEmail";
-import ApplicationDeleted from "../pages/ApplicationDeleted";
+import Vehicles from "../pages/Vehicles.jsx";
+import VehicleDetail from "../pages/public/VehicleDetail";
+import Register from "../pages/auth/Register";
+import Login from "../pages/auth/Login";
+import VerifyEmail from "../pages/auth/VerifyEmail";
+import ApplicationDeleted from "../pages/ApplicationDeleted.jsx";
 import ActivateAccountPage from "../pages/sales/client/ActivateAccountPage.jsx";
 
 // CLIENT
@@ -35,7 +35,7 @@ import Users from "../pages/admin/Users";
 import TestDriveManagement from "../pages/admin/TestDriveManagement";
 import WarrantyPlansPage from "../pages/admin/WarrantyPlansPage";
 import AdminCreateUserPage from "../pages/admin/AdminCreateUserPage";
-import AdminEventsPage from "../pages/admin/events/AdminEventsPage.jsx";
+import AdminEventsPage from "../pages/admin/AdminEventsPage.jsx";
 
 // SAV AGENT
 import SavTicketsPage from "../pages/sav/agent/SavTicketsPage.jsx";
@@ -52,7 +52,7 @@ import QuoteCreatePage from "../pages/sales/agent/QuoteCreatePage.jsx";
 import QuoteEditPage from "../pages/sales/agent/QuoteEditPage.jsx";
 
 // SHARED
-import NotificationsPage from "../pages/client/NotificationsPage";
+import NotificationsPage from "../pages/shared/NotificationsPage";
 import NotFound from "../pages/NotFound";
 import TestDriveDetails from "../pages/client/TestDriveDetails.jsx";
 
@@ -84,7 +84,7 @@ export default function AppRoutes() {
         {/* ========================= */}
 
         <Route path="/" element={<Home />} />
-        <Route path="/search" element={<VehicleSearch />} />
+        <Route path="/vehicles" element={<Vehicles />} />
         <Route path="/vehicle/:id" element={<VehicleDetail />} />
 
         {/* ========================= */}
@@ -93,7 +93,6 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="application-deleted" element={<ApplicationDeleted />} />
-          <Route path="notifications" element={<NotificationsPage />} />
         </Route>
 
         {/* ========================= */}
@@ -131,6 +130,7 @@ export default function AppRoutes() {
             <Route path="tickets/:id" element={<AgentTicketDetailsPage />} />
 
             <Route path="stats" element={<SavStatisticsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
 
           </Route>
         </Route>
@@ -151,6 +151,8 @@ export default function AppRoutes() {
             <Route path="quotes/create/:leadId" element={<QuoteCreatePage />} />
             <Route path="quotes/edit/:id" element={<QuoteEditPage />} />
             <Route path="quotes/:id" element={<QuoteDetailPage />} />
+                      <Route path="notifications" element={<NotificationsPage />} />
+
           </Route>
         </Route>
 
@@ -180,6 +182,7 @@ export default function AppRoutes() {
             <Route path="payment/cancel" element={<PaymentCancelPage />} />
             <Route path="quotes" element={<CustomerQuotesPage />} />
             <Route path="quotes/:id" element={<CustomerQuoteDetailPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
 
           </Route>
         </Route>
@@ -212,7 +215,8 @@ export default function AppRoutes() {
             <Route path="test-drives/:id" element={<TestDriveDetails />} />
 
             <Route path="warranty-plans" element={<WarrantyPlansPage />} />
-            <Route path="events" element={<AdminEventsPage />} />
+            <Route path="activity" element={<AdminEventsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
 
           </Route>
         </Route>

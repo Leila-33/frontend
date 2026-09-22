@@ -86,7 +86,7 @@ setFavorites(res.items || []);
           </p>
 
           <Link
-            to="/search"
+            to="/vehicles"
             className="btn btn-dark mt-2"
           >
             Explorer les véhicules

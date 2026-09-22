@@ -2,11 +2,11 @@ import { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
-import apiFetch from "../services/apiFetch";
+import apiFetch from "../../services/apiFetch";
 
 import { toast } from "react-toastify";
 
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Login() {
 

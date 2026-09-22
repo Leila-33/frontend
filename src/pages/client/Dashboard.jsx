@@ -157,7 +157,7 @@ export default function DashboardPage() {
           <div className="d-flex flex-wrap gap-3 mt-4">
 
             <Link
-              to="/search"
+              to="/vehicles"
               className="btn btn-light rounded-pill px-4"
             >
               <i className="bi bi-search me-2"></i>
@@ -688,7 +688,7 @@ export default function DashboardPage() {
 
 
                 <Link
-                  to="/search"
+                  to="/vehicles"
                   className="btn btn-dark rounded-pill py-3"
                 >
                   <i className="bi bi-search me-2"></i>

@@ -1,97 +1,143 @@
-/* =========================
-   CALENDAR
-========================= */
+/* =====================================================
+   CALENDRIER
+   ===================================================== */
 
-.calendar-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  max-width: 320px;
+.calendar {
+  width: 100%;
 }
 
-.day {
-  width: 40px;
-  height: 40px;
 
-  border: 1px solid #e9ecef;
-  border-radius: 10px;
+/* =====================================================
+   GRILLE
+   ===================================================== */
 
-  background: white;
-  color: #212529;
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
 
-  font-size: 14px;
-  font-weight: 500;
+
+/* =====================================================
+   JOURS DE LA SEMAINE
+   ===================================================== */
+
+.calendar-weekday {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #6c757d;
+  padding: 8px 0;
+}
+
+
+/* =====================================================
+   JOURS
+   ===================================================== */
+
+.calendar-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  aspect-ratio: 1;
+
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+
+  background-color: #fff;
 
   cursor: pointer;
 
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.day:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #212529;
+
+/* =====================================================
+   SURVOL
+   ===================================================== */
+
+.calendar-day:not(:disabled):hover {
+  background-color: #f1f3f5;
+  border-color: #adb5bd;
 }
 
-/* =========================
-   START / END
-========================= */
 
-.day.selected {
-  background: #212529;
-  color: white;
-  border-color: #212529;
-}
+/* =====================================================
+   DATES BLOQUÉES
+   ===================================================== */
 
-/* =========================
-   RANGE
-========================= */
-
-.day.range {
-  background: #e7f1ff;
-  border-color: #cfe2ff;
-  color: #0d6efd;
-}
-
-/* =========================
-   HOVER PREVIEW
-========================= */
-
-.day.preview {
-  background: #f1f3f5;
-  border-color: #ced4da;
-}
-
-/* =========================
-   BLOCKED
-========================= */
-
-.day.blocked,
-.day:disabled {
-  background: #f8f9fa;
+.calendar-day.blocked {
+  background-color: #e9ecef;
   color: #adb5bd;
-  border-color: #e9ecef;
+
   cursor: not-allowed;
   text-decoration: line-through;
 }
 
-/* =========================
-   PRICE BOX
-========================= */
 
-.booking-summary {
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 16px;
-  padding: 1rem;
-  margin-top: 1rem;
+/* =====================================================
+   APERÇU DE LA PÉRIODE
+   ===================================================== */
+
+.calendar-day.preview {
+  background-color: #e7f1ff;
+  border-color: #b6d4fe;
 }
 
-.booking-summary .price {
-  font-size: 1.5rem;
-  font-weight: 700;
+
+/* =====================================================
+   DATES SÉLECTIONNÉES
+   ===================================================== */
+
+/* =====================================================
+   PÉRIODE SÉLECTIONNÉE
+   ===================================================== */
+
+.calendar-day.selected-range {
+  background-color: #cfe2ff;
+  border-color: #9ec5fe;
+  color: #084298;
 }
 
-.booking-summary .days {
-  color: #6c757d;
-  font-size: 0.9rem;
+.calendar-day.selected {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: #fff;
+  font-weight: 600;
+}
+
+
+/* =====================================================
+   CASES VIDES
+   ===================================================== */
+
+.calendar-day.empty {
+  border: none;
+  background: transparent;
+
+  cursor: default;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 576px) {
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-weekday {
+    font-size: 0.75rem;
+  }
+
+  .calendar-day {
+    font-size: 0.85rem;
+  }
 }

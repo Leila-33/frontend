@@ -21,7 +21,7 @@ export default function Home() {
 
           <button
             className="btn btn-primary mt-3"
-            onClick={() => navigate("/VehicleSearch")}
+            onClick={() => navigate("/vehicles")}
           >
             Rechercher un véhicule
           </button>
