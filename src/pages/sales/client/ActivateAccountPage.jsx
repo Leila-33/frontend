@@ -1,595 +1,667 @@
-import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import apiFetch from "../../../services/apiFetch";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useState,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+
 import { toast } from "react-toastify";
+
 import { useAuth } from "../../../contexts/AuthContext";
+import apiFetch from "../../../services/apiFetch";
 
-
+/**
+ * Page d'activation du compte client.
+ *
+ * Le parcours est le suivant :
+ *
+ * 1. Récupération du token présent dans l'URL.
+ * 2. Vérification du token auprès de l'API.
+ * 3. Affichage d'un état adapté :
+ *    - token invalide ;
+ *    - token expiré ;
+ *    - compte déjà activé ;
+ *    - formulaire d'activation.
+ * 4. Création du mot de passe et acceptation des CGU.
+ * 5. Connexion automatique du client.
+ * 6. Redirection vers son espace.
+ */
 export default function ActivateAccountPage() {
-const {
-  login,
-  setPostLoginRedirect,
-} = useAuth();
+  // =====================================================
+  // AUTHENTIFICATION ET NAVIGATION
+  // =====================================================
 
-const [form, setForm] = useState({
-  password: "",
-  confirmPassword: "",
-  cgu: false,
-});
+  const {
+    login,
+    setPostLoginRedirect,
+  } = useAuth();
 
-const [
-  loading,
-  setLoading
-] = useState(false);
-
-const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const [searchParams] = useSearchParams();
 
-
+  // Token transmis dans le lien d'activation.
   const token = searchParams.get("token");
 
+  // =====================================================
+  // IDENTIFIANTS ACCESSIBILITÉ
+  // =====================================================
 
+  const passwordId = useId();
+  const confirmPasswordId = useId();
+  const cguId = useId();
 
+  // =====================================================
+  // ÉTAT DU FORMULAIRE
+  // =====================================================
 
-  const [checking, setChecking] = useState(true);
-
-
-  const [user, setUser] = useState(null);
-
-
-  const [alreadyVerified, setAlreadyVerified] = useState(false);
-  const [expired, setExpired] = useState(false);
-
-
-  const [validToken, setValidToken] = useState(false);
-useEffect(() => {
-
-  validate();
-
-}, [form]);
-
-
-const validate = () => {
-
-  const errors = {};
-
-if (!form.password) {
-    errors.password = "Mot de passe requis";
-  } else if (
-    !/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/.test(form.password)
-  ) {
-    errors.password =
-      "8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial";
-  }
-
-
-  if (
-    form.password !== form.confirmPassword
-  ) {
-
-    errors.confirmPassword =
-      "Les mots de passe ne correspondent pas";
-
-  }
-
-
-  if (!form.cgu) {
-
-    errors.cgu =
-      "Vous devez accepter les CGU";
-
-  }
-
-
-  setErrors(errors);
-
-
-  return Object.keys(errors).length === 0;
-
-};
-const handleChange = (e) => {
-
-  const {
-    name,
-    value,
-    checked,
-    type
-  } = e.target;
-
-
-  setForm({
-
-    ...form,
-
-    [name]:
-      type === "checkbox"
-        ? checked
-        : value
-
+  const [form, setForm] = useState({
+    password: "",
+    confirmPassword: "",
+    cgu: false,
   });
 
-};
-  // =========================
-  // CHECK TOKEN
-  // =========================
+  const [errors, setErrors] = useState({});
 
-  useEffect(() => {
+  // =====================================================
+  // ÉTAT DE LA PAGE
+  // =====================================================
 
+  // Vérification initiale du lien d'activation.
+  const [checking, setChecking] = useState(true);
 
+  // Soumission du formulaire.
+  const [loading, setLoading] = useState(false);
+
+  // Utilisateur associé au token.
+  const [user, setUser] = useState(null);
+
+  // États retournés par l'API de vérification.
+  const [alreadyVerified, setAlreadyVerified] =
+    useState(false);
+
+  const [expired, setExpired] = useState(false);
+
+  const [validToken, setValidToken] =
+    useState(false);
+
+  // =====================================================
+  // VALIDATION DU FORMULAIRE
+  // =====================================================
+
+  /**
+   * Valide les données saisies avant l'envoi.
+   *
+   * La validation est volontairement effectuée
+   * uniquement lors de la soumission afin d'éviter
+   * de recalculer et modifier l'état à chaque frappe.
+   */
+  const validateForm = useCallback(() => {
+    const validationErrors = {};
+
+    // -------------------------
+    // MOT DE PASSE
+    // -------------------------
+
+    if (!form.password) {
+      validationErrors.password =
+        "Mot de passe requis";
+    } else if (
+      !/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/
+        .test(form.password)
+    ) {
+      validationErrors.password =
+        "8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial";
+    }
+
+    // -------------------------
+    // CONFIRMATION
+    // -------------------------
+
+    if (
+      form.password !== form.confirmPassword
+    ) {
+      validationErrors.confirmPassword =
+        "Les mots de passe ne correspondent pas";
+    }
+
+    // -------------------------
+    // CGU
+    // -------------------------
+
+    if (!form.cgu) {
+      validationErrors.cgu =
+        "Vous devez accepter les CGU";
+    }
+
+    setErrors(validationErrors);
+
+    return (
+      Object.keys(validationErrors).length === 0
+    );
+  }, [form]);
+
+  // =====================================================
+  // MODIFICATION DU FORMULAIRE
+  // =====================================================
+
+  const handleChange = useCallback((event) => {
+    const {
+      name,
+      value,
+      checked,
+      type,
+    } = event.target;
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : value,
+    }));
+
+    // Supprime l'erreur du champ dès que l'utilisateur
+    // recommence à le modifier.
+    setErrors((currentErrors) => {
+      if (!currentErrors[name]) {
+        return currentErrors;
+      }
+
+      const nextErrors = {
+        ...currentErrors,
+      };
+
+      delete nextErrors[name];
+
+      return nextErrors;
+    });
+  }, []);
+
+  // =====================================================
+  // VÉRIFICATION DU TOKEN
+  // =====================================================
+
+  const checkToken = useCallback(async () => {
+    // Sans token, le lien est immédiatement considéré
+    // comme invalide.
     if (!token) {
-
+      setValidToken(false);
       setChecking(false);
 
       return;
-
     }
 
-
-    checkToken();
-
-
-  }, [token]);
-
-
-
-  const checkToken = async () => {
-
-
     try {
-
+      setChecking(true);
 
       const data = await apiFetch(
-
-        `/auth/check-activation-token?token=${token}`
-
+        `/auth/check-activation-token?token=${encodeURIComponent(token)}`,
+        {
+          method: "GET",
+        }
       );
-
 
       setUser(data);
 
-
       setAlreadyVerified(
-        data.already_verified
+        Boolean(data?.already_verified)
       );
-      setExpired(data.expired)
 
+      setExpired(
+        Boolean(data?.expired)
+      );
 
+      // Le token peut être techniquement reconnu
+      // tout en étant expiré ou déjà utilisé.
       setValidToken(true);
-
-
-
-    } catch(err) {
-
-toast.error(
-      err.message ||
-      "Erreur validation token"
-    );
+    } catch (error) {
       setValidToken(false);
 
-
+      toast.error(
+        error?.message ||
+        "Impossible de vérifier le lien d'activation."
+      );
     } finally {
-
-
       setChecking(false);
-
-
     }
+  }, [token]);
 
-  };
+  // Vérifie le token uniquement lorsque celui-ci
+  // change.
+  useEffect(() => {
+    checkToken();
+  }, [checkToken]);
 
+  // =====================================================
+  // ACTIVATION DU COMPTE
+  // =====================================================
 
+  const handleSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
 
-  // =========================
-  // ACTIVATE ACCOUNT
-  // =========================
-
-
-const handleSubmit = async () => {
-
-
-  if (!validate()) {
-
-    return;
-
-  }
-
-
-
-  try {
-
-    setLoading(true);
-
-    const res = await apiFetch(
-
-      "/auth/activate-account",
-
-      {
-
-        method:"POST",
-
-        body: {
-
-          token,
-
-          password:
-            form.password,
-
-          accepted_cgu:
-            form.cgu
-
-        }
-
+      if (loading) {
+        return;
       }
 
-    );
-
-
-    toast.success(
-      "Votre compte est activé."
-    );
-
-
-
-login(
-    res.access_token,
-    res.refresh_token
-);
-
-navigate(res.redirect);
-
-
-setPostLoginRedirect(res.redirect);
-
-login(
-    res.access_token,
-    res.refresh_token
-);
-
-  } catch(err) {
-
-
-    toast.error(
-      err.message ||
-      "Erreur activation"
-    );
-
-  }finally{
-
-    setLoading(false);
-
-  }
-
-};
-
-const isFormValid =
-  form.password.trim() !== "" &&
-  form.password === form.confirmPassword &&
-  form.cgu;
-
-
-console.log({
-  password: JSON.stringify(form.password),
-  confirmPassword: JSON.stringify(form.confirmPassword),
-  equal: form.password === form.confirmPassword,
-  isFormValid
-});
-  // =========================
-  // LOADING
-  // =========================
-
-  if(checking) {
-
-
-    return (
-
-      <div className="container min-vh-100 d-flex align-items-center justify-content-center">
-
-        Vérification du lien...
-
-      </div>
-
-    );
-
-  }
-
-
-
-
-  // =========================
-  // TOKEN INVALID
-  // =========================
-
-  if(!token || !validToken) {
-
-
-    return (
-
-      <div className="container min-vh-100 d-flex align-items-center justify-content-center">
-
-
-        <div
-          className="card shadow-sm"
-          style={{
-            maxWidth:"450px",
-            width:"100%"
-          }}
-        >
-
-          <div className="card-body text-center p-4">
-
-
-            <h4 className="text-danger mb-3">
-
-              Lien invalide
-
-            </h4>
-
-
-            <p className="text-muted">
-
-              Ce lien d'activation est invalide.
-
-            </p>
-
-
-            <button
-
-              className="btn btn-dark"
-
-              onClick={() => navigate("/")}
-
-            >
-
-              Retour
-
-            </button>
-
-
-          </div>
-
-        </div>
-
-
-      </div>
-
-    );
-
-  }
-
-  // =========================
-  // EXPIRED
-  // =========================
-if (expired) {
-  return (
-    <div className="container min-vh-100 d-flex align-items-center justify-content-center">
-
-      <div className="alert alert-warning text-center">
-
-        <h4 className="mb-3">
-          Lien expiré
-        </h4>
-
-        <p className="mb-0">
-          Ce lien d'activation a expiré.
-          Veuillez demander un nouveau lien.
-        </p>
-
-      </div>
-
-    </div>
+      // Validation côté frontend avant l'appel API.
+      if (!validateForm()) {
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const result = await apiFetch(
+          "/auth/activate-account",
+          {
+            method: "POST",
+            body: {
+              token,
+              password: form.password,
+              accepted_cgu: form.cgu,
+            },
+          }
+        );
+
+        toast.success(
+          "Votre compte est activé."
+        );
+
+        // La redirection éventuelle après connexion
+        // est enregistrée avant la connexion.
+        setPostLoginRedirect(
+          result.redirect
+        );
+
+        // Une seule connexion automatique.
+        login(
+          result.access_token,
+          result.refresh_token
+        );
+
+        navigate(result.redirect);
+      } catch (error) {
+        toast.error(
+          error?.message ||
+          "Impossible d'activer votre compte."
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      form,
+      loading,
+      login,
+      navigate,
+      setPostLoginRedirect,
+      token,
+      validateForm,
+    ]
   );
-}
 
-  // =========================
-  // ALREADY VERIFIED
-  // =========================
+  // =====================================================
+  // VALIDITÉ DU FORMULAIRE
+  // =====================================================
 
-  if(alreadyVerified) {
+  const isFormValid =
+    form.password.length > 0 &&
+    form.password === form.confirmPassword &&
+    form.cgu;
 
+  // =====================================================
+  // VÉRIFICATION EN COURS
+  // =====================================================
 
+  if (checking) {
     return (
-
-      <div className="container min-vh-100 d-flex align-items-center justify-content-center">
-
-
+      <main className="container min-vh-100 d-flex align-items-center justify-content-center">
         <div
-          className="card shadow-sm"
-          style={{
-            maxWidth:"450px",
-            width:"100%"
-          }}
+          className="d-flex align-items-center gap-2"
+          role="status"
+          aria-live="polite"
         >
+          <span
+            className="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          />
 
-          <div className="card-body text-center p-4">
-
-
-            <h4 className="fw-bold mb-3">
-
-              Compte déjà activé
-
-            </h4>
-
-
-            <p className="text-muted">
-
-              Bonjour {user.first_name}, votre compte
-              est déjà activé.
-
-              <br />
-
-              Vous pouvez vous connecter
-              pour consulter vos offres.
-
-            </p>
-
-
-            <button
-
-              className="btn btn-dark w-100"
-
-              onClick={() => navigate("/login")}
-
-            >
-
-              Se connecter
-
-            </button>
-
-
-          </div>
-
+          <span>
+            Vérification du lien...
+          </span>
         </div>
-
-
-      </div>
-
+      </main>
     );
-
   }
 
+  // =====================================================
+  // TOKEN INVALIDE
+  // =====================================================
 
+  if (!token || !validToken) {
+    return (
+      <main className="container min-vh-100 d-flex align-items-center justify-content-center">
+        <div
+          className="card border-0 shadow-sm rounded-4"
+          style={{
+            maxWidth: "450px",
+            width: "100%",
+          }}
+        >
+          <div className="card-body text-center p-4">
+            <i
+              className="bi bi-x-circle text-danger fs-1 mb-3"
+              aria-hidden="true"
+            />
 
+            <h1 className="h4 fw-bold mb-3">
+              Lien invalide
+            </h1>
 
-  // =========================
-  // ACTIVATION FORM
-  // =========================
+            <p className="text-muted mb-4">
+              Ce lien d'activation est invalide
+              ou ne peut plus être utilisé.
+            </p>
+
+            <Link
+              to="/"
+              className="btn btn-dark"
+            >
+              Retour
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // =====================================================
+  // TOKEN EXPIRÉ
+  // =====================================================
+
+  if (expired) {
+    return (
+      <main className="container min-vh-100 d-flex align-items-center justify-content-center">
+        <div
+          className="card border-0 shadow-sm rounded-4"
+          style={{
+            maxWidth: "450px",
+            width: "100%",
+          }}
+        >
+          <div className="card-body text-center p-4">
+            <i
+              className="bi bi-clock-history text-warning fs-1 mb-3"
+              aria-hidden="true"
+            />
+
+            <h1 className="h4 fw-bold mb-3">
+              Lien expiré
+            </h1>
+
+            <p className="text-muted mb-0">
+              Ce lien d'activation a expiré.
+              Veuillez demander un nouveau lien
+              d'activation.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // =====================================================
+  // COMPTE DÉJÀ ACTIVÉ
+  // =====================================================
+
+  if (alreadyVerified) {
+    return (
+      <main className="container min-vh-100 d-flex align-items-center justify-content-center">
+        <div
+          className="card border-0 shadow-sm rounded-4"
+          style={{
+            maxWidth: "450px",
+            width: "100%",
+          }}
+        >
+          <div className="card-body text-center p-4">
+            <i
+              className="bi bi-check-circle text-success fs-1 mb-3"
+              aria-hidden="true"
+            />
+
+            <h1 className="h4 fw-bold mb-3">
+              Compte déjà activé
+            </h1>
+
+            <p className="text-muted mb-4">
+              Bonjour{" "}
+              <strong>
+                {user?.first_name}
+              </strong>
+              , votre compte est déjà activé.
+              <br />
+              Vous pouvez vous connecter pour
+              consulter vos offres.
+            </p>
+
+            <Link
+              to="/login"
+              className="btn btn-dark w-100"
+            >
+              Se connecter
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // =====================================================
+  // FORMULAIRE D'ACTIVATION
+  // =====================================================
 
   return (
-
-    <div className="container min-vh-100 d-flex align-items-center justify-content-center">
-
-
+    <main className="container min-vh-100 d-flex align-items-center justify-content-center py-4">
       <div
-
-        className="card shadow-sm"
-
+        className="card border-0 shadow-sm rounded-4"
         style={{
-          maxWidth:"450px",
-          width:"100%"
+          maxWidth: "450px",
+          width: "100%",
         }}
-
       >
-
         <div className="card-body p-4">
-
-
-          <h3 className="fw-bold mb-2">
-
-            Bienvenue {user?.first_name}
-
-          </h3>
-
+          <h1 className="h3 fw-bold mb-2">
+            Bienvenue{" "}
+            {user?.first_name}
+          </h1>
 
           <p className="text-muted mb-4">
-
-            Choisissez votre mot de passe
-            pour accéder à votre espace client.
-
+            Choisissez votre mot de passe pour
+            accéder à votre espace client.
           </p>
 
+          <form onSubmit={handleSubmit}>
+            {/* =========================================
+                MOT DE PASSE
+            ========================================= */}
 
+            <div className="mb-3">
+              <label
+                htmlFor={passwordId}
+                className="form-label"
+              >
+                Mot de passe
+              </label>
 
-          <div className="mb-3">
+              <input
+                id={passwordId}
+                type="password"
+                name="password"
+                className={`form-control ${
+                  errors.password
+                    ? "is-invalid"
+                    : ""
+                }`}
+                value={form.password}
+                onChange={handleChange}
+                autoComplete="new-password"
+                disabled={loading}
+                aria-invalid={
+                  Boolean(errors.password)
+                }
+                aria-describedby={
+                  errors.password
+                    ? `${passwordId}-error`
+                    : undefined
+                }
+              />
 
-  <label className="form-label">
-    Mot de passe
-  </label>
+              {errors.password && (
+                <div
+                  id={`${passwordId}-error`}
+                  className="invalid-feedback"
+                >
+                  {errors.password}
+                </div>
+              )}
+            </div>
 
-  <input
-    type="password"
-    className={`form-control ${
-      errors.password
-        ? "is-invalid"
-        : ""
-    }`}
-    name="password"
-    value={form.password}
-    onChange={handleChange}
-  />
+            {/* =========================================
+                CONFIRMATION
+            ========================================= */}
 
-  {errors.password && (
-    <div className="invalid-feedback">
-      {errors.password}
-    </div>
-  )}
+            <div className="mb-3">
+              <label
+                htmlFor={confirmPasswordId}
+                className="form-label"
+              >
+                Confirmation du mot de passe
+              </label>
 
-</div>
+              <input
+                id={confirmPasswordId}
+                type="password"
+                name="confirmPassword"
+                className={`form-control ${
+                  errors.confirmPassword
+                    ? "is-invalid"
+                    : ""
+                }`}
+                value={form.confirmPassword}
+                onChange={handleChange}
+                autoComplete="new-password"
+                disabled={loading}
+                aria-invalid={
+                  Boolean(
+                    errors.confirmPassword
+                  )
+                }
+                aria-describedby={
+                  errors.confirmPassword
+                    ? `${confirmPasswordId}-error`
+                    : undefined
+                }
+              />
 
+              {errors.confirmPassword && (
+                <div
+                  id={`${confirmPasswordId}-error`}
+                  className="invalid-feedback"
+                >
+                  {errors.confirmPassword}
+                </div>
+              )}
+            </div>
 
-<div className="mb-3">
+            {/* =========================================
+                CGU
+            ========================================= */}
 
-  <label className="form-label">
-    Confirmation
-  </label>
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  id={cguId}
+                  className={`form-check-input ${
+                    errors.cgu
+                      ? "is-invalid"
+                      : ""
+                  }`}
+                  type="checkbox"
+                  name="cgu"
+                  checked={form.cgu}
+                  onChange={handleChange}
+                  disabled={loading}
+                  aria-invalid={Boolean(
+                    errors.cgu
+                  )}
+                />
 
-  <input
-    type="password"
-    className={`form-control ${
-      errors.confirmPassword
-        ? "is-invalid"
-        : ""
-    }`}
-    name="confirmPassword"
-    value={form.confirmPassword}
-    onChange={handleChange}
-  />
+                <label
+                  htmlFor={cguId}
+                  className="form-check-label"
+                >
+                  J'accepte les{" "}
+                  <Link
+                    to="/cgu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    CGU
+                  </Link>
+                </label>
 
-  {errors.confirmPassword && (
-    <div className="invalid-feedback">
-      {errors.confirmPassword}
-    </div>
-  )}
+                {errors.cgu && (
+                  <div className="invalid-feedback">
+                    {errors.cgu}
+                  </div>
+                )}
+              </div>
+            </div>
 
-</div>
+            {/* =========================================
+                SUBMIT
+            ========================================= */}
 
+            <button
+              type="submit"
+              className="btn btn-dark w-100"
+              disabled={
+                loading ||
+                !isFormValid
+              }
+            >
+              {loading ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    aria-hidden="true"
+                  />
 
-<div className="form-check mb-3">
+                  Activation...
+                </>
+              ) : (
+                <>
+                  <i
+                    className="bi bi-check-circle me-2"
+                    aria-hidden="true"
+                  />
 
-  <input
-    className="form-check-input"
-    type="checkbox"
-    name="cgu"
-    checked={form.cgu}
-    onChange={handleChange}
-  />
-
-  <label className="form-check-label">
-
-    J’accepte les{" "}
-
-    <a href="/cgu" target="_blank">
-      CGU
-    </a>
-
-  </label>
-
-</div>
-
-
-{errors.cgu && (
-  <p className="text-danger">
-    {errors.cgu}
-  </p>
-)}
-
-          <button
-  className="btn btn-dark w-100"
-  disabled={loading || !isFormValid}
-  onClick={handleSubmit}
->
-  Activer mon compte
-</button>
-
-
+                  Activer mon compte
+                </>
+              )}
+            </button>
+          </form>
         </div>
-
       </div>
-
-
-    </div>
-
+    </main>
   );
-
 }

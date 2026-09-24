@@ -48,8 +48,7 @@ import SalesDashboard from "../pages/sales/agent/SalesDashboard.jsx";
 import QuoteDetailPage from "../pages/sales/agent/QuoteDetailPage.jsx";
 import LeadsPage from "../pages/sales/agent/LeadsPage.jsx";
 import LeadDetailPage from "../pages/sales/agent/LeadDetailPage.jsx";
-import QuoteCreatePage from "../pages/sales/agent/QuoteCreatePage.jsx";
-import QuoteEditPage from "../pages/sales/agent/QuoteEditPage.jsx";
+import QuoteFormContainer from "../pages/sales/agent/QuoteFormContainer.jsx";
 
 // SHARED
 import NotificationsPage from "../pages/shared/NotificationsPage";
@@ -130,7 +129,7 @@ export default function AppRoutes() {
             <Route path="tickets/:id" element={<AgentTicketDetailsPage />} />
 
             <Route path="stats" element={<SavStatisticsPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
 
           </Route>
         </Route>
@@ -148,10 +147,16 @@ export default function AppRoutes() {
             <Route path="dashboard" element={<SalesDashboard />} />
             <Route path="leads" element={<LeadsPage />} />
             <Route path="leads/:id" element={<LeadDetailPage />} />
-            <Route path="quotes/create/:leadId" element={<QuoteCreatePage />} />
-            <Route path="quotes/edit/:id" element={<QuoteEditPage />} />
+            <Route
+  path="/sales/quotes/new"
+  element={<QuoteFormContainer />}
+/>
+            <Route
+  path="/sales/quotes/:id/edit"
+  element={<QuoteFormContainer />}
+/>
             <Route path="quotes/:id" element={<QuoteDetailPage />} />
-                      <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
 
           </Route>
         </Route>
@@ -182,7 +187,7 @@ export default function AppRoutes() {
             <Route path="payment/cancel" element={<PaymentCancelPage />} />
             <Route path="quotes" element={<CustomerQuotesPage />} />
             <Route path="quotes/:id" element={<CustomerQuoteDetailPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
 
           </Route>
         </Route>
@@ -216,7 +221,7 @@ export default function AppRoutes() {
 
             <Route path="warranty-plans" element={<WarrantyPlansPage />} />
             <Route path="activity" element={<AdminEventsPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
 
           </Route>
         </Route>

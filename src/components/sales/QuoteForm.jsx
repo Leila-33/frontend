@@ -1,127 +1,114 @@
-import { useState, useMemo, useEffect } from "react";
-import apiFetch from "../../services/apiFetch";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
 import { toast } from "react-toastify";
 
-import { useNavigate, useParams } from "react-router-dom";
+import apiFetch from "../../services/apiFetch";
 
+/**
+ * Formulaire de création / modification d'une offre commerciale.
+ *
+ * Responsabilités :
+ * - charger le prospect ;
+ * - gérer les informations financières ;
+ * - gérer la reprise d'un véhicule ;
+ * - valider l'ensemble du formulaire ;
+ * - calculer l'estimation de reprise ;
+ * - transmettre les données au composant parent.
+ *
+ * Le composant ne contient pas la logique métier
+ * de création de l'offre : celle-ci reste gérée
+ * par `onSubmit`.
+ */
 export default function QuoteFormPage({
-
   initialValues = null,
-
   mode = "create",
-
   onSubmit = null,
-
 }) {
   const { leadId } = useParams();
   const navigate = useNavigate();
 
+  // =====================================================
+  // ÉTAT
+  // =====================================================
 
   const [loading, setLoading] = useState(false);
 
+  const [tradeInLoading, setTradeInLoading] =
+    useState(false);
+
   const [lead, setLead] = useState(null);
 
-const [
- discount,
- setDiscount
-] = useState(
-  initialValues?.discount ?? 0
-);
+  const [discount, setDiscount] = useState(
+    initialValues?.discount ?? 0
+  );
 
-
-
-const [
- downPayment,
- setDownPayment
-] = useState(
-  initialValues?.down_payment ?? 0
-);
-
-
-
-const [
- duration,
- setDuration
-] = useState(
-  initialValues?.duration_months ?? 36
-);
-
-
-
-const [
- tradeInValue,
- setTradeInValue
-] = useState(
-  initialValues?.trade_in_value ?? 0
-);
-
-
-
-const [form, setForm] = useState({
-
-  trade_in_enabled:
-    Boolean(
-      initialValues?.trade_in
-    ),
-
-
-  trade_brand:
-    initialValues?.trade_in?.brand ?? "",
-
-
-  trade_model:
-    initialValues?.trade_in?.model ?? "",
-
-
-  trade_year:
-    initialValues?.trade_in?.year ?? "",
-
-
-  trade_mileage:
-    initialValues?.trade_in?.mileage ?? "",
-
-
-  trade_condition:
-    initialValues?.trade_in?.condition ?? ""
-
-});
-
-
-  const [tradeInErrors, setTradeInErrors] = useState({});
-
-
-
-  // =========================
-  // LOAD LEAD
-  // =========================
-
-useEffect(() => {
-
-  if(mode === "create") {
-
-    fetchLead();
-
-  }
-
-  else if(initialValues?.lead){
-
-    setLead(
-      initialValues.lead
+  const [downPayment, setDownPayment] =
+    useState(
+      initialValues?.down_payment ?? 0
     );
 
-  }
+  const [duration, setDuration] = useState(
+    initialValues?.duration_months ?? 36
+  );
 
-}, [
-  leadId,
-  mode,
-  initialValues
-]);
+  const [tradeInValue, setTradeInValue] =
+    useState(
+      initialValues?.trade_in_value ?? 0
+    );
 
+  const [form, setForm] = useState({
+    trade_in_enabled:
+      Boolean(initialValues?.trade_in),
 
-  const fetchLead = async () => {
+    trade_brand:
+      initialValues?.trade_in?.brand ?? "",
+
+    trade_model:
+      initialValues?.trade_in?.model ?? "",
+
+    trade_year:
+      initialValues?.trade_in?.year ?? "",
+
+    trade_mileage:
+      initialValues?.trade_in?.mileage ?? "",
+
+    trade_condition:
+      initialValues?.trade_in?.condition ?? "",
+  });
+
+  // =====================================================
+  // VÉHICULE
+  // =====================================================
+
+  const vehicle = lead?.vehicle;
+
+  const basePrice =
+    Number(
+      initialValues?.base_price ??
+        vehicle?.price ??
+        0
+    );
+
+  // =====================================================
+  // CHARGEMENT DU PROSPECT
+  // =====================================================
+
+  const fetchLead = useCallback(async () => {
+    if (!leadId) {
+      return;
+    }
 
     try {
-
       const data = await apiFetch(
         `/agent/leads/${leadId}`,
         {
@@ -129,161 +116,348 @@ useEffect(() => {
         }
       );
 
-
       setLead(data);
-
-
-    } catch (err) {
-
+    } catch (error) {
       toast.error(
         "Impossible de charger le prospect."
       );
+    }
+  }, [leadId]);
 
+  useEffect(() => {
+    if (mode === "create") {
+      fetchLead();
+      return;
     }
 
-  };
+    if (initialValues?.lead) {
+      setLead(initialValues.lead);
+    }
+  }, [
+    fetchLead,
+    mode,
+    initialValues,
+  ]);
 
+  // =====================================================
+  // VALIDATION DE LA REPRISE
+  // =====================================================
 
+  /**
+   * Valide uniquement les champs de la reprise.
+   *
+   * La reprise n'est considérée comme obligatoire
+   * que lorsque `trade_in_enabled` est activé.
+   */
+  const validateTradeIn = useCallback(
+    (data) => {
+      const errors = {};
 
-  // =========================
-  // TRADE IN
-  // =========================
+      // -------------------------------------------------
+      // Si la reprise n'est pas activée,
+      // aucun champ de reprise n'est obligatoire.
+      // -------------------------------------------------
 
-
-const validateTradeIn = (data) => {
-
-  const errors = {};
-
-
-  const currentYear = new Date().getFullYear();
-
-
-  // MARQUE
-  if (!data.trade_brand?.trim()) {
-    errors.trade_brand = "Marque obligatoire";
-  }
-
-
-  // MODELE
-  if (!data.trade_model?.trim()) {
-    errors.trade_model = "Modèle obligatoire";
-  }
-
-
-  // ANNEE
- const year = Number(data.trade_year);
-
-    if (data.trade_year === "" || data.trade_year == null) {
-      errors.trade_year = "Année requise";
-
-    } else if (
-      !Number.isInteger(year) ||
-      year < 1900 ||
-      year > currentYear
-    ) {
-      errors.trade_year = "Année invalide";}
-
-
-  // KM
- const mileage = Number(data.trade_mileage);
-
-    if (data.trade_mileage === "" || data.trade_mileage == null) {
-      errors.trade_mileage = "Kilométrage requis";
-
-    } else if (
-      !Number.isFinite(mileage) ||
-      mileage < 0
-    ) {
-      errors.trade_mileage = "Kilométrage invalide";}
-
-
-  // ETAT
-  if (!data.trade_condition) {
-    errors.trade_condition = "Etat obligatoire";
-  }
-
-
-  return errors;
-};
-
-
-  const handleTradeInChange = (e) => {
-
-    const {
-      name,
-      value
-    } = e.target;
-
-
-    const updated = {
-
-      ...form,
-
-      [name]: value
-
-    };
-
-
-    setForm(updated);
-
-
-    setTradeInErrors(
-      validateTradeIn(updated)
-    );
-
-  };
-
-
-
-  const isTradeInValid = () => {
-
-
-    if (!form.trade_in_enabled)
-      return false;
-
-
-    const errors =
-      validateTradeIn(form);
-
-
-    return Object.keys(errors).length === 0;
-
-  };
-
-
-
-  const handleTradeIn = async () => {
-
-    try {
-
-
-      if (!form.trade_in_enabled) {
-
-        setTradeInValue(0);
-
-        return;
-
+      if (!data.trade_in_enabled) {
+        return errors;
       }
 
+      const currentYear =
+        new Date().getFullYear();
 
+      // -------------------------------------------------
+      // MARQUE
+      // -------------------------------------------------
+
+      if (!data.trade_brand?.trim()) {
+        errors.trade_brand =
+          "Marque obligatoire.";
+      }
+
+      // -------------------------------------------------
+      // MODÈLE
+      // -------------------------------------------------
+
+      if (!data.trade_model?.trim()) {
+        errors.trade_model =
+          "Modèle obligatoire.";
+      }
+
+      // -------------------------------------------------
+      // ANNÉE
+      // -------------------------------------------------
+
+      if (
+        data.trade_year === "" ||
+        data.trade_year == null
+      ) {
+        errors.trade_year =
+          "Année requise.";
+      } else {
+        const year = Number(
+          data.trade_year
+        );
+
+        if (
+          !Number.isInteger(year) ||
+          year < 1900 ||
+          year > currentYear
+        ) {
+          errors.trade_year =
+            "Année invalide.";
+        }
+      }
+
+      // -------------------------------------------------
+      // KILOMÉTRAGE
+      // -------------------------------------------------
+
+      if (
+        data.trade_mileage === "" ||
+        data.trade_mileage == null
+      ) {
+        errors.trade_mileage =
+          "Kilométrage requis.";
+      } else {
+        const mileage = Number(
+          data.trade_mileage
+        );
+
+        if (
+          !Number.isFinite(mileage) ||
+          mileage < 0
+        ) {
+          errors.trade_mileage =
+            "Kilométrage invalide.";
+        }
+      }
+
+      // -------------------------------------------------
+      // ÉTAT
+      // -------------------------------------------------
+
+      if (!data.trade_condition) {
+        errors.trade_condition =
+          "État obligatoire.";
+      }
+
+      return errors;
+    },
+    []
+  );
+
+  // =====================================================
+  // VALIDATION GLOBALE
+  // =====================================================
+
+  /**
+   * Valide l'ensemble du formulaire.
+   *
+   * Toutes les erreurs sont centralisées dans cet objet.
+   *
+   * Le formulaire est valide uniquement lorsque :
+   *
+   * Object.keys(errors).length === 0
+   */
+  const errors = useMemo(() => {
+    const validationErrors = {};
+
+    // -------------------------------------------------
+    // PRIX DU VÉHICULE
+    // -------------------------------------------------
+
+    if (
+      !Number.isFinite(basePrice) ||
+      basePrice < 0
+    ) {
+      validationErrors.base_price =
+        "Prix du véhicule invalide.";
+    }
+
+    // -------------------------------------------------
+    // REMISE
+    // -------------------------------------------------
+
+    const numericDiscount =
+      Number(discount);
+
+    if (
+      !Number.isFinite(numericDiscount) ||
+      numericDiscount < 0
+    ) {
+      validationErrors.discount =
+        "Remise invalide.";
+    }
+
+    // -------------------------------------------------
+    // APPORT
+    // -------------------------------------------------
+
+    const numericDownPayment =
+      Number(downPayment);
+
+    if (
+      !Number.isFinite(numericDownPayment) ||
+      numericDownPayment < 0
+    ) {
+      validationErrors.down_payment =
+        "Apport invalide.";
+    }
+
+    // -------------------------------------------------
+    // DURÉE
+    // -------------------------------------------------
+
+    const allowedDurations = [
+      24,
+      36,
+      48,
+      60,
+    ];
+
+    if (
+      !allowedDurations.includes(
+        Number(duration)
+      )
+    ) {
+      validationErrors.duration =
+        "Durée de financement invalide.";
+    }
+
+    // -------------------------------------------------
+    // REPRISE
+    // -------------------------------------------------
+
+    const tradeInErrors =
+      validateTradeIn(form);
+
+    Object.assign(
+      validationErrors,
+      tradeInErrors
+    );
+
+    // -------------------------------------------------
+    // VALEUR DE REPRISE
+    // -------------------------------------------------
+
+    const numericTradeInValue =
+      Number(tradeInValue);
+
+    if (
+      form.trade_in_enabled &&
+      (
+        !Number.isFinite(
+          numericTradeInValue
+        ) ||
+        numericTradeInValue < 0
+      )
+    ) {
+      validationErrors.trade_in_value =
+        "Valeur de reprise invalide.";
+    }
+
+    // -------------------------------------------------
+    // COHÉRENCE DU FINANCEMENT
+    // -------------------------------------------------
+
+    const totalDiscount =
+      numericDiscount +
+      numericDownPayment +
+      numericTradeInValue;
+
+    if (
+      Number.isFinite(basePrice) &&
+      Number.isFinite(totalDiscount) &&
+      totalDiscount > basePrice
+    ) {
+      validationErrors.total =
+        "La remise, l'apport et la reprise ne peuvent pas dépasser le prix du véhicule.";
+    }
+
+    return validationErrors;
+  }, [
+    basePrice,
+    discount,
+    downPayment,
+    duration,
+    form,
+    tradeInValue,
+    validateTradeIn,
+  ]);
+
+  // =====================================================
+  // VALIDITÉ DU FORMULAIRE
+  // =====================================================
+
+  /**
+   * Une seule règle détermine si l'offre peut être
+   * enregistrée : aucune erreur ne doit être présente.
+   */
+  const isFormValid =
+    Object.keys(errors).length === 0;
+
+  // =====================================================
+  // MODIFICATION DES CHAMPS DE REPRISE
+  // =====================================================
+
+  const handleTradeInChange = (event) => {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setForm((previousForm) => ({
+      ...previousForm,
+      [name]: value,
+    }));
+  };
+
+  // =====================================================
+  // ACTIVATION / DÉSACTIVATION DE LA REPRISE
+  // =====================================================
+
+  const handleTradeInToggle = (event) => {
+    const enabled =
+      event.target.checked;
+
+    setForm((previousForm) => ({
+      ...previousForm,
+      trade_in_enabled: enabled,
+    }));
+
+    // Si la reprise est désactivée,
+    // sa valeur ne doit plus être déduite.
+    if (!enabled) {
+      setTradeInValue(0);
+    }
+  };
+
+  // =====================================================
+  // CALCUL DE LA REPRISE
+  // =====================================================
+
+  const handleTradeIn = async () => {
+    if (
+      !form.trade_in_enabled ||
+      Object.keys(
+        validateTradeIn(form)
+      ).length > 0
+    ) {
+      return;
+    }
+
+    try {
+      setTradeInLoading(true);
 
       const payload = {
-
-        brand: form.trade_brand,
-
-        model: form.trade_model,
-
+        brand: form.trade_brand.trim(),
+        model: form.trade_model.trim(),
         year: Number(form.trade_year),
-
         mileage: Number(form.trade_mileage),
-
-        condition: form.trade_condition
-
+        condition: form.trade_condition,
       };
 
-
-
-      const res = await apiFetch(
+      const response = await apiFetch(
         "/trade-in/estimate",
         {
           method: "POST",
@@ -291,150 +465,151 @@ const validateTradeIn = (data) => {
         }
       );
 
-
+      const estimatedValue = Number(
+        response?.estimated_value ?? 0
+      );
 
       setTradeInValue(
-        res.estimated_value || 0
+        Number.isFinite(estimatedValue)
+          ? estimatedValue
+          : 0
       );
-
 
       toast.success(
-        "Estimation reprise mise à jour"
+        "Estimation reprise mise à jour."
       );
-
-
-    } catch(err) {
-
+    } catch (error) {
       toast.error(
-        "Erreur estimation reprise"
+        error?.message ||
+          "Erreur lors de l'estimation de la reprise."
       );
-
+    } finally {
+      setTradeInLoading(false);
     }
-
   };
 
-
-
-
-
-  // =========================
-  // CALCUL QUOTE
-  // =========================
-
-
-  const vehicle = lead?.vehicle;
-
-const basePrice =
-  initialValues?.base_price ??
-  vehicle?.price ??
-  0;
-
-const totalDiscount =
-  discount + downPayment + tradeInValue;
-
-const isValidQuote =
-  totalDiscount <= basePrice;
+  // =====================================================
+  // CALCUL DE L'OFFRE
+  // =====================================================
 
   const total = useMemo(() => {
-
-
     return Math.max(
-
-      basePrice
-      - discount
-      - downPayment
-      - tradeInValue,
-
+      basePrice -
+        Number(discount || 0) -
+        Number(downPayment || 0) -
+        Number(tradeInValue || 0),
       0
-
     );
-
-
   }, [
     basePrice,
     discount,
     downPayment,
-    tradeInValue
+    tradeInValue,
   ]);
-
-
 
   const monthly = useMemo(() => {
+    const numericDuration =
+      Number(duration);
 
-
-    if (!duration)
-      return 0;
-
+    if (
+      !Number.isFinite(numericDuration) ||
+      numericDuration <= 0
+    ) {
+      return "0.00";
+    }
 
     return (
-      total / duration
+      total / numericDuration
     ).toFixed(2);
-
-
   }, [
     total,
-    duration
+    duration,
   ]);
 
+  // =====================================================
+  // CRÉATION / MODIFICATION DE L'OFFRE
+  // =====================================================
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
+    // Sécurité supplémentaire :
+    // même si le bouton est désactivé côté interface,
+    // on empêche également la soumission si une erreur
+    // existe.
+    if (
+      loading ||
+      !isFormValid ||
+      !lead ||
+      !onSubmit
+    ) {
+      return;
+    }
 
+    const payload = {
+      lead_id: lead.id,
 
+      discount: Number(discount),
 
-  // =========================
-  // CREATE QUOTE
-  // =========================
+      down_payment:
+        Number(downPayment),
 
+      trade_in_value:
+        Number(tradeInValue),
 
-  const handleSubmit = async () => {
+      duration_months:
+        Number(duration),
 
-  const payload = {
-    lead_id: lead.id,
-    discount,
-    down_payment: downPayment,
-    trade_in_value: tradeInValue,
-    duration_months: duration,
-    trade_in: form.trade_in_enabled
-      ? {
-          brand: form.trade_brand,
-          model: form.trade_model,
-          year: Number(form.trade_year),
-          mileage: Number(form.trade_mileage),
-          condition: form.trade_condition,
-          estimated_value: tradeInValue,
-        }
-      : null,
+      trade_in:
+        form.trade_in_enabled
+          ? {
+              brand:
+                form.trade_brand.trim(),
+
+              model:
+                form.trade_model.trim(),
+
+              year:
+                Number(form.trade_year),
+
+              mileage:
+                Number(
+                  form.trade_mileage
+                ),
+
+              condition:
+                form.trade_condition,
+            }
+          : null,
+    };
+
+    try {
+      setLoading(true);
+
+      await onSubmit(payload);
+    } catch (error) {
+      toast.error(
+        error?.message ||
+          "Erreur lors de l'enregistrement."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  try {
-
-    setLoading(true);
-
-    await onSubmit(payload);
-
-  } catch (err) {
-
-    toast.error(
-      err.message ||
-      "Erreur lors de l'enregistrement."
-    );
-
-  } finally {
-
-    setLoading(false);
-
-  }
-
-};
-
-
-
-
+  // =====================================================
+  // CHARGEMENT
+  // =====================================================
 
   if (!lead) {
     return (
       <div className="container py-5">
-        Prospect introuvable.
+        <div
+          className="alert alert-light border"
+          role="status"
+        >
+          Prospect introuvable.
+        </div>
       </div>
     );
   }
@@ -442,495 +617,710 @@ const isValidQuote =
   return (
     <div className="container py-4">
 
-      {/* HEADER */}
+      {/* =================================================
+          EN-TÊTE
+          ================================================= */}
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
         <div>
-          <h2 className="fw-bold mb-1">
-
-{
- mode === "create"
- ?
- "Créer une offre"
- :
- "Modifier l'offre"
-}
-
-</h2>
+          <h1 className="h2 fw-bold mb-1">
+            {mode === "create"
+              ? "Créer une offre"
+              : "Modifier l'offre"}
+          </h1>
 
           <div className="text-muted">
-            {lead.first_name} {lead.last_name}
+            {lead.first_name}{" "}
+            {lead.last_name}
           </div>
         </div>
 
         <button
+          type="button"
           className="btn btn-outline-secondary"
           onClick={() => navigate(-1)}
+          disabled={loading}
         >
+          <i
+            className="bi bi-arrow-left me-2"
+            aria-hidden="true"
+          />
           Retour
         </button>
-
       </div>
-{/* REPRISE */}
 
-
-          <div className="card shadow-sm mb-4">
-
-
-            <div className="card-body">
-
-
-              <h5>
-                Reprise véhicule
-              </h5>
-
-
-
-              <div className="form-check mb-3">
-
-
-                <input
-
-                  className="form-check-input"
-
-                  type="checkbox"
-
-                  checked={
-                    form.trade_in_enabled
-                  }
-
-                  onChange={(e)=>
-
-                    setForm({
-
-                      ...form,
-
-                      trade_in_enabled:
-                        e.target.checked
-
-                    })
-
-                  }
-
-                />
-
-
-                <label className="form-check-label">
-
-                  Le client possède un véhicule à reprendre
-
-                </label>
-
-
-              </div>
-
-
-
-
-
-              {form.trade_in_enabled && (
-
-                <div className="row g-3">
-
-
-  {/* MARQUE */}
-  <div className="col-md-6">
-
-    <label className="form-label">
-      Marque
-    </label>
-
-    <input
-      name="trade_brand"
-      className={`form-control ${
-        tradeInErrors.trade_brand
-          ? "is-invalid"
-          : ""
-      }`}
-      value={form.trade_brand}
-      onChange={handleTradeInChange}
-    />
-
-    {tradeInErrors.trade_brand && (
-      <div className="invalid-feedback">
-        {tradeInErrors.trade_brand}
-      </div>
-    )}
-
-  </div>
-
-
-
-  {/* MODELE */}
-  <div className="col-md-6">
-
-    <label className="form-label">
-      Modèle
-    </label>
-
-    <input
-      name="trade_model"
-      className={`form-control ${
-        tradeInErrors.trade_model
-          ? "is-invalid"
-          : ""
-      }`}
-      value={form.trade_model}
-      onChange={handleTradeInChange}
-    />
-
-    {tradeInErrors.trade_model && (
-      <div className="invalid-feedback">
-        {tradeInErrors.trade_model}
-      </div>
-    )}
-
-  </div>
-
-
-
-  {/* ANNEE */}
-  <div className="col-md-4">
-
-    <label className="form-label">
-      Année
-    </label>
-
-    <input
-      type="number"
-      name="trade_year"
-      className={`form-control ${
-        tradeInErrors.trade_year
-          ? "is-invalid"
-          : ""
-      }`}
-      value={form.trade_year}
-      onChange={handleTradeInChange}
-    />
-
-    {tradeInErrors.trade_year && (
-      <div className="invalid-feedback">
-        {tradeInErrors.trade_year}
-      </div>
-    )}
-
-  </div>
-
-
-
-  {/* KM */}
-  <div className="col-md-4">
-
-    <label className="form-label">
-      Kilométrage
-    </label>
-
-    <input
-      type="number"
-      name="trade_mileage"
-      className={`form-control ${
-        tradeInErrors.trade_mileage
-          ? "is-invalid"
-          : ""
-      }`}
-      value={form.trade_mileage}
-      onChange={handleTradeInChange}
-    />
-
-    {tradeInErrors.trade_mileage && (
-      <div className="invalid-feedback">
-        {tradeInErrors.trade_mileage}
-      </div>
-    )}
-
-  </div>
-
-
-
-  {/* CONDITION */}
-  <div className="col-md-4">
-
-    <label className="form-label">
-      État
-    </label>
-
-    <select
-      name="trade_condition"
-      className={`form-select ${
-        tradeInErrors.trade_condition
-          ? "is-invalid"
-          : ""
-      }`}
-      value={form.trade_condition}
-      onChange={handleTradeInChange}
-    >
-
-      <option value="">
-        Choisir
-      </option>
-
-      <option value="excellent">
-        Excellent
-      </option>
-
-      <option value="good">
-        Bon
-      </option>
-
-      <option value="average">
-        Moyen
-      </option>
-
-      <option value="poor">
-        Mauvais
-      </option>
-
-    </select>
-
-
-    {tradeInErrors.trade_condition && (
-      <div className="invalid-feedback">
-        {tradeInErrors.trade_condition}
-      </div>
-    )}
-
-  </div>
-
-
-
-
-
-
-                  <button
-
-                    className="btn btn-dark mt-3"
-
-                    disabled={
-                      !isTradeInValid()
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+      >
+
+        {/* =================================================
+            REPRISE
+            ================================================= */}
+
+        <div className="card border-0 shadow-sm mb-4">
+          <div className="card-body p-4">
+
+            <h2 className="h5 fw-semibold mb-3">
+              Reprise véhicule
+            </h2>
+
+            <div className="form-check mb-3">
+              <input
+                id="trade-in-enabled"
+                className="form-check-input"
+                type="checkbox"
+                checked={
+                  form.trade_in_enabled
+                }
+                onChange={
+                  handleTradeInToggle
+                }
+                disabled={loading}
+              />
+
+              <label
+                htmlFor="trade-in-enabled"
+                className="form-check-label"
+              >
+                Le client possède un véhicule
+                à reprendre
+              </label>
+            </div>
+
+            {form.trade_in_enabled && (
+              <div className="row g-3">
+
+                {/* -----------------------------------------
+                    MARQUE
+                    ----------------------------------------- */}
+
+                <div className="col-md-6">
+                  <label
+                    htmlFor="trade-brand"
+                    className="form-label"
+                  >
+                    Marque
+                  </label>
+
+                  <input
+                    id="trade-brand"
+                    name="trade_brand"
+                    type="text"
+                    className={`form-control ${
+                      errors.trade_brand
+                        ? "is-invalid"
+                        : ""
+                    }`}
+                    value={
+                      form.trade_brand
                     }
+                    onChange={
+                      handleTradeInChange
+                    }
+                    disabled={loading}
+                    aria-invalid={
+                      Boolean(
+                        errors.trade_brand
+                      )
+                    }
+                    aria-describedby={
+                      errors.trade_brand
+                        ? "trade-brand-error"
+                        : undefined
+                    }
+                  />
 
+                  {errors.trade_brand && (
+                    <div
+                      id="trade-brand-error"
+                      className="invalid-feedback"
+                    >
+                      {errors.trade_brand}
+                    </div>
+                  )}
+                </div>
+
+                {/* -----------------------------------------
+                    MODÈLE
+                    ----------------------------------------- */}
+
+                <div className="col-md-6">
+                  <label
+                    htmlFor="trade-model"
+                    className="form-label"
+                  >
+                    Modèle
+                  </label>
+
+                  <input
+                    id="trade-model"
+                    name="trade_model"
+                    type="text"
+                    className={`form-control ${
+                      errors.trade_model
+                        ? "is-invalid"
+                        : ""
+                    }`}
+                    value={
+                      form.trade_model
+                    }
+                    onChange={
+                      handleTradeInChange
+                    }
+                    disabled={loading}
+                    aria-invalid={
+                      Boolean(
+                        errors.trade_model
+                      )
+                    }
+                  />
+
+                  {errors.trade_model && (
+                    <div className="invalid-feedback">
+                      {errors.trade_model}
+                    </div>
+                  )}
+                </div>
+
+                {/* -----------------------------------------
+                    ANNÉE
+                    ----------------------------------------- */}
+
+                <div className="col-md-4">
+                  <label
+                    htmlFor="trade-year"
+                    className="form-label"
+                  >
+                    Année
+                  </label>
+
+                  <input
+                    id="trade-year"
+                    name="trade_year"
+                    type="number"
+                    min="1900"
+                    max={
+                      new Date().getFullYear()
+                    }
+                    className={`form-control ${
+                      errors.trade_year
+                        ? "is-invalid"
+                        : ""
+                    }`}
+                    value={
+                      form.trade_year
+                    }
+                    onChange={
+                      handleTradeInChange
+                    }
+                    disabled={loading}
+                    aria-invalid={
+                      Boolean(
+                        errors.trade_year
+                      )
+                    }
+                  />
+
+                  {errors.trade_year && (
+                    <div className="invalid-feedback">
+                      {errors.trade_year}
+                    </div>
+                  )}
+                </div>
+
+                {/* -----------------------------------------
+                    KILOMÉTRAGE
+                    ----------------------------------------- */}
+
+                <div className="col-md-4">
+                  <label
+                    htmlFor="trade-mileage"
+                    className="form-label"
+                  >
+                    Kilométrage
+                  </label>
+
+                  <input
+                    id="trade-mileage"
+                    name="trade_mileage"
+                    type="number"
+                    min="0"
+                    className={`form-control ${
+                      errors.trade_mileage
+                        ? "is-invalid"
+                        : ""
+                    }`}
+                    value={
+                      form.trade_mileage
+                    }
+                    onChange={
+                      handleTradeInChange
+                    }
+                    disabled={loading}
+                    aria-invalid={
+                      Boolean(
+                        errors.trade_mileage
+                      )
+                    }
+                  />
+
+                  {errors.trade_mileage && (
+                    <div className="invalid-feedback">
+                      {errors.trade_mileage}
+                    </div>
+                  )}
+                </div>
+
+                {/* -----------------------------------------
+                    ÉTAT
+                    ----------------------------------------- */}
+
+                <div className="col-md-4">
+                  <label
+                    htmlFor="trade-condition"
+                    className="form-label"
+                  >
+                    État
+                  </label>
+
+                  <select
+                    id="trade-condition"
+                    name="trade_condition"
+                    className={`form-select ${
+                      errors.trade_condition
+                        ? "is-invalid"
+                        : ""
+                    }`}
+                    value={
+                      form.trade_condition
+                    }
+                    onChange={
+                      handleTradeInChange
+                    }
+                    disabled={loading}
+                    aria-invalid={
+                      Boolean(
+                        errors.trade_condition
+                      )
+                    }
+                  >
+                    <option value="">
+                      Choisir
+                    </option>
+
+                    <option value="excellent">
+                      Excellent
+                    </option>
+
+                    <option value="good">
+                      Bon
+                    </option>
+
+                    <option value="average">
+                      Moyen
+                    </option>
+
+                    <option value="poor">
+                      Mauvais
+                    </option>
+                  </select>
+
+                  {errors.trade_condition && (
+                    <div className="invalid-feedback">
+                      {errors.trade_condition}
+                    </div>
+                  )}
+                </div>
+
+                {/* -----------------------------------------
+                    CALCUL REPRISE
+                    ----------------------------------------- */}
+
+                <div className="col-12">
+                  <button
+                    type="button"
+                    className="btn btn-dark"
                     onClick={
                       handleTradeIn
                     }
-
+                    disabled={
+                      loading ||
+                      tradeInLoading ||
+                      Object.keys(
+                        validateTradeIn(form)
+                      ).length > 0
+                    }
                   >
-
-                    Calculer la reprise
-
+                    {tradeInLoading ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          aria-hidden="true"
+                        />
+                        Calcul en cours...
+                      </>
+                    ) : (
+                      <>
+                        <i
+                          className="bi bi-calculator me-2"
+                          aria-hidden="true"
+                        />
+                        Calculer la reprise
+                      </>
+                    )}
                   </button>
 
-
-
                   {tradeInValue > 0 && (
-
-                    <div className="alert alert-light mt-3">
-
+                    <div className="alert alert-light border mt-3 mb-0">
                       Valeur estimée :
                       {" "}
                       <strong>
                         {tradeInValue} €
                       </strong>
-
-
                     </div>
-
                   )}
 
-
-
+                  {errors.trade_in_value && (
+                    <div className="text-danger small mt-2">
+                      {errors.trade_in_value}
+                    </div>
+                  )}
                 </div>
 
-              )}
-
-
-
-            </div>
-
+              </div>
+            )}
           </div>
-      <div className="row g-4">
+        </div>
 
-        {/* COLONNE GAUCHE */}
+        {/* =================================================
+            CONTENU PRINCIPAL
+            ================================================= */}
 
-        <div className="col-lg-7">
+        <div className="row g-4">
 
-          <div className="card shadow-sm">
+          {/* =================================================
+              INFORMATIONS FINANCIÈRES
+              ================================================= */}
 
-            <div className="card-body">
+          <div className="col-lg-7">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body p-4">
 
-              <h5 className="mb-3">
-                Informations financières
-              </h5>
+                <h2 className="h5 fw-semibold mb-3">
+                  Informations financières
+                </h2>
 
-              <div className="row g-3">
+                <div className="row g-3">
 
-                <div className="col-md-6">
-  <label className="form-label">
-    Remise (€)
-  </label>
+                  {/* -----------------------------------------
+                      REMISE
+                      ----------------------------------------- */}
 
-  <input
-    type="number"
-    className="form-control"
-    min="0"
-    max={basePrice}
-    value={discount}
-    onChange={(e) =>
-      setDiscount(
-        Math.min(
-          Number(e.target.value),
-          basePrice
-        )
-      )
-    }
-  />
-</div>
+                  <div className="col-md-6">
+                    <label
+                      htmlFor="discount"
+                      className="form-label"
+                    >
+                      Remise (€)
+                    </label>
 
+                    <input
+                      id="discount"
+                      type="number"
+                      className={`form-control ${
+                        errors.discount
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      min="0"
+                      value={discount}
+                      onChange={(event) =>
+                        setDiscount(
+                          Number(
+                            event.target.value
+                          )
+                        )
+                      }
+                      disabled={loading}
+                      aria-invalid={
+                        Boolean(
+                          errors.discount
+                        )
+                      }
+                    />
 
-<div className="col-md-6">
-  <label className="form-label">
-    Apport client (€)
-  </label>
+                    {errors.discount && (
+                      <div className="invalid-feedback">
+                        {errors.discount}
+                      </div>
+                    )}
+                  </div>
 
-  <input
-    type="number"
-    className="form-control"
-    min="0"
-    max={basePrice}
-    value={downPayment}
-    onChange={(e) =>
-      setDownPayment(
-        Math.min(
-          Number(e.target.value),
-          basePrice
-        )
-      )
-    }
-  />
-</div>
+                  {/* -----------------------------------------
+                      APPORT
+                      ----------------------------------------- */}
 
-  
+                  <div className="col-md-6">
+                    <label
+                      htmlFor="down-payment"
+                      className="form-label"
+                    >
+                      Apport client (€)
+                    </label>
 
-                <div className="col-md-6">
-                  <label className="form-label">
-                    Durée
-                  </label>
+                    <input
+                      id="down-payment"
+                      type="number"
+                      className={`form-control ${
+                        errors.down_payment
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      min="0"
+                      value={downPayment}
+                      onChange={(event) =>
+                        setDownPayment(
+                          Number(
+                            event.target.value
+                          )
+                        )
+                      }
+                      disabled={loading}
+                      aria-invalid={
+                        Boolean(
+                          errors.down_payment
+                        )
+                      }
+                    />
 
-                  <select
-                    className="form-select"
-                    value={duration}
-                    onChange={(e) =>
-                      setDuration(Number(e.target.value))
-                    }
+                    {errors.down_payment && (
+                      <div className="invalid-feedback">
+                        {errors.down_payment}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* -----------------------------------------
+                      DURÉE
+                      ----------------------------------------- */}
+
+                  <div className="col-md-6">
+                    <label
+                      htmlFor="duration"
+                      className="form-label"
+                    >
+                      Durée
+                    </label>
+
+                    <select
+                      id="duration"
+                      className={`form-select ${
+                        errors.duration
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      value={duration}
+                      onChange={(event) =>
+                        setDuration(
+                          Number(
+                            event.target.value
+                          )
+                        )
+                      }
+                      disabled={loading}
+                      aria-invalid={
+                        Boolean(
+                          errors.duration
+                        )
+                      }
+                    >
+                      <option value={24}>
+                        24 mois
+                      </option>
+
+                      <option value={36}>
+                        36 mois
+                      </option>
+
+                      <option value={48}>
+                        48 mois
+                      </option>
+
+                      <option value={60}>
+                        60 mois
+                      </option>
+                    </select>
+
+                    {errors.duration && (
+                      <div className="invalid-feedback">
+                        {errors.duration}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* =================================================
+              RÉCAPITULATIF
+              ================================================= */}
+
+          <div className="col-lg-5">
+            <div className="card border-0 shadow-sm">
+              <div className="card-body p-4">
+
+                <h2 className="h5 fw-semibold mb-3">
+                  Récapitulatif
+                </h2>
+
+                <div className="mb-3">
+                  <div className="fw-semibold">
+                    {vehicle?.brand}{" "}
+                    {vehicle?.model}
+                  </div>
+
+                  <small className="text-muted">
+                    {lead.first_name}{" "}
+                    {lead.last_name}
+                  </small>
+                </div>
+
+                <hr />
+
+                <div className="d-flex justify-content-between mb-2">
+                  <span>
+                    Prix véhicule
+                  </span>
+
+                  <strong>
+                    {basePrice} €
+                  </strong>
+                </div>
+
+                <div className="d-flex justify-content-between mb-2">
+                  <span>
+                    Remise
+                  </span>
+
+                  <strong>
+                    - {discount} €
+                  </strong>
+                </div>
+
+                <div className="d-flex justify-content-between mb-2">
+                  <span>
+                    Apport
+                  </span>
+
+                  <strong>
+                    - {downPayment} €
+                  </strong>
+                </div>
+
+                <div className="d-flex justify-content-between mb-2">
+                  <span>
+                    Reprise
+                  </span>
+
+                  <strong>
+                    - {tradeInValue} €
+                  </strong>
+                </div>
+
+                <hr />
+
+                <div className="d-flex justify-content-between mb-2">
+                  <span>
+                    Montant financé
+                  </span>
+
+                  <strong>
+                    {total} €
+                  </strong>
+                </div>
+
+                <div className="d-flex justify-content-between mb-4">
+                  <span>
+                    Mensualité estimée
+                  </span>
+
+                  <strong>
+                    {monthly} €/mois
+                  </strong>
+                </div>
+
+                {/* -----------------------------------------
+                    ERREUR GLOBALE
+                    ----------------------------------------- */}
+
+                {!isFormValid && (
+                  <div
+                    className="alert alert-danger"
+                    role="alert"
                   >
-                    <option value={24}>24 mois</option>
-                    <option value={36}>36 mois</option>
-                    <option value={48}>48 mois</option>
-                    <option value={60}>60 mois</option>
-                  </select>
-                </div>
+                    Veuillez corriger les erreurs
+                    du formulaire avant de générer
+                    l'offre.
+                  </div>
+                )}
+
+                {/* -----------------------------------------
+                    ERREUR DE COHÉRENCE FINANCIÈRE
+                    ----------------------------------------- */}
+
+                {errors.total && (
+                  <div
+                    className="alert alert-danger"
+                    role="alert"
+                  >
+                    {errors.total}
+                  </div>
+                )}
+
+                {/* -----------------------------------------
+                    BOUTON PRINCIPAL
+                    ----------------------------------------- */}
+
+                <button
+                  type="submit"
+                  className="btn btn-dark w-100"
+                  disabled={
+                    loading ||
+                    !isFormValid
+                  }
+                >
+                  {loading ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        aria-hidden="true"
+                      />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <i
+                        className="bi bi-file-earmark-check me-2"
+                        aria-hidden="true"
+                      />
+
+                      {mode === "create"
+                        ? "Générer l'offre"
+                        : "Enregistrer les modifications"}
+                    </>
+                  )}
+                </button>
 
               </div>
-
             </div>
-
           </div>
 
         </div>
-
-        {/* COLONNE DROITE */}
-
-        <div className="col-lg-5">
-
-          <div className="card shadow-sm">
-
-            <div className="card-body">
-
-              <h5 className="mb-3">
-                Récapitulatif
-              </h5>
-
-              <div className="mb-3">
-
-                <div className="fw-semibold">
-                  {vehicle?.brand} {vehicle?.model}
-                </div>
-
-                <small className="text-muted">
-                  {lead.first_name} {lead.last_name}
-                </small>
-
-              </div>
-
-              <hr />
-
-              <div className="d-flex justify-content-between">
-  <span>Prix véhicule</span>
-  <strong>{basePrice} €</strong>
-</div>
-
-<div className="d-flex justify-content-between">
-  <span>Remise</span>
-  <strong>- {discount} €</strong>
-</div>
-
-<div className="d-flex justify-content-between">
-  <span>Apport</span>
-  <strong>- {downPayment} €</strong>
-</div>
-
-<div className="d-flex justify-content-between">
-  <span>Reprise</span>
-  <strong>- {tradeInValue} €</strong>
-</div>
-
-<hr />
-
-<div className="d-flex justify-content-between">
-  <span>Montant financé</span>
-  <strong>{total} €</strong>
-</div>
-
-<div className="d-flex justify-content-between">
-  <span>Mensualité estimée</span>
-  <strong>{monthly} €/mois</strong>
-</div>
-
-              <button
-  className="btn btn-dark w-100"
-  onClick={handleSubmit}
-  disabled={
-    loading || !isValidQuote
-  }
->
-  {
- mode === "create"
- ?
- "Générer l'offre"
- :
- "Enregistrer les modifications"
-}
-</button>
-
-{!isValidQuote && (
-  <div className="alert alert-danger mt-3">
-    La remise, l'apport et la reprise ne peuvent pas dépasser
-    le prix du véhicule.
-  </div>
-)}
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
+      </form>
     </div>
   );
 }
-
-
-
-

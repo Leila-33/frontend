@@ -1,307 +1,346 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import { Link } from "react-router-dom";
+
+import { toast } from "react-toastify";
+
 import apiFetch from "../../../services/apiFetch";
-import { quoteStatusConfig } from "../../../utils/status";
 
+import {
+  QUOTE_STATUSES,
+} from "../../../constants/quoteOptions";
 
-export default function CustomerQuotesPage(){
+import QuoteStatusBadge from "../../../components/quotes/QuoteStatusBadge";
 
-  const [quotes,setQuotes] = useState([]);
+/**
+ * Page permettant au client de consulter
+ * ses offres commerciales.
+ *
+ * Les offres sont regroupées par statut :
+ * - offres en attente de réponse ;
+ * - offres acceptées ;
+ * - offres refusées ;
+ * - offres expirées.
+ *
+ * Les offres nécessitant une action du client
+ * sont également identifiées visuellement.
+ */
+export default function CustomerQuotesPage() {
+  // =====================================================
+  // ÉTAT
+  // =====================================================
 
-  const navigate = useNavigate();
+  const [quotes, setQuotes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
+  // =====================================================
+  // CHARGEMENT DES OFFRES
+  // =====================================================
 
-    const load = async()=>{
+  useEffect(() => {
+    let isMounted = true;
 
-      const data = await apiFetch(
-        "/quotes",
-        {
-          method:"GET",
+    const loadQuotes = async () => {
+      try {
+        setLoading(true);
+
+        const data = await apiFetch(
+          "/quotes",
+          {
+            method: "GET",
+          }
+        );
+
+        // Évite une mise à jour d'état si le composant
+        // a été démonté pendant la requête.
+        if (isMounted) {
+          setQuotes(
+            Array.isArray(data)
+              ? data
+              : []
+          );
         }
-      );
-
-      setQuotes(data);
-
+      } catch (error) {
+        if (isMounted) {
+          toast.error(
+            error?.message ||
+            "Impossible de charger vos offres."
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     };
 
-
-    load();
-
-  },[]);
-
-
-
-  const quotesByStatus = {
-
-    SENT: quotes.filter(
-      quote => quote.status === "SENT"
-    ),
-
-    ACCEPTED: quotes.filter(
-      quote => quote.status === "ACCEPTED"
-    ),
-
-    REJECTED: quotes.filter(
-      quote => quote.status === "REJECTED"
-    ),
-
-    EXPIRED: quotes.filter(
-      quote => quote.status === "EXPIRED"
-    ),
-
-  };
-
-
-
-const renderQuotes = (
-  status,
-  quotesList
-) => {
-
-  if (quotesList.length === 0) {
-    return null;
-  }
-
-
-  return (
-
-    <div className="mb-5" key={status}>
-
-
-      <h4 className="fw-bold mb-3">
-
-        {quoteStatusConfig[status].title}
-
-      </h4>
-
-
-
-      {
-        quotesList.map((quote) => {
-
-
-          return (
-
-            <div
-              key={quote.id}
-              className="card mb-3 shadow-sm"
-            >
-
-              <div className="card-body">
-
-
-                <div className="d-flex justify-content-between">
-
-
-                  <div>
-
-
-                    <h5>
-
-                      {
-                        quote.vehicle
-                          ? (
-                              <>
-                                {quote.vehicle.brand}
-                                {" "}
-                                {quote.vehicle.model}
-                              </>
-                            )
-                          : "Véhicule"
-                      }
-
-                    </h5>
-
-
-
-                    <p className="text-muted mb-1">
-
-                      Prix :
-
-                      {" "}
-
-                      {quote.base_price} €
-
-                    </p>
-
-
-
-                    <p className="mb-0">
-
-                      Mensualité :
-
-                      {" "}
-
-                      <strong>
-
-                        {quote.monthly_payment}
-
-                        €/mois
-
-                      </strong>
-
-                    </p>
-
-
-                  </div>
-
-
-
-
-
-                  <div className="d-flex flex-column align-items-end gap-2">
-
-
-                    <span
-                      className={
-                        `badge ${quoteStatusConfig[status].className}`
-                      }
-                    >
-
-                      {quoteStatusConfig[status].label}
-
-                    </span>
-
-
-
-
-                    {
-                      quote.requires_action && (
-
-                        <span className="badge bg-warning text-dark">
-
-                          Action requise
-
-                        </span>
-
-                      )
-                    }
-
-
-                  </div>
-
-
-
-                </div>
-
-
-
-
-
-                {
-                  quote.requires_action && (
-
-                    <div className="alert alert-warning mt-3 mb-0">
-
-                      <i className="bi bi-exclamation-circle me-2"/>
-
-                      Votre réponse est attendue pour cette offre.
-
-                    </div>
-
-                  )
-                }
-
-
-
-
-
-                <button
-
-                  className="btn btn-outline-primary mt-3"
-
-                  onClick={() =>
-                    navigate(
-                      `/quotes/${quote.id}`
-                    )
-                  }
-
-                >
-
-                  Voir l'offre
-
-                </button>
-
-
-
-              </div>
-
-
-            </div>
-
-          );
-
-
-        })
+    loadQuotes();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // =====================================================
+  // REGROUPEMENT PAR STATUT
+  // =====================================================
+
+  /**
+   * Regroupe les offres en un seul parcours du tableau.
+   *
+   * Cela évite de parcourir `quotes` quatre fois
+   * avec quatre appels successifs à `filter()`.
+   */
+  const quotesByStatus = useMemo(() => {
+    const groupedQuotes = {
+      SENT: [],
+      ACCEPTED: [],
+      REJECTED: [],
+      EXPIRED: [],
+    };
+
+    quotes.forEach((quote) => {
+      if (
+        Object.prototype.hasOwnProperty.call(
+          groupedQuotes,
+          quote.status
+        )
+      ) {
+        groupedQuotes[quote.status].push(quote);
       }
+    });
 
+    return groupedQuotes;
+  }, [quotes]);
 
-    </div>
+  // =====================================================
+  // FORMATAGE
+  // =====================================================
 
-  );
-
-};
-
-
-
-return (
-
-  <div className="container mt-4 mb-5">
-
-
-    <h2 className="fw-bold mb-4">
-
-      Mes offres commerciales
-
-    </h2>
-
-
-
-    {
-      quotes.length === 0 && (
-
-        <div className="alert alert-info">
-
-          Vous n'avez aucune offre.
-
-        </div>
-
-      )
+  /**
+   * Formate un montant en euros.
+   *
+   * Une valeur absente est affichée comme
+   * "Non renseigné" plutôt que "NaN".
+   */
+  const formatAmount = (value) => {
+    if (value == null) {
+      return "Non renseigné";
     }
 
+    return `${Number(value).toLocaleString("fr-FR")} €`;
+  };
 
+  // =====================================================
+  // RENDU D'UNE SECTION
+  // =====================================================
 
-    {renderQuotes(
-      "SENT",
-      quotesByStatus.SENT
-    )}
+  const renderQuotes = (status) => {
+    const statusQuotes =
+      quotesByStatus[status];
 
+    // Ne crée pas de section vide.
+    if (!statusQuotes?.length) {
+      return null;
+    }
 
+    const statusConfig =
+      QUOTE_STATUSES[status];
 
-    {renderQuotes(
-      "ACCEPTED",
-      quotesByStatus.ACCEPTED
-    )}
+    if (!statusConfig) {
+      return null;
+    }
 
+    return (
+      <section
+        key={status}
+        className="mb-5"
+        aria-labelledby={`quotes-${status}`}
+      >
+        <h2
+          id={`quotes-${status}`}
+          className="h4 fw-bold mb-3"
+        >
+          {statusConfig.title}
+        </h2>
 
+        <div className="d-flex flex-column gap-3">
+          {statusQuotes.map((quote) => {
+            const vehicleName =
+              [
+                quote?.vehicle?.brand,
+                quote?.vehicle?.model,
+              ]
+                .filter(Boolean)
+                .join(" ") ||
+              "Véhicule non renseigné";
 
-    {renderQuotes(
-      "REJECTED",
-      quotesByStatus.REJECTED
-    )}
+            return (
+              <article
+                key={quote.id}
+                className="card border-0 shadow-sm rounded-4"
+              >
+                <div className="card-body p-4">
 
+                  {/* =====================================
+                      EN-TÊTE
+                  ===================================== */}
 
+                  <div className="d-flex flex-column flex-md-row justify-content-between gap-3">
 
-    {renderQuotes(
-      "EXPIRED",
-      quotesByStatus.EXPIRED
-    )}
+                    <div>
+                      <h3 className="h5 fw-semibold mb-2">
+                        {vehicleName}
+                      </h3>
 
+                      <p className="text-muted mb-1">
+                        Prix :{" "}
+                        <strong className="text-body">
+                          {formatAmount(
+                            quote?.base_price
+                          )}
+                        </strong>
+                      </p>
 
+                      <p className="mb-0">
+                        Mensualité :{" "}
+                        <strong>
+                          {quote?.monthly_payment != null
+                            ? `${Number(
+                                quote.monthly_payment
+                              ).toLocaleString(
+                                "fr-FR"
+                              )} €/mois`
+                            : "Non renseignée"}
+                        </strong>
+                      </p>
+                    </div>
 
-  </div>
+                    {/* =================================
+                        STATUTS
+                    ================================= */}
 
-);
+                    <div className="d-flex flex-column align-items-md-end gap-2">
 
+                      <QuoteStatusBadge
+                        status={quote.status}
+                        role="client"
+                      />
+
+                      {quote.requires_action && (
+                        <span className="badge bg-warning text-dark">
+                          Action requise
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* =====================================
+                      ACTION REQUISE
+                  ===================================== */}
+
+                  {quote.requires_action && (
+                    <div
+                      className="alert alert-warning mt-4 mb-0"
+                      role="status"
+                    >
+                      <i
+                        className="bi bi-exclamation-circle me-2"
+                        aria-hidden="true"
+                      />
+
+                      Votre réponse est attendue
+                      pour cette offre.
+                    </div>
+                  )}
+
+                  {/* =====================================
+                      ACTION
+                  ===================================== */}
+
+                  <div className="mt-4">
+                    <Link
+                      to={`/quotes/${quote.id}`}
+                      className="btn btn-outline-primary"
+                    >
+                      <i
+                        className="bi bi-file-earmark-text me-2"
+                        aria-hidden="true"
+                      />
+
+                      Voir l'offre
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  // =====================================================
+  // CHARGEMENT
+  // =====================================================
+
+  if (loading) {
+    return (
+      <main className="container mt-4 mb-5">
+        <div
+          className="d-flex justify-content-center align-items-center gap-2 py-5"
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            className="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          />
+
+          <span>
+            Chargement de vos offres...
+          </span>
+        </div>
+      </main>
+    );
+  }
+
+  // =====================================================
+  // AFFICHAGE
+  // =====================================================
+
+  return (
+    <main className="container mt-4 mb-5">
+
+      <h1 className="fw-bold mb-4">
+        Mes offres commerciales
+      </h1>
+
+      {/* ===============================================
+          AUCUNE OFFRE
+      =============================================== */}
+
+      {quotes.length === 0 && (
+        <div className="alert alert-info">
+          Vous n'avez aucune offre commerciale.
+        </div>
+      )}
+
+      {/* ===============================================
+          OFFRES PAR STATUT
+      =============================================== */}
+
+      {renderQuotes("SENT")}
+
+      {renderQuotes("ACCEPTED")}
+
+      {renderQuotes("REJECTED")}
+
+      {renderQuotes("EXPIRED")}
+    </main>
+  );
 }

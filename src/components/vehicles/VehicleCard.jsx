@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import "../../styles/form_check.css";
 import ConfirmActionModal from "../../components/common/ConfirmActionModal";
 import {
   BsCalendar3,

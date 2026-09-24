@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import { uploadImages } from "../../services/uploadService";
-import "../../styles/form_check.css";
 import Pagination from "../../components/common/Pagination";
 
 import {

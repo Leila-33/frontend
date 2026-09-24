@@ -102,7 +102,7 @@ export default function SalesSidebar({
           ====================================================== */}
 
       <SidebarNavItem
-        to="/notifications"
+        to="/sales/notifications"
         icon="bi bi-bell"
         onClick={onClickLink}
       >

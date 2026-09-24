@@ -45,13 +45,13 @@ export default function SalesDashboard() {
     {
       key: "new_leads",
       label: "Nouveaux leads",
-      icon: "bi-person-plus",
+      icon: "bi-inbox",
     },
 
     {
       key: "my_leads",
       label: "Mes leads",
-      icon: "bi-people",
+      icon: "bi-kanban",
     },
 
     {
@@ -254,36 +254,25 @@ export default function SalesDashboard() {
             <div className="d-grid gap-2">
 
               <Link
-                to="/sales/leads"
+                to="/sales/leads?filter=unassigned"
                 className="btn btn-dark"
               >
                 <i
-                  className="bi bi-people me-2"
+                  className="bi bi-inbox me-2"
                   aria-hidden="true"
                 />
-                Voir tous les leads
+                Voir tous les leads non assignés
               </Link>
 
               <Link
-                to="/sales/my-leads"
+                to="/sales/leads?filter=my"
                 className="btn btn-outline-dark"
               >
                 <i
-                  className="bi bi-person-check me-2"
+                  className="bi bi-kanban me-2"
                   aria-hidden="true"
                 />
                 Mes leads
-              </Link>
-
-              <Link
-                to="/sales/quotes"
-                className="btn btn-outline-primary"
-              >
-                <i
-                  className="bi bi-file-earmark-text me-2"
-                  aria-hidden="true"
-                />
-                Devis
               </Link>
 
             </div>

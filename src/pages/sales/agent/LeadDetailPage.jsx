@@ -1,31 +1,84 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
 import { toast } from "react-toastify";
+
 import apiFetch from "../../../services/apiFetch";
-import { leadStatusConfig, quoteStatusConfig } from "../../../utils/status";
-import ConfirmModal from "../../../components/sales/ConfirmModal";
 
+
+import { LEAD_STATUSES } from "../../../constants/leadOptions";
+import { QUOTE_STATUSES } from "../../../constants/quoteOptions";
+
+import ConfirmActionModal from "../../../components/common/ConfirmActionModal";
+
+/**
+ * Page de détail d'un prospect commercial.
+ *
+ * Responsabilités :
+ * - charger les informations du prospect ;
+ * - afficher ses coordonnées et son véhicule ;
+ * - afficher les actions commerciales disponibles ;
+ * - permettre de marquer le prospect comme contacté ;
+ * - permettre de créer une offre ;
+ * - afficher les offres existantes ;
+ * - permettre la suppression du prospect lorsque celle-ci
+ *   est autorisée par le backend.
+ *
+ * Les règles métier restent gérées par l'API.
+ * Le frontend se contente d'afficher les actions autorisées
+ * via les propriétés `can_*` retournées par le backend.
+ */
 export default function LeadDetailPage() {
-
   const { id } = useParams();
   const navigate = useNavigate();
 
-const [
-  showDeleteModal,
-  setShowDeleteModal
-] = useState(false);
+  // =====================================================
+  // ÉTAT
+  // =====================================================
 
   const [lead, setLead] = useState(null);
 
+  /**
+   * Chargement initial du prospect.
+   *
+   * Cet état est distinct de `actionLoading` afin d'éviter
+   * de masquer toute la page lorsqu'une action commerciale
+   * est simplement en cours.
+   */
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * Indique qu'une action est actuellement exécutée :
+   * - marquage comme contacté ;
+   * - suppression.
+   */
+  const [actionLoading, setActionLoading] =
+    useState(false);
+
   const [
-    loading,
-    setLoading
+    showDeleteModal,
+    setShowDeleteModal,
   ] = useState(false);
 
+  // =====================================================
+  // CHARGEMENT DU PROSPECT
+  // =====================================================
 
-  const fetchLead = async () => {
+  const fetchLead = useCallback(async () => {
+    if (!id) {
+      return;
+    }
 
     try {
+      setLoading(true);
 
       const data = await apiFetch(
         `/agent/leads/${id}`,
@@ -35,434 +88,569 @@ const [
       );
 
       setLead(data);
-
-
-    } catch(err) {
-
+    } catch (error) {
       toast.error(
-        "Erreur lors du chargement du prospect"
+        error?.message ||
+          "Erreur lors du chargement du prospect."
       );
 
+      setLead(null);
+    } finally {
+      setLoading(false);
     }
-
-  };
-
-
+  }, [id]);
 
   useEffect(() => {
     fetchLead();
-  }, [id]);
+  }, [fetchLead]);
 
-const hasQuote = lead?.quotes?.length > 0;
-const markAsContacted = async () => {
-  try {
-          setLoading(true);
+  // =====================================================
+  // MARQUER COMME CONTACTÉ
+  // =====================================================
 
-    await apiFetch(
-      `/agent/leads/${lead.id}/contacted`,
-      {
-        method: "PATCH",
-      }
-    );
-
-    fetchLead();
-
-    toast.success("Le prospect a été marqué comme contacté.");
-
-  } catch (err) {
-    toast.error(err.message || "Impossible de mettre à jour le prospect.");
-  }finally{
-
-
-      setLoading(false);
-
-
+  const markAsContacted = async () => {
+    if (
+      !lead ||
+      actionLoading
+    ) {
+      return;
     }
-};
-const deleteLead = async () => {
 
-  try {
+    try {
+      setActionLoading(true);
 
-    setLoading(true);
+      await apiFetch(
+        `/agent/leads/${lead.id}/contacted`,
+        {
+          method: "PATCH",
+        }
+      );
 
-    await apiFetch(
-      `/agent/leads/${lead.id}`,
-      {
-        method: "DELETE",
-      }
+
+      await fetchLead();
+
+      toast.success(
+        "Le prospect a été marqué comme contacté."
+      );
+    } catch (error) {
+      toast.error(
+        error?.message ||
+          "Impossible de mettre à jour le prospect."
+      );
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // =====================================================
+  // SUPPRESSION DU PROSPECT
+  // =====================================================
+
+  const deleteLead = async () => {
+    if (
+      !lead ||
+      actionLoading
+    ) {
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+
+      await apiFetch(
+        `/agent/leads/${lead.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      toast.success(
+        "Prospect supprimé."
+      );
+
+      navigate("/sales/leads");
+    } catch (error) {
+      toast.error(
+        error?.message ||
+          "Impossible de supprimer le prospect."
+      );
+    } finally {
+      setActionLoading(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  // =====================================================
+  // ÉTATS DE CHARGEMENT
+  // =====================================================
+
+  if (loading) {
+    return (
+      <div
+        className="container py-5 text-center text-muted"
+        role="status"
+        aria-live="polite"
+      >
+        <span
+          className="spinner-border spinner-border-sm me-2"
+          aria-hidden="true"
+        />
+
+        Chargement du prospect...
+      </div>
     );
-
-    toast.success(
-      "Prospect supprimé."
-    );
-
-    navigate("/sales/leads");
-
-  } catch (err) {
-
-    toast.error(
-      err.message ||
-      "Impossible de supprimer le prospect."
-    );
-
-  } finally {
-
-    setLoading(false);
-
-    setShowDeleteModal(false);
-
   }
 
-};
+  // =====================================================
+  // PROSPECT INTROUVABLE
+  // =====================================================
 
-if (loading) {
+  if (!lead) {
+    return (
+      <div className="container py-5">
+        <div className="card border-0 shadow-sm rounded-4">
+          <div className="card-body text-center p-5">
 
-  return (
-    <div className="container py-5 text-center text-muted">
-      Chargement du prospect...
-    </div>
-  );
+            <i
+              className="bi bi-person-x fs-1 text-muted"
+              aria-hidden="true"
+            />
 
-}
+            <h1 className="h4 fw-semibold mt-3">
+              Prospect introuvable
+            </h1>
 
+            <p className="text-muted mb-4">
+              Ce prospect n'existe plus ou n'est
+              plus accessible.
+            </p>
 
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() =>
+                navigate("/sales/leads")
+              }
+            >
+              <i
+                className="bi bi-arrow-left me-2"
+                aria-hidden="true"
+              />
+              Retour aux prospects
+            </button>
 
-
-
-if (!lead) {
-
-  return (
-    <div className="container py-5">
-
-      <div className="card shadow-sm border-0 rounded-4">
-
-        <div className="card-body text-center p-5">
-          
-          <h4 className="mt-3">
-            Prospect introuvable
-          </h4>
-
-          <p className="text-muted mb-0">
-            Ce prospect n'existe plus ou n'est plus accessible.
-          </p>
-
+          </div>
         </div>
-
       </div>
+    );
+  }
 
-    </div>
-  );
+  // =====================================================
+  // DONNÉES D'AFFICHAGE
+  // =====================================================
 
-}
+  const statusConfig =
+    LEAD_STATUSES[lead.status];
+
+  const quotes = Array.isArray(
+    lead.quotes
+  )
+    ? lead.quotes
+    : [];
+
+  const vehicle = lead.vehicle;
+
+  // =====================================================
+  // AFFICHAGE
+  // =====================================================
 
   return (
-
     <div className="container py-4">
 
+      {/* =================================================
+          EN-TÊTE
+          ================================================= */}
 
-      {/* HEADER */}
-
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <header className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
         <div>
+          <div className="d-flex align-items-center gap-2 flex-wrap">
 
-          <h2 className="fw-bold">
-            {lead.first_name} {lead.last_name}
-          </h2>
+            <h1 className="h2 fw-bold mb-0">
+              {lead.first_name}{" "}
+              {lead.last_name}
+            </h1>
 
-          <span
-  className={
-    `badge ${
-      leadStatusConfig[lead.status]?.className 
-      ?? "bg-dark"
-    }`
-  }
->
+            <span
+              className={`badge ${
+                statusConfig?.className ??
+                "bg-secondary"
+              }`}
+            >
+              {statusConfig?.label ??
+                lead.status ??
+                "Statut inconnu"}
+            </span>
 
-  {
-    leadStatusConfig[lead.status]?.label
-    ?? lead.status
-  }
+          </div>
 
-</span>
-
+          <p className="text-muted mb-0 mt-1">
+            Détail du prospect commercial
+          </p>
         </div>
 
+        <div className="d-flex gap-2 flex-wrap">
 
-        <div className="d-flex gap-2">
+          {lead.can_delete && (
+            <button
+              type="button"
+              className="btn btn-outline-danger"
+              onClick={() =>
+                setShowDeleteModal(true)
+              }
+              disabled={actionLoading}
+            >
+              <i
+                className="bi bi-trash me-2"
+                aria-hidden="true"
+              />
+              Supprimer
+            </button>
+          )}
 
-  {lead.can_delete && (
-  <button
-    className="btn btn-outline-danger"
-    onClick={() => setShowDeleteModal(true)}
-    title="Supprimer le prospect"
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => navigate(-1)}
+            disabled={actionLoading}
+          >
+            <i
+              className="bi bi-arrow-left me-2"
+              aria-hidden="true"
+            />
+            Retour
+          </button>
 
-  >
-    <i className="bi bi-trash" />
-  </button>
-)}
+        </div>
+      </header>
 
-  <button
-    className="btn btn-outline-secondary"
-    onClick={() => navigate(-1)}
-  >
-    Retour
-  </button>
-
-</div>
-
-      </div>
-
-
+      {/* =================================================
+          INFORMATIONS PRINCIPALES
+          ================================================= */}
 
       <div className="row g-4">
 
+        {/* =================================================
+            INFORMATIONS CLIENT
+            ================================================= */}
 
-        {/* CLIENT */}
+        <div className="col-lg-6">
+          <section className="card border-0 shadow-sm rounded-4 h-100">
 
-        <div className="col-md-6">
+            <div className="card-body p-4">
 
-          <div className="card shadow-sm rounded-4">
+              <div className="d-flex align-items-center gap-2 mb-4">
 
-            <div className="card-body">
+                <i
+                  className="bi bi-file-earmark-text text-muted"
+                  aria-hidden="true"
+                />
 
-              <h5 className="fw-bold mb-3">
-                Informations client
-              </h5>
+                <h2 className="h5 fw-semibold mb-0">
+                  Informations client
+                </h2>
 
+              </div>
 
-              <p>
-                <strong>Email :</strong>
-                <br/>
-                {lead.email}
-              </p>
+              <div className="mb-3">
 
+                <div className="small text-muted mb-1">
+                  Email
+                </div>
 
-              <p>
-                <strong>Téléphone :</strong>
-                <br/>
-                {lead.phone}
-              </p>
+                <div className="fw-medium text-break">
+                  {lead.email || "Non renseigné"}
+                </div>
 
+              </div>
 
-              <p>
-                <strong>Message :</strong>
-                <br/>
-                {lead.message || "Aucun message"}
-              </p>
+              <div className="mb-3">
 
+                <div className="small text-muted mb-1">
+                  Téléphone
+                </div>
+
+                <div className="fw-medium">
+                  {lead.phone || "Non renseigné"}
+                </div>
+
+              </div>
+
+              <div>
+
+                <div className="small text-muted mb-1">
+                  Message
+                </div>
+
+                <div
+                  className="text-break"
+                  style={{
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {lead.message ||
+                    "Aucun message"}
+                </div>
+
+              </div>
 
             </div>
-
-          </div>
-
+          </section>
         </div>
 
+        {/* =================================================
+            VÉHICULE
+            ================================================= */}
 
+        <div className="col-lg-6">
+          <section className="card border-0 shadow-sm rounded-4 h-100">
 
+            <div className="card-body p-4">
 
-        {/* VEHICULE */}
+              <div className="d-flex align-items-center gap-2 mb-4">
 
-        <div className="col-md-6">
+                <i
+                  className="bi bi-car-front text-muted"
+                  aria-hidden="true"
+                />
 
+                <h2 className="h5 fw-semibold mb-0">
+                  Véhicule recherché
+                </h2>
 
-          <div className="card shadow-sm rounded-4">
+              </div>
 
-            <div className="card-body">
-
-
-              <h5 className="fw-bold mb-3">
-                Véhicule recherché
-              </h5>
-
-
-
-              {lead.vehicle ? (
-
+              {vehicle ? (
                 <>
-                  <p>
-                    <strong>
-                      {lead.vehicle.brand}
-                      {" "}
-                      {lead.vehicle.model}
-                    </strong>
-                  </p>
+                  <h3 className="h6 fw-bold mb-2">
+                    {vehicle.brand}{" "}
+                    {vehicle.model}
+                  </h3>
 
+                  <div className="d-flex align-items-center gap-2">
 
-                  <p>
-                    Prix :
-                    {" "}
-                    {lead.vehicle.price} €
-                  </p>
+                    <i
+                      className="bi bi-tag text-muted"
+                      aria-hidden="true"
+                    />
 
+                    <span>
+                      {vehicle.price != null
+                        ? `${Number(
+                            vehicle.price
+                          ).toLocaleString(
+                            "fr-FR"
+                          )} €`
+                        : "Prix non renseigné"}
+                    </span>
+
+                  </div>
                 </>
-
               ) : (
-
-                <p className="text-muted">
-                  Aucun véhicule sélectionné
+                <p className="text-muted mb-0">
+                  Aucun véhicule sélectionné.
                 </p>
-
               )}
 
-
             </div>
-
-          </div>
-
-
+          </section>
         </div>
-
-
 
       </div>
 
+      {/* =================================================
+          ACTIONS COMMERCIALES
+          ================================================= */}
 
+      <section className="card border-0 shadow-sm rounded-4 mt-4">
 
-      {/* ACTIONS COMMERCIAL */}
+        <div className="card-body p-4">
 
-<div className="card shadow-sm rounded-4 mt-4">
+          <div className="d-flex align-items-center gap-2 mb-4">
 
-  <div className="card-body">
+            <i
+              className="bi bi-kanban text-muted"
+              aria-hidden="true"
+            />
 
-
-    <h5 className="fw-bold mb-3">
-      Actions commerciales
-    </h5>
-
-
-    <div className="d-flex gap-3 flex-wrap">
-
-
-      {
-        lead.status === "ASSIGNED" && (
-
-          <button
-            className="btn btn-primary"
-            onClick={markAsContacted}
-            disabled={loading}
-          >
-            {
-              loading
-                ? "Mise à jour..."
-                : "Marquer comme contacté"
-            }
-          </button>
-
-        )
-      }
-
-
-
-      {
-        lead.can_create_quote && (
-
-          <button
-            className="btn btn-dark"
-            onClick={() =>
-              navigate(
-                `/sales/quotes/create/${lead.id}`
-              )
-            }
-          >
-            Créer une offre
-          </button>
-
-        )
-      }
-
-
-    </div>
-
-
-
-    {
-      lead.quotes &&
-      lead.quotes.length > 0 && (
-
-        <div className="mt-4">
-
-
-          <h5 className="fw-bold mb-3">
-            Offres
-          </h5>
-
-
-
-          <div className="d-flex gap-2 flex-wrap">
-
-
-            {
-              lead.quotes.map(
-                (quote) => (
-
-                  <button
-                    key={quote.id}
-                    onClick={() =>
-                      navigate(
-                        `/sales/quotes/${quote.id}`
-                      )
-                    }
-                    className="btn btn-outline-dark"
-                  >
-
-                    Voir l'offre (
-  {
-    quoteStatusConfig[quote.status]?.label
-    ?? quote.status
-  }
-)
-
-                  </button>
-
-                )
-              )
-            }
-
+            <h2 className="h5 fw-semibold mb-0">
+              Actions commerciales
+            </h2>
 
           </div>
 
+          <div className="d-flex gap-2 flex-wrap">
+
+            {/* -----------------------------------------
+                MARQUER COMME CONTACTÉ
+                ----------------------------------------- */}
+
+            {lead.status === "ASSIGNED" && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={markAsContacted}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      aria-hidden="true"
+                    />
+
+                    Mise à jour...
+                  </>
+                ) : (
+                  <>
+                    <i
+                      className="bi bi-telephone-check me-2"
+                      aria-hidden="true"
+                    />
+
+                    Marquer comme contacté
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* -----------------------------------------
+                CRÉER UNE OFFRE
+                ----------------------------------------- */}
+
+            {lead.can_create_quote && (
+              <button
+                type="button"
+                className="btn btn-dark"
+                onClick={() =>
+                  navigate(
+                    `/sales/quotes/new`
+                  )
+                }
+                disabled={actionLoading}
+              >
+                <i
+                  className="bi bi-file-earmark-plus me-2"
+                  aria-hidden="true"
+                />
+
+                Créer une offre
+              </button>
+            )}
+
+          </div>
+
+          {/* =================================================
+              OFFRES EXISTANTES
+              ================================================= */}
+
+          {quotes.length > 0 && (
+            <div className="border-top mt-4 pt-4">
+
+              <div className="d-flex align-items-center gap-2 mb-3">
+
+                <i
+                  className="bi bi-file-earmark-text text-muted"
+                  aria-hidden="true"
+                />
+
+                <h2 className="h5 fw-semibold mb-0">
+                  Offres
+                </h2>
+
+                <span className="badge bg-light text-dark">
+                  {quotes.length}
+                </span>
+
+              </div>
+
+              <div className="row g-2">
+
+                {quotes.map((quote) => {
+                  const quoteConfig =
+                    QUOTE_STATUSES[
+                      quote.status
+                    ];
+
+                  return (
+                    <div
+                      key={quote.id}
+                      className="col-12 col-md-6"
+                    >
+                      <button
+                        type="button"
+                        className="btn btn-outline-dark w-100 d-flex justify-content-between align-items-center text-start"
+                        onClick={() =>
+                          navigate(
+                            `/sales/quotes/${quote.id}`
+                          )
+                        }
+                        disabled={actionLoading}
+                      >
+                        <span>
+                          <i
+                            className="bi bi-file-earmark-text me-2"
+                            aria-hidden="true"
+                          />
+
+                          Offre #{quote.id}
+                        </span>
+
+                        <span
+                          className={`badge ${
+                            quoteConfig?.className ??
+                            "bg-secondary"
+                          }`}
+                        >
+                          {quoteConfig?.label ??
+                            quote.status}
+                        </span>
+                      </button>
+                    </div>
+                  );
+                })}
+
+              </div>
+
+            </div>
+          )}
 
         </div>
+      </section>
 
-      )
-    }
+      {/* =================================================
+          MODALE DE SUPPRESSION
+          ================================================= */}
 
-
-  </div>
-
-</div>
-
-<ConfirmModal
-
-  show={showDeleteModal}
-
-  title="Supprimer le prospect"
-
-  message={
-    <>
-      Êtes-vous sûr de vouloir supprimer ce prospect ?
-      <br />
-      Cette action est irréversible.
-    </>
-  }
-
-  confirmText="Supprimer"
-
-  cancelText="Annuler"
-
-  loading={loading}
-
-  onClose={() =>
-    setShowDeleteModal(false)
-  }
-
-  onConfirm={deleteLead}
-
-/>
+      <ConfirmActionModal
+        open={showDeleteModal}
+        type="delete"
+        title="Supprimer le prospect"
+        description={
+          <>
+            Êtes-vous sûr de vouloir supprimer
+            ce prospect ?
+            <br />
+            Cette action est irréversible.
+          </>
+        }
+        loading={actionLoading}
+        onCancel={() =>
+          setShowDeleteModal(false)
+        }
+        onConfirm={deleteLead}
+      />
 
     </div>
-
   );
-
 }

@@ -1,633 +1,681 @@
 import {
+  useCallback,
   useEffect,
   useState,
 } from "react";
 
 import {
   useNavigate,
-  useParams
+  useParams,
 } from "react-router-dom";
 
+import { toast } from "react-toastify";
 
-import apiFetch from "../../../services/apiFetch"
 import QuoteDecisionModal from "../../../components/sales/QuoteDecisionModal";
+import QuoteFinancingCard from "../../../components/quotes/QuoteFinancingCard";
+import QuoteStatusBadge from "../../../components/quotes/QuoteStatusBadge";
+import QuoteTradeInCard from "../../../components/quotes/QuoteTradeInCard";
+import QuoteVehicleCard from "../../../components/quotes/QuoteVehicleCard";
 
-import {
-  toast
-} from "react-toastify";
+import apiFetch from "../../../services/apiFetch";
 
-
-
+/**
+ * Page de détail d'une offre commerciale côté client.
+ *
+ * Le client peut :
+ * - consulter son offre ;
+ * - consulter le véhicule proposé ;
+ * - consulter les conditions financières ;
+ * - consulter une éventuelle reprise ;
+ * - consulter son conseiller ;
+ * - accepter l'offre ;
+ * - refuser l'offre ;
+ * - accéder à son dossier après acceptation.
+ *
+ * Les composants de présentation communs aux offres
+ * sont réutilisés depuis `components/quotes`.
+ */
 export default function CustomerQuoteDetailPage() {
-
-
-  const {
-    id
-  } = useParams();
-
-
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [ loading, setLoading ] = useState(false);
+
+  // =====================================================
+  // ÉTAT
+  // =====================================================
+
+  /**
+   * Offre actuellement chargée.
+   */
+  const [quote, setQuote] = useState(null);
+
+  /**
+   * Chargement initial de l'offre.
+   */
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * Chargement d'une action :
+   * - acceptation ;
+   * - refus.
+   */
+  const [actionLoading, setActionLoading] = useState(false);
+
+  /**
+   * Contrôle d'ouverture de la modale de décision.
+   */
   const [showDecision, setShowDecision] = useState(false);
 
+  /**
+   * Action sélectionnée dans la modale :
+   * - accept ;
+   * - refuse.
+   */
   const [decisionMode, setDecisionMode] = useState(null);
 
-  const [
-    quote,
-    setQuote
-  ] = useState(null);
+  /**
+   * Message d'erreur de chargement.
+   */
+  const [error, setError] = useState(null);
 
+  // =====================================================
+  // CHARGEMENT DE L'OFFRE
+  // =====================================================
 
-
-  const [
-    error,
-    setError
-  ] = useState(null);
-
-
-
-  const statusConfig = {
-
-
-    SENT: {
-
-      label:
-        "En attente de votre réponse",
-
-      className:
-        "bg-primary",
-
-    },
-
-
-    ACCEPTED: {
-
-      label:
-        "Offre acceptée",
-
-      className:
-        "bg-success",
-
-    },
-
-
-    REJECTED : {
-
-      label:
-        "Offre refusée",
-
-      className:
-        "bg-danger",
-
-    },
-
-
-    EXPIRED: {
-
-      label:
-        "Offre expirée",
-
-      className:
-        "bg-secondary",
-
-    },
-
-  };
-
-
-
-  // =========================
-  // LOAD QUOTE
-  // =========================
-
-
-  const fetchQuote = async () => {
-
+  /**
+   * Récupère l'offre depuis l'API.
+   *
+   * `useCallback` permet de conserver une référence stable
+   * utilisée par `useEffect`.
+   */
+  const fetchQuote = useCallback(async () => {
+    if (!id) {
+      setQuote(null);
+      setError("Offre introuvable.");
+      setLoading(false);
+      return;
+    }
 
     try {
+      setLoading(true);
+      setError(null);
 
-
-
-      const data = await apiFetch(
-
-        `/quotes/${id}`,
-
-        {
-        }
-
-      );
-
+      const data = await apiFetch(`/quotes/${id}`, {
+        method: "GET",
+      });
 
       setQuote(data);
+    } catch (error) {
+      setQuote(null);
 
+      const message =
+        error?.message ||
+        "Impossible de charger cette offre.";
 
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
-    catch (err) {
-
-
-      console.error(err);
-
-      toast.error(err.message || "Impossible de charger cette offre.")
-
-      setError(
-        "Impossible de charger cette offre."
-      );
-
-
-    }
-  };
-
-
-
-  useEffect(() => {
-
-
-    fetchQuote();
-
-
   }, [id]);
 
+  useEffect(() => {
+    fetchQuote();
+  }, [fetchQuote]);
 
+  // =====================================================
+  // ACCEPTATION
+  // =====================================================
 
-
-
-
-  // =========================
-  // ACCEPT
-  // =========================
-
-
-  const acceptQuote = async () => {
+  /**
+   * Accepte l'offre commerciale.
+   *
+   * L'API crée le dossier associé puis retourne
+   * son identifiant.
+   */
+  const acceptQuote = useCallback(async () => {
+    if (!id) {
+      return false;
+    }
 
     try {
-
-
-      setLoading(true);
+      setActionLoading(true);
 
       const data = await apiFetch(
-
         `/quotes/${id}/accept`,
-
         {
           method: "POST",
         }
-
       );
-
-
-
-
-
-toast.success(
-  data.message
-);
-
-
-navigate(
-  `/applications/${data.application_id}`
-);
-
-
-
-      fetchQuote();
-
-
-
-    }
-    catch (err) {
-
-
-      toast.error(
-
-        "Impossible d'accepter cette offre."
-
-      );
-
-
-    } finally {
-
-
-      setLoading(false);
-
-
-    }
-
-  };
-
-
-
-
-  // =========================
-  // REFUSE
-  // =========================
-
-
-  const refuseQuote = async (data) => {
-
-
-    try {
-
-      setLoading(true);
-
-
-      await apiFetch(
-
-        `/quotes/${id}/refuse`,
-
-        {
-
-          method: "POST",
-
-          body: {
-
-            reason: data.reason,
-
-            comment: data.comment,
-
-          }
-
-        }
-
-      );
-
-
 
       toast.success(
-
-        "Votre refus a été enregistré."
-
+        data?.message ||
+        "Votre offre a été acceptée."
       );
 
+      /**
+       * Le dossier ayant été créé par l'API,
+       * on redirige directement le client vers celui-ci.
+       */
+      if (data?.application_id) {
+        navigate(
+          `/applications/${data.application_id}`
+        );
+      } else {
+        /**
+         * Sécurité si l'API ne retourne pas
+         * immédiatement l'identifiant du dossier.
+         */
+        await fetchQuote();
+      }
 
-
-      fetchQuote();
-
-
-
-    }
-    catch (err) {
-
-
+      return true;
+    } catch (error) {
       toast.error(
-
-        "Impossible de refuser cette offre."
-
+        error?.message ||
+        "Impossible d'accepter cette offre."
       );
 
-
+      return false;
     } finally {
+      setActionLoading(false);
+    }
+  }, [fetchQuote, id, navigate]);
 
+  // =====================================================
+  // REFUS
+  // =====================================================
 
-      setLoading(false);
+  /**
+   * Refuse l'offre commerciale.
+   *
+   * `data` provient de la modale et contient :
+   * - reason ;
+   * - comment.
+   */
+  const refuseQuote = useCallback(
+    async (data) => {
+      if (!id) {
+        return false;
+      }
 
+      try {
+        setActionLoading(true);
 
+        await apiFetch(
+          `/quotes/${id}/refuse`,
+          {
+            method: "POST",
+            body: {
+              reason: data?.reason,
+              comment: data?.comment,
+            },
+          }
+        );
+
+        toast.success(
+          "Votre refus a été enregistré."
+        );
+
+        /**
+         * On recharge l'offre afin d'afficher
+         * immédiatement son nouveau statut.
+         */
+        await fetchQuote();
+
+        return true;
+      } catch (error) {
+        toast.error(
+          error?.message ||
+          "Impossible de refuser cette offre."
+        );
+
+        return false;
+      } finally {
+        setActionLoading(false);
+      }
+    },
+    [fetchQuote, id]
+  );
+
+  // =====================================================
+  // DÉCISION
+  // =====================================================
+
+  /**
+   * Ouvre la modale d'acceptation.
+   */
+  const handleAcceptClick = useCallback(() => {
+    setDecisionMode("accept");
+    setShowDecision(true);
+  }, []);
+
+  /**
+   * Ouvre la modale de refus.
+   */
+  const handleRefuseClick = useCallback(() => {
+    setDecisionMode("refuse");
+    setShowDecision(true);
+  }, []);
+
+  /**
+   * Ferme la modale de décision.
+   *
+   * Une action en cours empêche sa fermeture afin
+   * d'éviter une interaction pendant la requête.
+   */
+  const handleCloseDecision = useCallback(() => {
+    if (actionLoading) {
+      return;
     }
 
-  };
+    
+    setShowDecision(false);
+    setDecisionMode(null);
+  }, [actionLoading]);
 
+  /**
+   * Exécute la décision sélectionnée dans la modale.
+   *
+   * La modale ne se ferme que lorsque l'action
+   * a réellement réussi.
+   */
+  const handleDecisionConfirm = useCallback(
+    async (data) => {
+      let success = false;
 
+      if (decisionMode === "accept") {
+        success = await acceptQuote();
+      }
 
+      if (decisionMode === "refuse") {
+        success = await refuseQuote(data);
+      }
 
-  // =========================
-  // ERROR
-  // =========================
+      if (success) {
+        setShowDecision(false);
+        setDecisionMode(null);
+      }
+    },
+    [
+      acceptQuote,
+      decisionMode,
+      refuseQuote,
+    ]
+  );
 
+  // =====================================================
+  // ÉTAT DE CHARGEMENT
+  // =====================================================
 
-  if (error) {
-
-
+  if (loading) {
     return (
-
-      <div className="container mt-4">
-
-
-        <div className="alert alert-danger">
-
-          {error}
-
-        </div>
-
-
-        <button
-
-          className="btn btn-outline-secondary"
-
-          onClick={() => navigate(-1)}
-
+      <div className="container py-5">
+        <div
+          className="d-flex justify-content-center align-items-center gap-2 text-muted"
+          role="status"
+          aria-live="polite"
         >
+          <span
+            className="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          />
 
-          Retour
-
-        </button>
-
-
+          <span>
+            Chargement de l'offre...
+          </span>
+        </div>
       </div>
-
     );
-
   }
 
+  // =====================================================
+  // ÉTAT D'ERREUR
+  // =====================================================
 
-
-
-
-  if (!quote)
-    return null;
-
-
-
-  const status =
-    statusConfig[quote.status]
-    ??
-    {
-      label: quote.status,
-      className: "bg-secondary",
-    };
-
-
-
+  if (error || !quote) {
     return (
+      <div className="container py-5">
 
-  <div className="container mt-4 mb-5">
-
-    {/* HEADER */}
-
-    <div className="d-flex justify-content-between align-items-start mb-4">
-
-      <div>
-
-        <h2 className="fw-bold">
-          Votre offre commerciale
-        </h2>
-
-        <div className="text-muted">
-          Offre #{quote.id}
+        <div
+          className="alert alert-danger"
+          role="alert"
+        >
+          {error || "Offre introuvable."}
         </div>
 
-        <div className="text-muted small">
-          Créée le{" "}
-          {new Date(quote.created_at).toLocaleDateString()}
-        </div>
-
-        {quote.status === "ACCEPTED" && (
-          <div className="mt-3 text-success">
-
-            <h5 className="fw-bold mb-1">
-              ✓ Offre acceptée
-            </h5>
-
-            <p className="mb-0">
-              Vous avez accepté cette offre.
-              <br />
-              Votre dossier de financement a été créé.
-            </p>
-
-          </div>
-        )}
-
-        {quote.status === "REFUSED" && (
-          <div className="mt-3 text-danger">
-
-            <h5 className="fw-bold mb-1">
-              Offre refusée
-            </h5>
-
-            <p className="mb-0">
-              Vous avez refusé cette offre.
-            </p>
-
-          </div>
-        )}
-
-        {quote.status === "EXPIRED" && (
-          <div className="mt-3 text-warning">
-
-            <h5 className="fw-bold mb-1">
-              Offre expirée
-            </h5>
-
-            <p className="mb-0">
-              Cette offre a expiré et ne peut plus être acceptée.
-            </p>
-
-          </div>
-        )}
+        <button
+          type="button"
+          className="btn btn-outline-secondary"
+          onClick={() => navigate(-1)}
+        >
+          <i
+            className="bi bi-arrow-left me-2"
+            aria-hidden="true"
+          />
+          Retour
+        </button>
 
       </div>
+    );
+  }
 
-      <div className="text-end">
+  // =====================================================
+  // DONNÉES D'AFFICHAGE
+  // =====================================================
 
-        <span
-          className={`badge fs-6 ${status.className}`}
-        >
-          {status.label}
-        </span>
+  const applicationId =
+    quote.application_id;
 
-        {quote.status === "ACCEPTED" &&
-          quote.application_id && (
+  const salesAgentName =
+    [
+      quote.sales_agent?.first_name,
+      quote.sales_agent?.last_name,
+    ]
+      .filter(Boolean)
+      .join(" ") ||
+      "Conseiller non renseigné";
 
-            <div className="mt-3">
+  const createdAt = quote.created_at
+    ? new Date(
+        quote.created_at
+      ).toLocaleDateString("fr-FR")
+    : "Date non renseignée";
 
+  // =====================================================
+  // AFFICHAGE
+  // =====================================================
+
+  return (
+    <div className="container py-4 pb-5">
+
+      {/* =====================================================
+          EN-TÊTE
+      ===================================================== */}
+
+      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
+
+        <div>
+
+          <h1 className="h2 fw-bold mb-1">
+            Votre offre commerciale
+          </h1>
+
+          <div className="text-muted">
+            Offre #{quote.id}
+          </div>
+
+          <div className="text-muted small">
+            Créée le {createdAt}
+          </div>
+
+        </div>
+
+        <div className="d-flex flex-column align-items-lg-end gap-3">
+
+          <QuoteStatusBadge
+            status={quote.status}
+            role="client"
+          />
+
+          {/* =================================================
+              DOSSIER APRÈS ACCEPTATION
+          ================================================= */}
+
+          {quote.status === "ACCEPTED" &&
+            applicationId && (
               <button
+                type="button"
                 className="btn btn-success"
                 onClick={() =>
                   navigate(
-                    `/applications/${quote.application_id}`
+                    `/applications/${applicationId}`
                   )
                 }
               >
+                <i
+                  className="bi bi-folder2-open me-2"
+                  aria-hidden="true"
+                />
                 Voir mon dossier
               </button>
+            )}
+
+        </div>
+      </div>
+
+      {/* =====================================================
+          MESSAGE SELON LE STATUT
+      ===================================================== */}
+
+      {quote.status === "ACCEPTED" && (
+        <div
+          className="alert alert-success mb-4"
+          role="status"
+        >
+          <div className="d-flex gap-2">
+
+            <i
+              className="bi bi-check-circle mt-1"
+              aria-hidden="true"
+            />
+
+            <div>
+              <strong>
+                Offre acceptée
+              </strong>
+
+              <div>
+                Vous avez accepté cette offre.
+                {applicationId && (
+                  <>
+                    {" "}
+                    Votre dossier de financement
+                    a été créé.
+                  </>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {quote.status === "REJECTED" && (
+        <div
+          className="alert alert-danger mb-4"
+          role="status"
+        >
+          <div className="d-flex gap-2">
+
+            <i
+              className="bi bi-x-circle mt-1"
+              aria-hidden="true"
+            />
+
+            <div>
+              <strong>
+                Offre refusée
+              </strong>
+
+              <div>
+                Vous avez refusé cette offre.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {quote.status === "EXPIRED" && (
+        <div
+          className="alert alert-warning mb-4"
+          role="status"
+        >
+          <div className="d-flex gap-2">
+
+            <i
+              className="bi bi-clock-history mt-1"
+              aria-hidden="true"
+            />
+
+            <div>
+              <strong>
+                Offre expirée
+              </strong>
+
+              <div>
+                Cette offre n'est plus valable
+                et ne peut plus être acceptée.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          INFORMATIONS DE L'OFFRE
+      ===================================================== */}
+
+      <div className="row g-4">
+
+        {/* ===================================================
+            VÉHICULE
+        =================================================== */}
+
+        <div className="col-lg-6">
+          <QuoteVehicleCard quote={quote} />
+        </div>
+
+        {/* ===================================================
+            FINANCEMENT
+        =================================================== */}
+
+        <div className="col-lg-8">
+          <QuoteFinancingCard quote={quote} />
+        </div>
+
+        {/* ===================================================
+            REPRISE
+        =================================================== */}
+
+        <div className="col-lg-4">
+          <QuoteTradeInCard quote={quote} />
+        </div>
+
+        {/* ===================================================
+            CONSEILLER
+        =================================================== */}
+
+        {quote.sales_agent && (
+          <div className="col-12">
+
+            <div className="card border-0 shadow-sm rounded-4">
+
+              <div className="card-body p-4">
+
+                <h2 className="h5 fw-semibold mb-3">
+                  <i
+                    className="bi bi-headset me-2"
+                    aria-hidden="true"
+                  />
+                  Votre conseiller
+                </h2>
+
+                <div className="fw-semibold">
+                  {salesAgentName}
+                </div>
+
+                {quote.sales_agent.email && (
+                  <div className="text-muted">
+                    {quote.sales_agent.email}
+                  </div>
+                )}
+
+                {quote.sales_agent.phone && (
+                  <div className="text-muted">
+                    {quote.sales_agent.phone}
+                  </div>
+                )}
+
+              </div>
 
             </div>
 
+          </div>
         )}
-{quote.status === "EXPIRED" && (
-  <div className="alert alert-warning mb-4">
-
-    <h5 className="mb-1">
-      Offre expirée
-    </h5>
-
-    <p className="mb-0">
-      Cette offre n'est plus valable et ne peut plus être acceptée.
-    </p>
-
-  </div>
-)}
-      </div>
-
-    </div>
-
-
-
-    {/* VEHICLE */}
-
-    <div className="card shadow-sm mb-3">
-
-      <div className="card-body">
-
-        <h4 className="mb-3">
-          <i className="bi bi-car-front me-2" />
-          Véhicule
-        </h4>
-
-        <h5>
-          {quote.vehicle.brand}{" "}
-          {quote.vehicle.model}
-        </h5>
-
-        <p className="text-muted">
-          Prix :{" "}
-          <strong>
-            {quote.base_price} €
-          </strong>
-        </p>
 
       </div>
 
-    </div>
+      {/* =====================================================
+          ACTIONS CLIENT
+      ===================================================== */}
 
+      {quote.status === "SENT" && (
+        <div className="d-flex flex-wrap gap-2 mt-4">
 
+          <button
+            type="button"
+            className="btn btn-success"
+            onClick={handleAcceptClick}
+            disabled={actionLoading}
+          >
+            <i
+              className="bi bi-check-circle me-2"
+              aria-hidden="true"
+            />
+            Accepter l'offre
+          </button>
 
-    {/* FINANCING */}
-
-    <div className="card shadow-sm mb-3">
-
-      <div className="card-body">
-
-        <h4 className="mb-3">
-          <i className="bi bi-credit-card me-2" />
-          Financement
-        </h4>
-
-        <div className="row">
-
-          <div className="col-md-6">
-
-            <p>
-              Apport : {quote.down_payment} €
-            </p>
-
-            <p>
-              Remise : {quote.discount} €
-            </p>
-
-            <p>
-              Reprise : {quote.trade_in_value} €
-            </p>
-
-          </div>
-
-          <div className="col-md-6">
-
-            <p>
-              Montant financé : {quote.financed_amount} €
-            </p>
-
-            <p>
-              Durée : {quote.duration_months} mois
-            </p>
-
-            <h5 className="fw-bold">
-              {quote.monthly_payment} € / mois
-            </h5>
-
-          </div>
+          <button
+            type="button"
+            className="btn btn-outline-danger"
+            onClick={handleRefuseClick}
+            disabled={actionLoading}
+          >
+            <i
+              className="bi bi-x-circle me-2"
+              aria-hidden="true"
+            />
+            Refuser l'offre
+          </button>
 
         </div>
+      )}
 
-      </div>
-
-    </div>
-
-
-
-    {/* ADVISOR */}
-
-    {quote.sales_agent && (
-
-      <div className="card shadow-sm mb-3">
-
-        <div className="card-body">
-
-          <h4>
-            <i className="bi bi-person me-2" />
-            Votre conseiller
-          </h4>
-
-          <p className="mb-0">
-            {quote.sales_agent.first_name}{" "}
-            {quote.sales_agent.last_name}
-          </p>
-
-        </div>
-
-      </div>
-
-    )}
-
-
-
-    {/* ACTIONS */}
-
-    {quote.status === "SENT" && (
+      {/* =====================================================
+          RETOUR
+      ===================================================== */}
 
       <div className="mt-4">
 
         <button
-          className="btn btn-success me-2"
-          onClick={() => {
-            setDecisionMode("accept");
-            setShowDecision(true);
-          }}
+          type="button"
+          className="btn btn-outline-secondary"
+          onClick={() => navigate(-1)}
+          disabled={actionLoading}
         >
-          Accepter l'offre
-        </button>
-
-        <button
-          className="btn btn-outline-danger"
-          onClick={() => {
-            setDecisionMode("refuse");
-            setShowDecision(true);
-          }}
-        >
-          Refuser
+          <i
+            className="bi bi-arrow-left me-2"
+            aria-hidden="true"
+          />
+          Retour
         </button>
 
       </div>
 
-    )}
+      {/* =====================================================
+          MODALE DE DÉCISION
+      ===================================================== */}
 
+      <QuoteDecisionModal
+        show={showDecision}
+        mode={decisionMode}
+        loading={actionLoading}
+        onClose={handleCloseDecision}
+        onConfirm={handleDecisionConfirm}
+      />
 
-
-    <button
-      className="btn btn-outline-secondary mt-4"
-      onClick={() => navigate(-1)}
-    >
-      Retour
-    </button>
-
-    <QuoteDecisionModal
-      show={showDecision}
-      mode={decisionMode}
-      loading={loading}
-      onClose={() => setShowDecision(false)}
-      onConfirm={async (data) => {
-
-        if (decisionMode === "accept") {
-          await acceptQuote();
-        } else {
-          await refuseQuote(data);
-        }
-
-        setShowDecision(false);
-
-      }}
-    />
-
-  </div>
-
-);
-
+    </div>
+  );
 }

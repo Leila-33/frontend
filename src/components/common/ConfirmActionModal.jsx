@@ -1,9 +1,12 @@
 /**
- * Modale de confirmation utilisée avant l'exécution
- * d'une action sur un dossier.
+ * Modale de confirmation générique utilisée avant
+ * l'exécution d'une action.
  *
- * Les actions possibles sont définies dans l'objet `config`
- * en fonction de la valeur de `type`.
+ * Les actions disponibles sont définies dans l'objet
+ * `config` en fonction de la valeur de `type`.
+ *
+ * Le composant peut être utilisé pour différents
+ * types de ressources : dossiers, leads, tickets, etc.
  */
 export default function ConfirmActionModal({
   open,
@@ -25,56 +28,56 @@ export default function ConfirmActionModal({
    * - une icône Bootstrap Icons ;
    * - le texte affiché dans le bouton de confirmation.
    */
-  const config = {
-    // Prise en charge d'un dossier par un administrateur.
-    process: {
-      className: "btn-primary",
-      icon: "bi-check2-circle",
-      label: "Prendre en charge",
-    },
+const config = {
+  // Prise en charge d'une ressource par un administrateur.
+  process: {
+    className: "btn-primary",
+    icon: "bi-check2-circle",
+    label: "Prendre en charge",
+  },
 
-    // Suppression définitive du dossier.
-    delete: {
-      className: "btn-danger",
-      icon: "bi-trash",
-      label: "Supprimer",
-    },
+  // Suppression définitive d'une ressource.
+  delete: {
+    className: "btn-danger",
+    icon: "bi-trash",
+    label: "Supprimer",
+  },
 
-    // Archivage du dossier.
-    archive: {
-      className: "btn-warning",
-      icon: "bi-archive",
-      label: "Archiver",
-    },
+  // Archivage d'une ressource.
+  archive: {
+    className: "btn-warning",
+    icon: "bi-archive",
+    label: "Archiver",
+  },
 
-    // Désactivation d'un élément.
-    disable: {
-      className: "btn-danger",
-      icon: "bi-toggle-off",
-      label: "Désactiver",
-    },
+  // Désactivation d'une ressource.
+  disable: {
+    className: "btn-danger",
+    icon: "bi-toggle-off",
+    label: "Désactiver",
+  },
 
-    // Restauration d'un dossier archivé.
-    restore: {
-      className: "btn-success",
-      icon: "bi-arrow-counterclockwise",
-      label: "Désarchiver",
-    },
+  // Restauration d'une ressource archivée.
+  restore: {
+    className: "btn-success",
+    icon: "bi-arrow-counterclockwise",
+    label: "Désarchiver",
+  },
 
-    // Restauration d'un dossier précédemment annulé.
-    restore_cancelled: {
-      className: "btn-success",
-      icon: "bi-arrow-counterclockwise",
-      label: "Restaurer",
-    },
+  // Restauration d'une ressource précédemment annulée.
+  restore_cancelled: {
+    className: "btn-success",
+    icon: "bi-arrow-counterclockwise",
+    label: "Restaurer",
+  },
 
-    // Annulation d'un dossier.
-    cancel: {
-      className: "btn-secondary",
-      icon: "bi-x-circle",
-      label: "Annuler",
-    },
-  }[type];
+  // Annulation d'une ressource.
+  cancel: {
+    className: "btn-secondary",
+    icon: "bi-x-circle",
+    label: "Annuler",
+  },
+}[type];
 
   /**
    * Sécurité supplémentaire :
