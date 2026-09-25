@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import { uploadImages } from "../../services/uploadService";
 import Pagination from "../../components/common/Pagination";
+import { useDebounce } from "../../hooks/useDebounce";
 
 import {
   BsPlusLg,
@@ -10,7 +11,7 @@ import {
 } from "react-icons/bs";
 
 import { VehicleCard } from "../../components/vehicles/VehicleCard";
-
+import { ENGINE_TYPES, VEHICLE_TYPES } from "../../constants/vehicleOptions";
 
 /* =========================================================
    PAGE ADMINISTRATION DES VÉHICULES
@@ -34,18 +35,28 @@ export default function AdminVehicles() {
   const [filterType, setFilterType] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
 
+  // ==========================================================
+  // RECHERCHE AVEC DEBOUNCE
+  // ==========================================================
+
+  // Valeur de recherche mise à jour après une courte pause
+  // afin d'éviter une requête à chaque frappe.
+  const debouncedSearch = useDebounce(
+    search,
+    400
+  );
   /* =========================================================
      PAGINATION
   ========================================================= */
 
 
-    const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1);
 
-    const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(0);
 
-    const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-    const size = 10;
+  const size = 10;
 
   /* =========================================================
      MODALE VÉHICULE
@@ -117,16 +128,8 @@ export default function AdminVehicles() {
   /* =========================================================
      CHARGEMENT DES VÉHICULES
   ========================================================= */
-
   const fetchVehicles = useCallback(
-    async (customPage = page, shouldScroll = true) => {
-
-      /*
-       * On remonte en haut uniquement lors d'un changement
-       * de page ou d'une action explicite.
-       *
-       * On évite de le faire à chaque frappe dans les filtres.
-       */
+    async (customPage = 1, shouldScroll = true) => {
       if (shouldScroll) {
         window.scrollTo({
           top: 0,
@@ -135,19 +138,14 @@ export default function AdminVehicles() {
       }
 
       try {
-
         const rawFilters = {
-          search,
+          search: debouncedSearch,
           type: filterType,
           license_plate: licensePlate,
           page: customPage,
           size,
         };
 
-        /*
-         * Suppression des paramètres vides avant de construire
-         * la query string.
-         */
         const cleanFilters = Object.fromEntries(
           Object.entries(rawFilters).filter(
             ([, value]) =>
@@ -163,29 +161,26 @@ export default function AdminVehicles() {
           `/admin/vehicles/?${params.toString()}`
         );
 
-      setVehicles(data.items || []);
-
-      setTotal(data.total || 0);
-
-      setPage(data.page || customPage);
-
-      // Total des pages calculé par le backend
-      setTotalPages(data.total_pages || 1);
-
+        setVehicles(data.items || []);
+        setTotal(data.total || 0);
+        setPage(data.page || customPage);
+        setTotalPages(data.total_pages || 1);
       } catch (err) {
-
-        console.error("Erreur chargement véhicules :", err);
+        console.error(
+          "Erreur chargement véhicules :",
+          err
+        );
 
         toast.error(
-          err.message || "Erreur lors du chargement des véhicules"
+          err.message ||
+          "Erreur lors du chargement des véhicules"
         );
       }
     },
     [
-      search,
+      debouncedSearch,
       filterType,
       licensePlate,
-      page,
     ]
   );
 
@@ -242,28 +237,27 @@ export default function AdminVehicles() {
   }, [fetchOptions, fetchPlans]);
 
 
-  /* =========================================================
-     RECHERCHE AVEC DEBOUNCE
-  ========================================================= */
+  // ==========================================================
+  // RÉINITIALISATION DE LA PAGINATION
+  // ==========================================================
 
   useEffect(() => {
-
-    const delay = setTimeout(() => {
-
-      /*
-       * Toute modification d'un filtre recommence la recherche
-       * depuis la première page.
-       */
-      fetchVehicles(1, false);
-
-    }, 500);
-
-    return () => clearTimeout(delay);
-
+    setPage(1);
   }, [
-    search,
+    debouncedSearch,
     filterType,
     licensePlate,
+  ]);
+
+
+  // ==========================================================
+  // CHARGEMENT DES VÉHICULES
+  // ==========================================================
+
+  useEffect(() => {
+    fetchVehicles(page, false);
+  }, [
+    page,
     fetchVehicles,
   ]);
 
@@ -972,23 +966,19 @@ export default function AdminVehicles() {
                 id="vehicle-type"
                 className="form-select"
                 value={filterType}
-                onChange={(event) =>
-                  setFilterType(event.target.value)
-                }
+                onChange={(event) => setFilterType(event.target.value)}
               >
-                <option value="">
-                  Tous les types
-                </option>
+                <option value="">Tous les types</option>
 
-                <option value="sale">
-                  Vente
-                </option>
-
-                <option value="rent">
-                  Location
-                </option>
-
+                {Object.entries(VEHICLE_TYPES).map(
+                  ([type, config]) => (
+                    <option key={type} value={type}>
+                      {config.label}
+                    </option>
+                  )
+                )}
               </select>
+
 
             </div>
 
@@ -1037,31 +1027,31 @@ export default function AdminVehicles() {
           PAGINATION
       ===================================================== */}
 
-<div className="d-flex justify-content-between align-items-center mt-4">
+      <div className="d-flex justify-content-between align-items-center mt-4">
 
-  {/* =========================
+        {/* =========================
       NOMBRE TOTAL D'INSCRITS
   ========================= */}
 
-  <span className="text-muted">
-  <strong>{total}</strong>{" "}
-  {total <= 1 ? "véhicule" : "véhicules"}
-</span>
+        <span className="text-muted">
+          <strong>{total}</strong>{" "}
+          {total <= 1 ? "véhicule" : "véhicules"}
+        </span>
 
 
-  {/* =========================
+        {/* =========================
       PAGINATION
   ========================= */}
 
-<Pagination
-  page={page}
-  totalPages={totalPages}
-  onPageChange={(newPage) =>
-    fetchVehicles(newPage)
-  }
-/>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onPageChange={(newPage) =>
+            fetchVehicles(newPage)
+          }
+        />
 
-</div>
+      </div>
 
       {/* =====================================================
           MODALE AJOUT / MODIFICATION
@@ -1327,34 +1317,20 @@ export default function AdminVehicles() {
 
                     <select
                       name="engine_type"
-                      className={`form-select ${errors.engine_type
-                        ? "is-invalid"
-                        : ""
+                      className={`form-select ${errors.engine_type ? "is-invalid" : ""
                         }`}
                       value={form.engine_type}
                       onChange={handleChange}
                     >
+                      <option value="">Sélectionner</option>
 
-                      <option value="">
-                        Sélectionner
-                      </option>
-
-                      <option value="diesel">
-                        Diesel
-                      </option>
-
-                      <option value="petrol">
-                        Essence
-                      </option>
-
-                      <option value="electric">
-                        Électrique
-                      </option>
-
-                      <option value="hybrid">
-                        Hybride
-                      </option>
-
+                      {Object.entries(ENGINE_TYPES).map(
+                        ([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        )
+                      )}
                     </select>
 
                     {errors.engine_type && (

@@ -14,12 +14,12 @@ import { toast } from "react-toastify";
 import DetailLayout from "../../layouts/DetailLayout";
 
 import {
-  TEST_DRIVE_ACTION_MESSAGES,
-  testDriveStatusConfig,
+  TEST_DRIVE_ADMIN_ACTION_CONFIG,
+  TEST_DRIVE_STATUSES,
   TEST_DRIVE_EVENT_ICONS
-} from "../../utils/testDrive";
+} from "../../constants/testDriveOptions";
 
-import { formatDate } from "../../utils/date";
+import { formatDateTime } from "../../utils/dateUtils";
 
 import {
   getTestDrive,
@@ -32,10 +32,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import TestDriveStatusModal
   from "../../components/test-drives/TestDriveStatusModal";
 
+import { getTestDriveStatusClassName, getTestDriveStatusLabel } from "../../utils/testDriveUtils";
+import { formatAmount } from "../../utils/priceUtils";
 
-// ============================================================
-// COMPOSANT
-// ============================================================
 
 export default function TestDriveDetails() {
 
@@ -252,9 +251,9 @@ export default function TestDriveDetails() {
 
       // Message affiché après chaque action.
       toast.success(
-        TEST_DRIVE_ACTION_MESSAGES[
+        TEST_DRIVE_ADMIN_ACTION_CONFIG[
         actionModal.type
-        ] ||
+        ].message ||
         "Statut mis à jour avec succès"
       );
 
@@ -372,7 +371,7 @@ export default function TestDriveDetails() {
     const body = encodeURIComponent(
       `Bonjour,
 
-J’ai une question concernant mon essai routier du ${formatDate(
+J’ai une question concernant mon essai routier du ${formatDateTime(
         testDrive.appointment_date
       )}.
 
@@ -414,8 +413,8 @@ Merci.`
   // ==========================================================
 
   const status =
-    testDriveStatusConfig[testDrive.status]
-    || testDriveStatusConfig.pending;
+    TEST_DRIVE_STATUSES[testDrive.status]
+    || TEST_DRIVE_STATUSES.pending;
 
 
   // ==========================================================
@@ -581,9 +580,9 @@ Merci.`
                             </small>
 
                             <span className="fw-semibold">
-                              {Number(
+                              {formatAmount(
                                 testDrive.vehicle.price
-                              ).toLocaleString("fr-FR")} €
+                              )}
                             </span>
 
                           </div>
@@ -598,10 +597,10 @@ Merci.`
 
                     <span
                       className={
-                        `badge ${status.className} px-3 py-2`
+                        `badge ${getTestDriveStatusClassName(testDrive.status)} px-3 py-2`
                       }
                     >
-                      {status.label}
+                      {getTestDriveStatusLabel(testDrive.status)}
                     </span>
 
                   </div>
@@ -628,7 +627,7 @@ Merci.`
                         fs-5
                       "
                     >
-                      {formatDate(
+                      {formatDateTime(
                         testDrive.appointment_date
                       )}
                     </div>
@@ -820,7 +819,7 @@ Merci.`
 
                               <small className="text-muted">
 
-                                {formatDate(
+                                {formatDateTime(
                                   event.date
                                 )}
 

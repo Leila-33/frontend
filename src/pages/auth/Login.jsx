@@ -1,17 +1,21 @@
 import { useState } from "react";
-
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, useLocation } from "react-router-dom";
 import apiFetch from "../../services/apiFetch";
-
 import { toast } from "react-toastify";
-
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function Login() {
 
   // Permet de naviguer vers une autre page
   const navigate = useNavigate();
+  
+const location = useLocation();
+
+const registrationSuccess =
+  location.state?.registrationSuccess;
+
+const registrationEmail =
+  location.state?.email;
 
   // Récupère la fonction login depuis AuthContext
   const { login } = useAuth();
@@ -231,7 +235,30 @@ export default function Login() {
         Connexion
       </h2>
 
+{/* ==========================================================
+    CONFIRMATION INSCRIPTION
+========================================================== */}
 
+{registrationSuccess && (
+  <div
+    className="alert alert-success"
+    role="alert"
+  >
+    <div className="fw-semibold mb-1">
+      Compte créé avec succès !
+    </div>
+
+    <div>
+      Un email de confirmation a été envoyé à{" "}
+      <strong>{registrationEmail}</strong>.
+    </div>
+
+    <div className="mt-1">
+      Veuillez vérifier votre boîte mail afin
+      d'activer votre compte.
+    </div>
+  </div>
+)}
       <form onSubmit={handleSubmit}>
 
         {/* =========================

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
+import { formatAmount } from "../../utils/priceUtils";
 
 export default function FavoritesPage() {
 
@@ -191,7 +192,7 @@ setFavorites(res.items || []);
           </p>
 
           <div className="fw-bold fs-5 mb-3">
-            {vehicle.price?.toLocaleString()} €
+            {formatAmount(vehicle.price)}
           </div>
 
           <Link

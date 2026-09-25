@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import ConfirmActionModal from "../../components/common/ConfirmActionModal";
-import { STATUS, VEHICLE_TYPE } from "../../utils/status";
 import NumberedPagination from "../../components/common/NumberedPagination";
+import { APPLICATION_ACTION_MODAL_CONFIG, APPLICATION_STATUSES } from "../../constants/applicationOptions";
+import { VEHICLE_TYPES } from "../../constants/vehicleOptions";
+import { formatDate } from "../../utils/dateUtils";
+import { useDebounce } from "../../hooks/useDebounce";
 
-export default function AdminDossiers() {
-
-  // Permet de naviguer vers la page de détail d'un dossier.
-  const navigate = useNavigate();
+export default function Applications() {
 
   // Détermine si l'utilisateur consulte les dossiers actifs ou annulés.
   const [viewMode, setViewMode] = useState("active");
@@ -41,9 +41,36 @@ export default function AdminDossiers() {
     search: ""
   });
 
-  // Critère de tri utilisé lors de la récupération des dossiers.
-  const [sort, setSort] = useState("createdAt_desc");
+  // Fermeture de la modale
+  const closeModal = () => {
+  setModal({
+    open: false,
+    type: null,
+    id: null,
+  });
+};
+  // ==========================================================
+// CONFIGURATION DE LA MODALE
+// ==========================================================
 
+// Récupère le titre et la description correspondant
+// à l'action sélectionnée.
+const modalConfig =
+  APPLICATION_ACTION_MODAL_CONFIG[modal.type];
+
+// ==========================================================
+// RECHERCHE AVEC DEBOUNCE
+// ==========================================================
+
+// Valeur de recherche mise à jour après une courte pause
+// afin d'éviter une requête à chaque frappe.
+const debouncedSearch = useDebounce(
+  filters.search,
+  400
+);
+
+  // Critère de tri utilisé lors de la récupération des dossiers.
+const [sort, setSort] = useState("created_at_desc");
 
   // ---------------- ACTIONS DE CONFIRMATION ----------------
 
@@ -148,12 +175,13 @@ export default function AdminDossiers() {
 
         // Recherche textuelle.
         // trim() permet de supprimer les espaces inutiles.
-        if (filters.search?.trim()) {
-          params.append(
-            "search",
-            filters.search.trim()
-          );
-        }
+if (debouncedSearch?.trim()) {
+
+  params.append(
+    "search",
+    debouncedSearch.trim()
+  );
+}
 
         // Critère de tri.
         if (sort) {
@@ -192,29 +220,31 @@ export default function AdminDossiers() {
     },
 
     // La fonction est recréée lorsque ces valeurs changent.
-    [filters, sort, viewMode]
-  );
+[
+  filters.status,
+  filters.type,
+  debouncedSearch,
+  sort,
+  viewMode,
+]  );
 
 
   // ---------------- ACTUALISATION AUTOMATIQUE ----------------
+useEffect(() => {
+  setPagination((current) => ({
+    ...current,
+    page: 1,
+  }));
 
-  useEffect(() => {
-
-    // Petit délai avant de lancer la recherche.
-    // Cela évite d'effectuer une requête à chaque frappe
-    // dans le champ de recherche.
-    const timeout = setTimeout(() => {
-
-      // Lorsqu'un filtre change, on revient à la première page.
-      fetchApplications(1);
-
-    }, 500);
-
-    // Annule le précédent timer si l'utilisateur modifie
-    // de nouveau les filtres avant les 500 ms.
-    return () => clearTimeout(timeout);
-
-  }, [filters, sort, viewMode, fetchApplications]);
+  fetchApplications(1);
+}, [
+  filters.status,
+  filters.type,
+  debouncedSearch,
+  sort,
+  viewMode,
+  fetchApplications,
+]);
 
 
   // ---------------- INTERFACE ----------------
@@ -256,11 +286,10 @@ export default function AdminDossiers() {
 
         {/* Affichage des dossiers actifs. */}
         <button
-          className={`btn btn-sm ${
-            viewMode === "active"
+          className={`btn btn-sm ${viewMode === "active"
               ? "btn-primary"
               : "btn-outline-primary"
-          }`}
+            }`}
           onClick={() => setViewMode("active")}
         >
           Actifs
@@ -268,11 +297,10 @@ export default function AdminDossiers() {
 
         {/* Affichage des dossiers annulés. */}
         <button
-          className={`btn btn-sm ${
-            viewMode === "cancelled"
+          className={`btn btn-sm ${viewMode === "cancelled"
               ? "btn-warning"
               : "btn-outline-warning"
-          }`}
+            }`}
           onClick={() => setViewMode("cancelled")}
         >
           Annulés
@@ -286,137 +314,142 @@ export default function AdminDossiers() {
           ========================= */}
 
       <div className="card border-0 shadow-sm rounded-4 mb-4">
-
         <div className="card-body p-4">
-
           <div className="row g-3 align-items-center">
 
-            {/* -------- RECHERCHE -------- */}
+            {/* =====================================================
+          RECHERCHE
+          ===================================================== */}
 
             <div className="col-lg-4 col-md-6">
+              <label
+                htmlFor="application-search"
+                className="visually-hidden"
+              >
+                Rechercher un dossier
+              </label>
 
               <input
-                type="text"
+                id="application-search"
+                type="search"
                 className="form-control form-control-lg"
-                placeholder="Rechercher (Véhicule...)"
+                placeholder="Rechercher (véhicule...)"
                 value={filters.search}
-
-                // Met à jour la recherche à chaque saisie.
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    search: e.target.value
-                  })
+                onChange={(event) =>
+                  setFilters((current) => ({
+                    ...current,
+                    search: event.target.value,
+                  }))
                 }
               />
-
             </div>
 
+            {/* =====================================================
+          FILTRE STATUT
+          ===================================================== */}
 
-            {/* -------- FILTRE STATUT -------- */}
-
-            {/* Le filtre de statut n'est affiché que
-                pour les dossiers actifs. */}
             {viewMode === "active" && (
-
               <div className="col-lg-3 col-md-6">
+                <label
+                  htmlFor="application-status"
+                  className="visually-hidden"
+                >
+                  Filtrer par statut
+                </label>
 
                 <select
+                  id="application-status"
                   className="form-select form-select-lg"
                   value={filters.status}
-
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      status: e.target.value
-                    })
+                  onChange={(event) =>
+                    setFilters((current) => ({
+                      ...current,
+                      status: event.target.value,
+                    }))
                   }
                 >
-
                   <option value="all">
                     Tous statuts
                   </option>
 
-                  <option value="draft">
-                    Brouillon
-                  </option>
-
-                  <option value="submitted">
-                    Soumis
-                  </option>
-
-                  <option value="processing">
-                    En cours
-                  </option>
-
-                  <option value="approved">
-                    Validé
-                  </option>
-
-                  <option value="paid">
-                    Payé
-                  </option>
-
-                  <option value="completed">
-                    Terminé
-                  </option>
-
-                  <option value="rejected">
-                    Refusé
-                  </option>
-
+                  {Object.entries(APPLICATION_STATUSES)
+                    .filter(
+                      ([status]) =>
+                        status !== "archived" &&
+                        status !== "cancelled"
+                    )
+                    .map(([status, config]) => (
+                      <option
+                        key={status}
+                        value={status}
+                      >
+                        {config.label}
+                      </option>
+                    ))}
                 </select>
-
               </div>
             )}
 
-
-            {/* -------- FILTRE TYPE -------- */}
+            {/* =====================================================
+          FILTRE TYPE
+          ===================================================== */}
 
             <div className="col-lg-3 col-md-6">
+              <label
+                htmlFor="application-type"
+                className="visually-hidden"
+              >
+                Filtrer par type
+              </label>
 
               <select
+                id="application-type"
                 className="form-select form-select-lg"
                 value={filters.type}
-
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    type: e.target.value
-                  })
+                onChange={(event) =>
+                  setFilters((current) => ({
+                    ...current,
+                    type: event.target.value,
+                  }))
                 }
               >
-
                 <option value="all">
                   Tous types
                 </option>
 
-                <option value="sale">
-                  Vente
-                </option>
-
-                <option value="rent">
-                  Location
-                </option>
-
+                {Object.entries(VEHICLE_TYPES).map(
+                  ([type, config]) => (
+                    <option
+                      key={type}
+                      value={type}
+                    >
+                      {config.label}
+                    </option>
+                  )
+                )}
               </select>
-
             </div>
 
-
-            {/* -------- TRI -------- */}
+            {/* =====================================================
+          TRI
+          ===================================================== */}
 
             <div className="col-lg-2 col-md-6">
+              <label
+                htmlFor="application-sort"
+                className="visually-hidden"
+              >
+                Trier les dossiers
+              </label>
 
               <select
+                id="application-sort"
                 className="form-select form-select-lg"
                 value={sort}
-
-                onChange={(e) =>
-                  setSort(e.target.value)
+                onChange={(event) =>
+                  setSort(event.target.value)
                 }
               >
-
                 <option value="created_at_desc">
                   Date ↓
                 </option>
@@ -428,15 +461,11 @@ export default function AdminDossiers() {
                 <option value="status">
                   Statut
                 </option>
-
               </select>
-
             </div>
 
           </div>
-
         </div>
-
       </div>
 
 
@@ -499,22 +528,15 @@ export default function AdminDossiers() {
                   {/* -------- DATE DE CRÉATION -------- */}
 
                   <td>
-                    {d.created_at
-                      ? new Date(
-                          d.created_at
-                        ).toLocaleDateString()
-                      : "-"}
+                    {formatDate(d.created_at)
+                      }
                   </td>
 
 
                   {/* -------- DATE DE SOUMISSION -------- */}
 
                   <td>
-                    {d.submitted_at
-                      ? new Date(
-                          d.submitted_at
-                        ).toLocaleDateString()
-                      : "-"}
+                    {formatDate(d.submitted_at)}
                   </td>
 
 
@@ -523,11 +545,10 @@ export default function AdminDossiers() {
                   <td>
 
                     <span
-                      className={`badge bg-${
-                        VEHICLE_TYPE[d.type]?.color
-                      }`}
+                      className={`badge bg-${VEHICLE_TYPES[d.type]?.color
+                        }`}
                     >
-                      {VEHICLE_TYPE[d.type]?.label}
+                      {VEHICLE_TYPES[d.type]?.label}
                     </span>
 
                   </td>
@@ -545,11 +566,10 @@ export default function AdminDossiers() {
                   <td>
 
                     <span
-                      className={`badge bg-${
-                        STATUS[d.status]?.color
-                      }`}
+                      className={`badge bg-${APPLICATION_STATUSES[d.status]?.color
+                        }`}
                     >
-                      {STATUS[d.status]?.label}
+                      {APPLICATION_STATUSES[d.status]?.label}
                     </span>
 
                   </td>
@@ -562,19 +582,17 @@ export default function AdminDossiers() {
                     <div className="d-flex gap-2 justify-content-start">
 
                       {/* Consulter le détail du dossier. */}
-                      <button
-                        className="btn btn-light btn-sm rounded-circle shadow-sm"
-
-                        onClick={() =>
-                          navigate(
-                            `/applications/${d.id}`
-                          )
-                        }
-
-                        title="Voir le dossier"
-                      >
-                        <i className="bi bi-search" />
-                      </button>
+                     <Link
+  to={`/applications/${d.id}`}
+  className="btn btn-light btn-sm rounded-circle shadow-sm"
+  title="Voir le dossier"
+  aria-label="Voir le dossier"
+>
+  <i
+    className="bi bi-search"
+    aria-hidden="true"
+  />
+</Link>
 
 
                       {/* Supprimer uniquement un dossier
@@ -643,52 +661,25 @@ export default function AdminDossiers() {
           PAGINATION
           ========================= */}
 
-<NumberedPagination
-  page={pagination.page}
-  totalPages={pagination.total_pages}
-  onPageChange={fetchApplications}
-/>
+      <NumberedPagination
+        page={pagination.page}
+        totalPages={pagination.total_pages}
+        onPageChange={fetchApplications}
+      />
 
 
       {/* =========================
           MODALE DE CONFIRMATION
           ========================= */}
 
-      <ConfirmActionModal
-
-        // Affiche ou masque la modal.
-        open={modal.open}
-
-        // Indique à la modal quelle action est concernée.
-        type={modal.type}
-
-        // Le titre dépend de l'action sélectionnée.
-        title={
-          modal.type === "delete"
-            ? "Supprimer le dossier"
-            : "Annuler le dossier"
-        }
-
-        // Le message d'avertissement dépend également
-        // de l'action sélectionnée.
-        description={
-          modal.type === "delete"
-            ? "Cette action est irréversible."
-            : "Le dossier sera marqué comme annulé."
-        }
-
-        // Ferme la modal sans effectuer d'action.
-        onCancel={() =>
-          setModal({
-            open: false,
-            type: null,
-            id: null
-          })
-        }
-
-        // Exécute l'action après confirmation.
-        onConfirm={handleConfirm}
-      />
+  <ConfirmActionModal
+  open={modal.open}
+  type={modal.type}
+  title={modalConfig?.title}
+  description={modalConfig?.description}
+  onCancel={closeModal}
+  onConfirm={handleConfirm}
+/>
 
     </div>
   );

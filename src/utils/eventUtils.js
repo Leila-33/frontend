@@ -1,6 +1,9 @@
 import {
   EVENT_CATEGORIES,
   EVENT_TYPE_LABELS,
+  EVENT_TYPE_CONFIG,
+  DEFAULT_EVENT_TYPE_CONFIG
+
 } from "../constants/eventOptions";
 
 /**
@@ -79,4 +82,19 @@ export const getEventTypeColor = (type) => {
  */
 export const getEventCategoryLabel = (type) => {
   return getEventCategoryConfig(type).label;
+};
+
+// ==========================================================
+// ICÔNE D'UN ÉVÉNEMENT
+// ==========================================================
+
+/**
+ * Retourne l'icône Bootstrap correspondant au type
+ * d'événement.
+ */
+export const getEventIcon = (type) => {
+  return (
+    EVENT_TYPE_CONFIG[type]?.icon ??
+    DEFAULT_EVENT_TYPE_CONFIG.icon
+  );
 };

@@ -1,10 +1,4 @@
-/**
- * Formate un montant financier.
- *
- * Une valeur null ou undefined est affichée comme 0.
- */
-const formatAmount = (value) =>
-  Number(value ?? 0).toLocaleString("fr-FR");
+import { formatAmount } from "../../utils/priceUtils";
 
 /**
  * Affiche le détail financier d'une offre :
@@ -37,7 +31,7 @@ export default function QuoteFinancingCard({
           </span>
 
           <strong>
-            {formatAmount(quote?.base_price)} €
+            {formatAmount(quote?.base_price)}
           </strong>
         </div>
 
@@ -51,7 +45,7 @@ export default function QuoteFinancingCard({
           </span>
 
           <strong>
-            - {formatAmount(quote?.discount)} €
+            - {formatAmount(quote?.discount)}
           </strong>
         </div>
 
@@ -65,7 +59,7 @@ export default function QuoteFinancingCard({
           </span>
 
           <strong>
-            - {formatAmount(quote?.down_payment)} €
+            - {formatAmount(quote?.down_payment)}
           </strong>
         </div>
 
@@ -79,7 +73,7 @@ export default function QuoteFinancingCard({
           </span>
 
           <strong>
-            - {formatAmount(quote?.trade_in_value)} €
+            - {formatAmount(quote?.trade_in_value)}
           </strong>
         </div>
 
@@ -95,7 +89,7 @@ export default function QuoteFinancingCard({
           </span>
 
           <strong>
-            {formatAmount(quote?.financed_amount)} €
+            {formatAmount(quote?.financed_amount)}
           </strong>
         </div>
 
@@ -126,7 +120,7 @@ export default function QuoteFinancingCard({
 
           <strong>
             {quote?.monthly_payment != null
-              ? `${formatAmount(quote.monthly_payment)} €/mois`
+              ? `${formatAmount(quote.monthly_payment)} /mois`
               : "Non renseignée"}
           </strong>
         </div>

@@ -1,5 +1,5 @@
 import { ImageCarousel } from "./ImageCarousel";
-import {useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import { useAuth } from "../../contexts/AuthContext";
@@ -17,9 +17,9 @@ import {
   BsSpeedometer2,
   BsTrash,
   BsXCircle,
-  BsCalendarCheck
+  BsCalendarCheck,
 } from "react-icons/bs";
-
+import { formatAmount } from "../../utils/priceUtils";
 import AvailabilityModal from "./AvailabilityModal";
 
 /**
@@ -34,19 +34,13 @@ import AvailabilityModal from "./AvailabilityModal";
  * - permettre de modifier ou supprimer le véhicule ;
  * - rediriger vers la page de détail du véhicule.
  */
-export function VehicleCard({
-  v,
-  fetchVehicles,
-  openModal,
-}) {
-
+export function VehicleCard({ v, fetchVehicles, openModal }) {
   /* =======================================================
      CONTEXTE / NAVIGATION
   ======================================================= */
 
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
-
 
   /* =======================================================
      ÉTAT - SUPPRESSION
@@ -60,16 +54,11 @@ export function VehicleCard({
    */
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
 
+  // =======================================================
+  // ÉTAT - MODALE DE DISPONIBILITÉ
+  // =======================================================
 
-
-
-// =======================================================
-// ÉTAT - MODALE DE DISPONIBILITÉ
-// =======================================================
-
-const [availabilityVehicle, setAvailabilityVehicle] =
-  useState(null);
-
+  const [availabilityVehicle, setAvailabilityVehicle] = useState(null);
 
   /* =======================================================
      NAVIGATION VERS LE DÉTAIL
@@ -82,11 +71,7 @@ const [availabilityVehicle, setAvailabilityVehicle] =
    * Les autres utilisateurs utilisent la route publique.
    */
   const goToDetail = () => {
-    navigate(
-      isAdmin
-        ? `/admin/vehicle/${v.id}`
-        : `/vehicle/${v.id}`
-    );
+    navigate(isAdmin ? `/admin/vehicle/${v.id}` : `/vehicle/${v.id}`);
   };
 
   /* =======================================================
@@ -94,7 +79,6 @@ const [availabilityVehicle, setAvailabilityVehicle] =
   ======================================================= */
 
   const totalPrice = Number(v.price || 0);
-
 
   /* =======================================================
      OUVERTURE DE LA MODALE DE DISPONIBILITÉ (VEHICULE EN LOCATION)
@@ -104,27 +88,24 @@ const [availabilityVehicle, setAvailabilityVehicle] =
    * Ouvre la modale de vérification avec le véhicule courant.
    */
 
+  const openAvailabilityModal = (event, vehicle) => {
+    console.log("l");
+    event.stopPropagation();
 
-const openAvailabilityModal = (event, vehicle) => {
-    console.log("l")
-  event.stopPropagation();
-
-  setAvailabilityVehicle(vehicle);
-};
-
+    setAvailabilityVehicle(vehicle);
+  };
 
   /**
    * Ferme la modale de disponibilité et réinitialise
    * son état.
    */
-// =======================================================
-// FERMETURE DE LA MODALE DE DISPONIBILITÉ
-// =======================================================
+  // =======================================================
+  // FERMETURE DE LA MODALE DE DISPONIBILITÉ
+  // =======================================================
 
-const closeAvailabilityModal = () => {
-
-  setAvailabilityVehicle(null);
-};
+  const closeAvailabilityModal = () => {
+    setAvailabilityVehicle(null);
+  };
 
   /* =======================================================
      AFFICHAGE DE LA DISPONIBILITÉ D'UN VEHICULE EN VENTE (VISIBILITE CLIENT)
@@ -144,14 +125,11 @@ const closeAvailabilityModal = () => {
    * les véhicules proposés à la vente.
    */
   const renderAvailability = (vehicle) => {
-
     if (vehicle.type !== "sale") {
       return null;
     }
 
-
     const isAvailable = vehicle.is_available;
-
 
     /* -------------------------------------------------------
        BADGE DE DISPONIBILITÉ
@@ -159,7 +137,6 @@ const closeAvailabilityModal = () => {
 
     const badge = (
       <span className="d-flex align-items-center gap-2">
-
         {isAvailable ? (
           <span className="text-success d-flex align-items-center">
             <BsCheckCircle className="me-1" />
@@ -171,10 +148,8 @@ const closeAvailabilityModal = () => {
             Indisponible
           </span>
         )}
-
       </span>
     );
-
 
     /*
      * Seul l'administrateur peut modifier
@@ -183,7 +158,6 @@ const closeAvailabilityModal = () => {
     if (!isAdmin) {
       return badge;
     }
-
 
     /* -------------------------------------------------------
        AFFICHAGE ADMINISTRATEUR
@@ -194,11 +168,9 @@ const closeAvailabilityModal = () => {
         className="d-flex align-items-center gap-2"
         onClick={(event) => event.stopPropagation()}
       >
-
         {badge}
 
         <div className="form-check form-switch m-0">
-
           <input
             className="form-check-input"
             type="checkbox"
@@ -206,10 +178,7 @@ const closeAvailabilityModal = () => {
             checked={isAvailable}
             onClick={(event) => event.stopPropagation()}
             onChange={(event) => {
-              handleAvailabilityChange(
-                vehicle,
-                event.target.checked
-              );
+              handleAvailabilityChange(vehicle, event.target.checked);
             }}
             aria-label={
               isAvailable
@@ -217,9 +186,7 @@ const closeAvailabilityModal = () => {
                 : "Activer la disponibilité"
             }
           />
-
         </div>
-
       </div>
     );
   };
@@ -234,35 +201,21 @@ const closeAvailabilityModal = () => {
    * Cette action est réservée à l'administration.
    */
   const handleAvailabilityChange = async (vehicle, value) => {
-
     try {
-
-      await apiFetch(
-        `/admin/vehicles/${vehicle.id}/availability`,
-        {
-          method: "PATCH",
-          body: {
-            value,
-          },
-        }
-      );
-
+      await apiFetch(`/admin/vehicles/${vehicle.id}/availability`, {
+        method: "PATCH",
+        body: {
+          value,
+        },
+      });
 
       // Recharge la liste afin d'afficher la nouvelle valeur.
-    await fetchVehicles(undefined, false);
+      await fetchVehicles(undefined, false);
 
-
-      toast.success(
-        value
-          ? "Véhicule activé"
-          : "Véhicule désactivé"
-      );
-
+      toast.success(value ? "Véhicule activé" : "Véhicule désactivé");
     } catch (err) {
-
       toast.error(
-        err.message ||
-        "Erreur lors de la modification de la disponibilité"
+        err.message || "Erreur lors de la modification de la disponibilité"
       );
     }
   };
@@ -272,12 +225,11 @@ const closeAvailabilityModal = () => {
   const handleDelete = async (vehicle) => {
     try {
       await apiFetch(`/admin/vehicles/${vehicle.id}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
 
       toast.success("Véhicule supprimé ✅");
-    await fetchVehicles(undefined, false);
-
+      await fetchVehicles(undefined, false);
     } catch (err) {
       toast.error(err.message);
     }
@@ -288,18 +240,16 @@ const closeAvailabilityModal = () => {
 
   return (
     <div className="col-md-4 mb-4">
-
       {/* ===================================================
           MODALE DE VÉRIFICATION DE DISPONIBILITÉ
       =================================================== */}
 
-{availabilityVehicle && (
-  <AvailabilityModal
-    vehicle={availabilityVehicle}
-    onClose={closeAvailabilityModal}
-  />
-)}
-
+      {availabilityVehicle && (
+        <AvailabilityModal
+          vehicle={availabilityVehicle}
+          onClose={closeAvailabilityModal}
+        />
+      )}
 
       {/* ===================================================
           CARTE DU VÉHICULE
@@ -320,23 +270,18 @@ const closeAvailabilityModal = () => {
         }}
         onClick={goToDetail}
       >
-
         {/* ------------------------------------------------
             IMAGES
         ------------------------------------------------ */}
-<div
-  className="position-relative"
->
-  <ImageCarousel
-    images={v.images}
-  />
+        <div className="position-relative">
+          <ImageCarousel images={v.images} />
 
-  {/* =========================
+          {/* =========================
       TYPE DU VÉHICULE
   ========================= */}
 
-  <span
-    className={`
+          <span
+            className={`
       badge
       position-absolute
       top-0
@@ -345,67 +290,47 @@ const closeAvailabilityModal = () => {
       px-3
       py-2
       rounded-pill
-      ${
-        v.type === "sale"
-          ? "bg-success"
-          : "bg-primary"
-      }
+      ${v.type === "sale" ? "bg-success" : "bg-primary"}
     `}
-  >
-    {v.type === "sale"
-      ? "Vente"
-      : "Location"
-    }
-  </span>
-</div>
-
+          >
+            {v.type === "sale" ? "Vente" : "Location"}
+          </span>
+        </div>
 
         <div className="card-body d-flex flex-column">
-
           {/* =================================================
               TYPE + DISPONIBILITÉ
           ================================================= */}
-<div className="d-flex justify-content-end mb-3">
-  {renderAvailability(v)}
-</div>
-
+          <div className="d-flex justify-content-end mb-3">
+            {renderAvailability(v)}
+          </div>
 
           {/* =================================================
               TITRE
           ================================================= */}
 
           <div className="mb-3">
+            <h5 className="fw-bold mb-0">{v.brand}</h5>
 
-            <h5 className="fw-bold mb-0">
-              {v.brand}
-            </h5>
-
-            <div className="text-muted">
-              {v.model}
-            </div>
-
+            <div className="text-muted">{v.model}</div>
           </div>
-
 
           {/* =================================================
               INFORMATIONS PRINCIPALES
           ================================================= */}
 
           <div className="d-flex flex-wrap gap-2 mb-3">
-
             {/* Année */}
             <span className="badge bg-light text-dark border">
               <BsCalendar3 className="me-1" />
               {v.year}
             </span>
 
-
             {/* Kilométrage */}
             <span className="badge bg-light text-dark border">
               <BsSpeedometer2 className="me-1" />
               {Number(v.mileage || 0).toLocaleString("fr-FR")} km
             </span>
-
 
             {/* Motorisation */}
             {v.engine_type && (
@@ -415,29 +340,22 @@ const closeAvailabilityModal = () => {
               </span>
             )}
 
-
             {/* État */}
             <span className="badge bg-light text-dark border">
               <BsShieldCheck className="me-1" />
 
-              {v.condition === "new"
-                ? "Neuf"
-                : "Occasion"
-              }
+              {v.condition === "new" ? "Neuf" : "Occasion"}
             </span>
-
           </div>
-
 
           {/* =================================================
               GARANTIE
           ================================================= */}
 
-{v.warranty_plan && (
-  <div className="mb-3">
-
-    <span
-      className="
+          {v.warranty_plan && (
+            <div className="mb-3">
+              <span
+                className="
         badge
         bg-warning-subtle
         text-warning-emphasis
@@ -446,15 +364,13 @@ const closeAvailabilityModal = () => {
         py-2
         rounded-pill
       "
-      title="Garantie incluse"
-    >
-      <BsShieldCheck className="me-1" />
-      {v.warranty_plan.name}
-    </span>
-
-  </div>
-)}
-
+                title="Garantie incluse"
+              >
+                <BsShieldCheck className="me-1" />
+                {v.warranty_plan.name}
+              </span>
+            </div>
+          )}
 
           {/* =================================================
               OPTIONS DE LOCATION
@@ -462,20 +378,17 @@ const closeAvailabilityModal = () => {
 
           {v.type === "rent" && (
             <>
-
               {/* ------------------------------------------------
                   OPTIONS INCLUSES
               ------------------------------------------------ */}
 
               {v.included_options?.length > 0 && (
                 <div className="mb-3">
-
                   <small className="text-muted fw-semibold d-block mb-2">
                     Inclus
                   </small>
 
                   <div className="d-flex flex-wrap gap-2">
-
                     {v.included_options.map((option) => (
                       <span
                         key={option.id}
@@ -490,12 +403,9 @@ const closeAvailabilityModal = () => {
                         {option.name}
                       </span>
                     ))}
-
                   </div>
-
                 </div>
               )}
-
 
               {/* ------------------------------------------------
                   OPTIONS FACULTATIVES
@@ -503,18 +413,14 @@ const closeAvailabilityModal = () => {
 
               {v.optional_options?.length > 0 && (
                 <div className="mb-3">
-
                   <small className="text-muted fw-semibold d-block mb-2">
                     Options disponibles
                   </small>
 
                   <div className="d-flex flex-wrap gap-2">
-
                     {v.optional_options.map((option) => {
-
                       const price = Number(option.price || 0);
-                      const isDaily =
-                        option.billing_type === "daily";
+                      const isDaily = option.billing_type === "daily";
 
                       return (
                         <span
@@ -533,62 +439,46 @@ const closeAvailabilityModal = () => {
                           {price > 0 && (
                             <>
                               {" "}
-                              (+{price.toLocaleString("fr-FR")} €
+                              (+{formatAmount(price)}
                               {isDaily && "/jour"})
                             </>
                           )}
-
                         </span>
                       );
                     })}
-
                   </div>
-
                 </div>
               )}
-
             </>
           )}
-
 
           {/* =================================================
               PRIX
           ================================================= */}
 
           <div className="mt-auto pt-3 border-top">
-
             <div className="mb-3">
-
               <div className="fs-3 fw-bold text-dark">
-
-                {totalPrice.toLocaleString("fr-FR")} €
+                {formatAmount(totalPrice)}
 
                 {v.type === "rent" && (
-                  <span className="fs-6 text-muted fw-normal ms-2">
-                    / jour
-                  </span>
+                  <span className="fs-6 text-muted fw-normal ms-2">/ jour</span>
                 )}
-
               </div>
-
             </div>
-
 
             {/* =================================================
                 ACTIONS
             ================================================= */}
 
             <div className="d-flex justify-content-between align-items-center">
-
               {/* Immatriculation */}
               <div className="text-muted small">
                 <BsCarFront className="me-1" />
                 {v.license_plate || "—"}
               </div>
 
-
               <div className="d-flex gap-2">
-
                 {/* ---------------------------------------------
                     VÉRIFIER LA DISPONIBILITÉ
                 --------------------------------------------- */}
@@ -597,9 +487,9 @@ const closeAvailabilityModal = () => {
                   <button
                     type="button"
                     className="btn btn-light btn-sm border"
-                      onClick={(event) => {
-    openAvailabilityModal(event, v);
-  }}
+                    onClick={(event) => {
+                      openAvailabilityModal(event, v);
+                    }}
                     title="Vérifier la disponibilité"
                     aria-label={`Vérifier la disponibilité de ${v.brand} ${v.model}`}
                   >
@@ -607,63 +497,58 @@ const closeAvailabilityModal = () => {
                   </button>
                 )}
 
-
                 {/* ---------------------------------------------
                     MODIFIER
                 --------------------------------------------- */}
-{isAdmin &&
-  window.location.pathname.includes("/admin/vehicles") && (
-    <>
-      {/* ---------------------------------------------
+                {isAdmin &&
+                  window.location.pathname.includes("/admin/vehicles") && (
+                    <>
+                      {/* ---------------------------------------------
           MODIFIER
       --------------------------------------------- */}
 
-      <button
-        type="button"
-        className="btn btn-light btn-sm border"
-        onClick={(event) => {
-          event.stopPropagation();
-          openModal(v);
-        }}
-        title="Modifier"
-        aria-label={`Modifier ${v.brand} ${v.model}`}
-      >
-        <BsPencil />
-      </button>
+                      <button
+                        type="button"
+                        className="btn btn-light btn-sm border"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openModal(v);
+                        }}
+                        title="Modifier"
+                        aria-label={`Modifier ${v.brand} ${v.model}`}
+                      >
+                        <BsPencil />
+                      </button>
 
-      {/* ---------------------------------------------
+                      {/* ---------------------------------------------
           SUPPRIMER
       --------------------------------------------- */}
 
-      <button
-        type="button"
-        className="
+                      <button
+                        type="button"
+                        className="
           btn
           btn-light
           btn-sm
           border
           text-danger
         "
-        onClick={(event) => {
-          event.stopPropagation();
-          setVehicleToDelete(v);
-        }}
-        title="Supprimer"
-        aria-label={`Supprimer ${v.brand} ${v.model}`}
-      >
-        <BsTrash />
-      </button>
-    </>
-)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setVehicleToDelete(v);
+                        }}
+                        title="Supprimer"
+                        aria-label={`Supprimer ${v.brand} ${v.model}`}
+                      >
+                        <BsTrash />
+                      </button>
+                    </>
+                  )}
               </div>
-
             </div>
-
           </div>
-
         </div>
       </div>
-
 
       {/* ===================================================
           MODALE DE CONFIRMATION DE SUPPRESSION
@@ -682,7 +567,6 @@ const closeAvailabilityModal = () => {
           setVehicleToDelete(null);
         }}
         onConfirm={async () => {
-
           if (!vehicleToDelete) {
             return;
           }
@@ -702,7 +586,6 @@ const closeAvailabilityModal = () => {
           setVehicleToDelete(null);
         }}
       />
-
     </div>
   );
 }

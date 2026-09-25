@@ -13,21 +13,23 @@ import Pagination from "../../components/common/Pagination";
 import {
   TEST_DRIVE_ADMIN_ACTIONS,
   TEST_DRIVE_ADMIN_ACTION_CONFIG,
-  TEST_DRIVE_ACTION_MESSAGES,
   DEFAULT_TEST_DRIVE_STATS,
-  testDriveStatusConfig
-} from "../../utils/testDrive";
+  TEST_DRIVE_STATUSES,
+  TEST_DRIVE_TABS,
+  TEST_DRIVE_STAT_CARD_COLORS,
+} from "../../constants/testDriveOptions";
 
 import {
-  formatDate,
+  formatDateTime,
   isToday
-} from "../../utils/date";
+} from "../../utils/dateUtils";
 
 import {
   getAdminTestDrives,
   updateTestDriveStatus
 } from "../../services/testDriveService";
-
+import { useDebounce } from "../../hooks/useDebounce";
+import { getTestDriveStatusClassName, getTestDriveStatusLabel } from "../../utils/testDriveUtils";
 
 export default function AdminTestDrives() {
 
@@ -69,7 +71,16 @@ export default function AdminTestDrives() {
     date: ""
   });
 
+  // ==========================================================
+  // RECHERCHE AVEC DEBOUNCE
+  // ==========================================================
 
+  // Valeur de recherche mise à jour après une courte pause
+  // afin d'éviter une requête à chaque frappe.
+  const debouncedSearch = useDebounce(
+    filters.search,
+    400
+  );
   // =========================
   // TRI
   // =========================
@@ -86,12 +97,12 @@ export default function AdminTestDrives() {
   // PAGINATION
   // =========================
 
-const [pagination, setPagination] = useState({
-  page: 1,
-  limit: 20,
-  total: 0,
-  total_pages: 1
-});
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    total_pages: 1
+  });
 
 
   // =========================
@@ -123,10 +134,11 @@ const [pagination, setPagination] = useState({
       // RECHERCHE
       // -------------------------
 
-      if (filters.search) {
+      if (debouncedSearch?.trim()) {
+
         params.append(
           "search",
-          filters.search
+          debouncedSearch.trim()
         );
       }
 
@@ -211,7 +223,7 @@ const [pagination, setPagination] = useState({
 
   }, [
     filters.status,
-    filters.search,
+    debouncedSearch,
     filters.date,
     sort.field,
     sort.direction,
@@ -230,10 +242,6 @@ const [pagination, setPagination] = useState({
 
   }, [fetchTestDrives]);
 
-
-  // =========================
-  // PAGINATION
-  // =========================
 
 
 
@@ -312,7 +320,7 @@ const [pagination, setPagination] = useState({
       // sur la même colonne, on inverse le tri.
       direction:
         prev.field === field &&
-        prev.direction === "asc"
+          prev.direction === "asc"
           ? "desc"
           : "asc"
 
@@ -408,9 +416,9 @@ const [pagination, setPagination] = useState({
 
       // Message correspondant à l'action effectuée.
       toast.success(
-        TEST_DRIVE_ACTION_MESSAGES[
-          actionModal.type
-        ] ||
+        TEST_DRIVE_ADMIN_ACTION_CONFIG[
+        actionModal.type
+        ].message ||
         "Statut mis à jour avec succès"
       );
 
@@ -471,157 +479,36 @@ const [pagination, setPagination] = useState({
           CARTES STATISTIQUES
       ========================= */}
 
-      <div className="row g-3 mb-4">
+<div className="row g-3 mb-4">
+  {TEST_DRIVE_TABS
+    .filter((tab) => tab.key !== "all")
+    .map((tab) => (
+      <div key={tab.key} className="col-md-6 col-xl-3">
+        <div className="card border-0 shadow-sm rounded-4 h-100">
+          <div className="card-body p-4">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <p className="text-muted mb-1">
+                  {tab.label}
+                </p>
 
-
-        {/* -------------------------
-            ESSAIS EN ATTENTE
-        ------------------------- */}
-
-        <div className="col-md-6 col-xl-3">
-
-          <div className="card shadow-sm border-0 h-100">
-
-            <div className="card-body">
-
-              <div className="d-flex justify-content-between align-items-center">
-
-                <div>
-
-                  <p className="text-muted mb-1">
-                    En attente
-                  </p>
-
-                  <h2 className="mb-0">
-                    {stats.pending}
-                  </h2>
-
-                </div>
-
-                <div className="fs-2 text-warning">
-                  🕐
-                </div>
-
+                <h2 className="mb-0 fw-bold">
+                  {stats[tab.key] ?? 0}
+                </h2>
               </div>
 
+              <i
+                className={`bi ${tab.icon} fs-2 text-${
+                  TEST_DRIVE_STAT_CARD_COLORS[tab.key]
+                }`}
+                aria-hidden="true"
+              />
             </div>
-
           </div>
-
         </div>
-
-
-        {/* -------------------------
-            ESSAIS CONFIRMÉS
-        ------------------------- */}
-
-        <div className="col-md-6 col-xl-3">
-
-          <div className="card shadow-sm border-0 h-100">
-
-            <div className="card-body">
-
-              <div className="d-flex justify-content-between align-items-center">
-
-                <div>
-
-                  <p className="text-muted mb-1">
-                    Confirmés
-                  </p>
-
-                  <h2 className="mb-0">
-                    {stats.confirmed}
-                  </h2>
-
-                </div>
-
-                <div className="fs-2 text-primary">
-                  ✓
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        {/* -------------------------
-            ESSAIS TERMINÉS
-        ------------------------- */}
-
-        <div className="col-md-6 col-xl-3">
-
-          <div className="card shadow-sm border-0 h-100">
-
-            <div className="card-body">
-
-              <div className="d-flex justify-content-between align-items-center">
-
-                <div>
-
-                  <p className="text-muted mb-1">
-                    Terminés
-                  </p>
-
-                  <h2 className="mb-0">
-                    {stats.completed}
-                  </h2>
-
-                </div>
-
-                <div className="fs-2 text-success">
-                  ✓
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        {/* -------------------------
-            ESSAIS ANNULÉS / REFUSÉS
-        ------------------------- */}
-
-        <div className="col-md-6 col-xl-3">
-
-          <div className="card shadow-sm border-0 h-100">
-
-            <div className="card-body">
-
-              <div className="d-flex justify-content-between align-items-center">
-
-                <div>
-
-                  <p className="text-muted mb-1">
-                    Annulés / refusés
-                  </p>
-
-                  <h2 className="mb-0">
-                    {stats.cancelled}
-                  </h2>
-
-                </div>
-
-                <div className="fs-2 text-danger">
-                  ✕
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
       </div>
+    ))}
+</div>
 
 
       {/* =========================
@@ -639,76 +526,76 @@ const [pagination, setPagination] = useState({
                 RECHERCHE
             ------------------------- */}
 
-            <div className="col-md-4">
+<div className="col-md-4">
 
-              <label className="form-label">
-                Recherche
-              </label>
+  <label
+    htmlFor="test-drive-search"
+    className="form-label fw-semibold"
+  >
+    Recherche
+  </label>
 
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Client, véhicule..."
-                value={filters.search}
-                onChange={(e) =>
-                  handleFilterChange(
-                    "search",
-                    e.target.value
-                  )
-                }
-              />
+  <input
+    id="test-drive-search"
+    type="search"
+    className="form-control"
+    placeholder="Client, véhicule..."
+    value={filters.search}
+    onChange={(event) =>
+      handleFilterChange(
+        "search",
+        event.target.value
+      )
+    }
+    aria-label="Rechercher un essai routier"
+  />
 
-            </div>
+</div>
 
 
             {/* -------------------------
                 FILTRE PAR STATUT
             ------------------------- */}
 
-            <div className="col-md-3">
+<div className="col-md-3">
 
-              <label className="form-label">
-                Statut
-              </label>
+  <label
+    htmlFor="test-drive-status"
+    className="form-label fw-semibold"
+  >
+    Statut
+  </label>
 
-              <select
-                className="form-select"
-                value={filters.status}
-                onChange={(e) =>
-                  handleFilterChange(
-                    "status",
-                    e.target.value
-                  )
-                }
-              >
+  <select
+    id="test-drive-status"
+    className="form-select"
+    value={filters.status}
+    onChange={(event) =>
+      handleFilterChange(
+        "status",
+        event.target.value
+      )
+    }
+  >
 
-                <option value="">
-                  Tous les statuts
-                </option>
+    <option value="">
+      Tous les statuts
+    </option>
 
-                <option value="pending">
-                  En attente
-                </option>
+    {Object.entries(TEST_DRIVE_STATUSES).map(
+      ([status, config]) => (
+        <option
+          key={status}
+          value={status}
+        >
+          {config.label}
+        </option>
+      )
+    )}
 
-                <option value="confirmed">
-                  Confirmé
-                </option>
+  </select>
 
-                <option value="rejected">
-                  Refusé
-                </option>
-
-                <option value="cancelled">
-                  Annulé
-                </option>
-
-                <option value="completed">
-                  Terminé
-                </option>
-
-              </select>
-
-            </div>
+</div>
 
 
             {/* -------------------------
@@ -882,13 +769,6 @@ const [pagination, setPagination] = useState({
 
                 {testDrives.map((td) => {
 
-                  // Récupération de la configuration
-                  // correspondant au statut de l'essai.
-                  const status =
-                    testDriveStatusConfig[
-                      td.status
-                    ] ||
-                    testDriveStatusConfig.pending;
 
 
                   // Vérifie si le rendez-vous
@@ -903,7 +783,7 @@ const [pagination, setPagination] = useState({
                   // pour le statut actuel.
                   const actions =
                     TEST_DRIVE_ADMIN_ACTIONS[
-                      td.status
+                    td.status
                     ] || [];
 
 
@@ -955,7 +835,7 @@ const [pagination, setPagination] = useState({
                       <td>
 
                         <div className="fw-semibold">
-                          {formatDate(
+                          {formatDateTime(
                             td.appointment_date
                           )}
                         </div>
@@ -983,10 +863,10 @@ const [pagination, setPagination] = useState({
 
                         <span
                           className={
-                            status.className
+                            getTestDriveStatusClassName(td.status)
                           }
                         >
-                          {status.label}
+                          {getTestDriveStatusLabel(td.status)}
                         </span>
 
                       </td>
@@ -1026,7 +906,7 @@ const [pagination, setPagination] = useState({
 
                             const config =
                               TEST_DRIVE_ADMIN_ACTION_CONFIG[
-                                action
+                              action
                               ];
 
 
@@ -1108,16 +988,16 @@ const [pagination, setPagination] = useState({
 
               {/* Boutons de pagination */}
 
-      <Pagination
-        page={pagination.page}
-        totalPages={pagination.total_pages}
-        onPageChange={(newPage) =>
-          setPagination((prev) => ({
-            ...prev,
-            page: newPage
-          }))
-        }
-      />
+              <Pagination
+                page={pagination.page}
+                totalPages={pagination.total_pages}
+                onPageChange={(newPage) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    page: newPage
+                  }))
+                }
+              />
 
             </div>
 

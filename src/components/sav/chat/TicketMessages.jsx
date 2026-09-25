@@ -1,3 +1,5 @@
+import { formatDateTime } from "../../../utils/dateUtils";
+
 /**
  * Affiche la conversation d'un ticket SAV.
  *
@@ -66,26 +68,6 @@ export default function TicketMessages({
           message.sender_role === currentRole;
 
 
-        // =================================================
-        // DATE
-        // =================================================
-
-        /**
-         * Conversion de la date retournée par l'API en
-         * format lisible pour l'utilisateur.
-         */
-        const formattedDate = message.created_at
-          ? new Date(
-              message.created_at
-            ).toLocaleString("fr-FR", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "";
-
 
         // =================================================
         // MESSAGE
@@ -147,7 +129,7 @@ export default function TicketMessages({
                   DATE
               ========================================= */}
 
-              {formattedDate && (
+              {formatDateTime(message.created_at) && (
 
                 <div
                   className={`small mt-2 ${
@@ -156,7 +138,7 @@ export default function TicketMessages({
                       : "text-muted"
                   }`}
                 >
-                  {formattedDate}
+                  {formatDateTime(message.created_at)}
                 </div>
 
               )}

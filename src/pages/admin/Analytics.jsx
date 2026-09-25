@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
-import apiFetch from "../../services/apiFetch";
-import { toast } from "react-toastify";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   LineChart,
@@ -14,148 +16,207 @@ import {
   Bar,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
 
-import { STATUS } from "../../utils/status";
+import { toast } from "react-toastify";
 
-// =========================
-// CONFIGURATION GRAPHIQUES
-// =========================
+import apiFetch from "../../services/apiFetch";
 
-const COLORS = [
-  "#0d6efd",
-  "#198754",
-  "#ffc107",
-  "#dc3545",
-  "#6c757d"
-];
+import {
+  formatChartDate,
+  formatMonth,
+} from "../../utils/dateUtils";
 
-// =========================
-// FORMATTERS
-// =========================
+import {
+  APPLICATION_STATUSES,
+} from "../../constants/applicationOptions";
 
-const formatChartDate = (date) => {
-  if (!date) return "";
+import {
+  ADMIN_ANALYTICS_STAT_CARDS,
+  ANALYTICS_CHART_COLORS,
+} from "../../constants/analyticsOptions";
 
-  return new Date(`${date}T00:00:00`).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit"
-  });
+// ==========================================================
+// DONNÉES PAR DÉFAUT
+// ==========================================================
+
+const DEFAULT_ANALYTICS_DATA = {
+  applications_by_day: [],
+  status_distribution: [],
+  revenue: [],
+  stats: {
+    total: 0,
+    approved: 0,
+    rejected: 0,
+    submitted: 0,
+    draft: 0,
+  },
 };
 
-const formatMonth = (month) => {
-  if (!month) return "";
+// ==========================================================
+// CARTE DE STATISTIQUE
+// ==========================================================
 
-  const [year, monthNumber] = month.split("-");
+/**
+ * Affiche une statistique sous forme de carte.
+ *
+ * Le composant reste local à AdminAnalytics car il est
+ * uniquement utilisé dans cette page et ne contient
+ * aucune logique métier réutilisable.
+ */
+function StatCard({
+  title,
+  value,
+  color = "dark",
+}) {
+  return (
+    <div className="col-6 col-md">
+      <div className="card border-0 shadow-sm rounded-4 h-100">
+        <div className="card-body">
+          <div className="text-muted small">
+            {title}
+          </div>
 
-  return new Date(
-    Number(year),
-    Number(monthNumber) - 1,
-    1
-  ).toLocaleDateString("fr-FR", {
-    month: "short",
-    year: "numeric"
-  });
+          <div
+            className={`fs-3 fw-bold text-${color}`}
+          >
+            {value ?? 0}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================================
+// NORMALISATION DES DONNÉES
+// ==========================================================
+
+/**
+ * Sécurise les données reçues de l'API afin que le
+ * composant puisse toujours travailler avec une structure
+ * prévisible.
+ */
+const normalizeAnalyticsData = (response) => {
+  const stats = response?.stats ?? {};
+
+  return {
+    applications_by_day: Array.isArray(
+      response?.applications_by_day
+    )
+      ? response.applications_by_day
+      : [],
+
+    status_distribution: Array.isArray(
+      response?.status_distribution
+    )
+      ? response.status_distribution
+      : [],
+
+    revenue: Array.isArray(response?.revenue)
+      ? response.revenue
+      : [],
+
+    stats: {
+      total: stats.total ?? 0,
+      approved: stats.active ?? 0,
+      rejected: stats.rejected ?? 0,
+      submitted: stats.submitted ?? 0,
+      draft: stats.draft ?? 0,
+    },
+  };
 };
+
+// ==========================================================
+// COMPOSANT
+// ==========================================================
 
 export default function AdminAnalytics() {
-
-  const [data, setData] = useState({
-    applications_by_day: [],
-    status_distribution: [],
-    revenue: [],
-    stats: {
-      total: 0,
-      approved: 0,
-      rejected: 0,
-      submitted: 0,
-      draft: 0
-    }
-  });
+  const [data, setData] = useState(
+    DEFAULT_ANALYTICS_DATA
+  );
 
   const [loading, setLoading] = useState(true);
 
-  // =========================
-  // FETCH ANALYTICS
-  // =========================
+  // ========================================================
+  // CHARGEMENT DES ANALYTICS
+  // ========================================================
 
-  const fetchAnalytics = async () => {
-
+  /**
+   * Récupère les statistiques et données nécessaires
+   * à l'affichage du dashboard analytics.
+   */
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true);
 
     try {
-
-      const res = await apiFetch("/admin/analytics");
-
-      setData({
-        applications_by_day: Array.isArray(res?.applications_by_day)
-          ? res.applications_by_day
-          : [],
-
-        status_distribution: Array.isArray(res?.status_distribution)
-          ? res.status_distribution
-          : [],
-
-        revenue: Array.isArray(res?.revenue)
-          ? res.revenue
-          : [],
-
-        stats: {
-          total: res?.stats?.total ?? 0,
-          approved: res?.stats?.approved ?? 0,
-          rejected: res?.stats?.rejected ?? 0,
-          submitted: res?.stats?.submitted ?? 0,
-          draft: res?.stats?.draft ?? 0
-        }
-      });
-
-    } catch (err) {
-
-      console.error("fetchAnalytics error:", err);
-
-      toast.error(
-        err?.message || "Erreur lors du chargement des analytics"
+      const response = await apiFetch(
+        "/admin/analytics"
       );
 
+      setData(
+        normalizeAnalyticsData(response)
+      );
+    } catch (error) {
+      console.error(
+        "fetchAnalytics error:",
+        error
+      );
+
+      toast.error(
+        error?.message ??
+          "Erreur lors du chargement des statistiques"
+      );
     } finally {
-
       setLoading(false);
-
     }
-  };
+  }, []);
+
+  // ========================================================
+  // CHARGEMENT INITIAL
+  // ========================================================
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [fetchAnalytics]);
 
-  // =========================
+  // ========================================================
   // PRÉPARATION DES STATUTS
-  // =========================
+  // ========================================================
 
-  const statusData = data.status_distribution.map((item) => ({
-    ...item,
+  /**
+   * Transforme les codes techniques renvoyés par
+   * le backend en données directement exploitables
+   * par le graphique circulaire.
+   *
+   * Exemple :
+   * "processing" → "Pris en charge"
+   * "approved"   → "Validé"
+   */
+  const statusData =
+    data.status_distribution.map((item) => ({
+      ...item,
 
-    // Le backend conserve le code technique :
-    // "paid", "cancelled", "processing", etc.
-    //
-    // STATUS fournit le libellé affiché :
-    // "Payé", "Annulé", "Pris en charge", etc.
-    displayName: STATUS[item.name]?.label || item.name
-  }));
+      displayName:
+        APPLICATION_STATUSES[item.name]?.label ??
+        item.name,
+    }));
+
+  // ========================================================
+  // RENDU
+  // ========================================================
 
   return (
-
     <div className="container py-4">
 
-      {/* =========================
+      {/* ====================================================
           HEADER
-      ========================= */}
+      ==================================================== */}
 
       <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
 
         <div>
-
           <h2 className="fw-bold mb-1">
             Statistiques
           </h2>
@@ -163,7 +224,6 @@ export default function AdminAnalytics() {
           <p className="text-muted mb-0">
             Performance globale du système
           </p>
-
         </div>
 
         <button
@@ -172,9 +232,7 @@ export default function AdminAnalytics() {
           onClick={fetchAnalytics}
           disabled={loading}
         >
-
           {loading ? (
-
             <>
               <span
                 className="spinner-border spinner-border-sm me-2"
@@ -184,176 +242,97 @@ export default function AdminAnalytics() {
 
               Actualisation...
             </>
-
           ) : (
-
             <>
-              <i className="bi bi-arrow-clockwise me-2" />
+              <i
+                className="bi bi-arrow-clockwise me-2"
+                aria-hidden="true"
+              />
+
               Actualiser
             </>
-
           )}
-
         </button>
 
       </div>
 
-      {/* =========================
+      {/* ====================================================
           STATISTIQUES
-      ========================= */}
+      ==================================================== */}
 
       <div className="row g-3 mb-4">
 
-        {/* TOTAL */}
+        {ADMIN_ANALYTICS_STAT_CARDS.map(
+          (stat) => {
 
-        <div className="col-md">
+            // Les statuts utilisent directement
+            // la configuration centralisée de
+            // applicationOptions.js.
+            const color = stat.status
+              ? APPLICATION_STATUSES[
+                  stat.status
+                ]?.color
+              : stat.color;
 
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-
-            <div className="card-body">
-
-              <div className="text-muted small">
-                Total dossiers
-              </div>
-
-              <div className="fs-3 fw-bold">
-                {data.stats.total}
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* SOUMIS */}
-
-        <div className="col-md">
-
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-
-            <div className="card-body">
-
-              <div className="text-muted small">
-                Soumis
-              </div>
-
-              <div className={`fs-3 fw-bold text-${STATUS.submitted.color}`}>
-                {data.stats.submitted}
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* VALIDÉS */}
-
-        <div className="col-md">
-
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-
-            <div className="card-body">
-
-              <div className="text-muted small">
-                Validés
-              </div>
-
-              <div className={`fs-3 fw-bold text-${STATUS.approved.color}`}>
-                {data.stats.approved}
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* REFUSÉS */}
-
-        <div className="col-md">
-
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-
-            <div className="card-body">
-
-              <div className="text-muted small">
-                Refusés
-              </div>
-
-              <div className={`fs-3 fw-bold text-${STATUS.rejected.color}`}>
-                {data.stats.rejected}
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* BROUILLONS */}
-
-        <div className="col-md">
-
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-
-            <div className="card-body">
-
-              <div className="text-muted small">
-                Brouillons
-              </div>
-
-              <div className={`fs-3 fw-bold text-${STATUS.draft.color}`}>
-                {data.stats.draft}
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
+            return (
+              <StatCard
+                key={stat.key}
+                title={stat.title}
+                value={data.stats[stat.key]}
+                color={color}
+              />
+            );
+          }
+        )}
 
       </div>
 
-      {/* =========================
+      {/* ====================================================
           GRAPHIQUES
-      ========================= */}
+      ==================================================== */}
 
       <div className="row g-4">
 
-        {/* =========================
+        {/* ==================================================
             DOSSIERS CRÉÉS
-        ========================= */}
+        ================================================== */}
 
         <div className="col-lg-8">
 
-          <div className="card border-0 shadow-sm rounded-4 p-3">
+          <div className="card border-0 shadow-sm rounded-4 p-3 h-100">
 
             <h5 className="fw-semibold mb-3">
               Dossiers créés
             </h5>
 
             {data.applications_by_day.length === 0 ? (
-
               <div className="text-muted text-center py-5">
                 Aucune donnée disponible
               </div>
-
             ) : (
-
-              <ResponsiveContainer width="100%" height={300}>
-
-                <LineChart data={data.applications_by_day}>
-
-                  <CartesianGrid strokeDasharray="3 3" />
+              <ResponsiveContainer
+                width="100%"
+                height={300}
+              >
+                <LineChart
+                  data={
+                    data.applications_by_day
+                  }
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                  />
 
                   <XAxis
                     dataKey="date"
-                    tickFormatter={formatChartDate}
+                    tickFormatter={
+                      formatChartDate
+                    }
                   />
 
-                  <YAxis allowDecimals={false} />
+                  <YAxis
+                    allowDecimals={false}
+                  />
 
                   <Tooltip />
 
@@ -364,39 +343,35 @@ export default function AdminAnalytics() {
                     strokeWidth={3}
                     dot
                   />
-
                 </LineChart>
-
               </ResponsiveContainer>
-
             )}
 
           </div>
 
         </div>
 
-        {/* =========================
+        {/* ==================================================
             RÉPARTITION DES STATUTS
-        ========================= */}
+        ================================================== */}
 
         <div className="col-lg-4">
 
-          <div className="card border-0 shadow-sm rounded-4 p-3">
+          <div className="card border-0 shadow-sm rounded-4 p-3 h-100">
 
             <h5 className="fw-semibold mb-3">
               Statuts des dossiers
             </h5>
 
             {statusData.length === 0 ? (
-
               <div className="text-muted text-center py-5">
                 Aucune donnée disponible
               </div>
-
             ) : (
-
-              <ResponsiveContainer width="100%" height={300}>
-
+              <ResponsiveContainer
+                width="100%"
+                height={300}
+              >
                 <PieChart>
 
                   <Pie
@@ -406,35 +381,36 @@ export default function AdminAnalytics() {
                     outerRadius={100}
                     label
                   >
-
-                    {statusData.map((item, index) => (
-
-                      <Cell
-                        key={item.name}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-
-                    ))}
-
+                    {statusData.map(
+                      (item, index) => (
+                        <Cell
+                          key={item.name}
+                          fill={
+                            ANALYTICS_CHART_COLORS[
+                              index %
+                                ANALYTICS_CHART_COLORS.length
+                            ]
+                          }
+                        />
+                      )
+                    )}
                   </Pie>
 
                   <Tooltip />
 
                 </PieChart>
-
               </ResponsiveContainer>
-
             )}
 
           </div>
 
         </div>
 
-        {/* =========================
+        {/* ==================================================
             REVENUS
-        ========================= */}
+        ================================================== */}
 
-        <div className="col-lg-12">
+        <div className="col-12">
 
           <div className="card border-0 shadow-sm rounded-4 p-3">
 
@@ -443,22 +419,26 @@ export default function AdminAnalytics() {
             </h5>
 
             {data.revenue.length === 0 ? (
-
               <div className="text-muted text-center py-5">
                 Aucune donnée disponible
               </div>
-
             ) : (
-
-              <ResponsiveContainer width="100%" height={300}>
-
-                <BarChart data={data.revenue}>
-
-                  <CartesianGrid strokeDasharray="3 3" />
+              <ResponsiveContainer
+                width="100%"
+                height={300}
+              >
+                <BarChart
+                  data={data.revenue}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                  />
 
                   <XAxis
                     dataKey="month"
-                    tickFormatter={formatMonth}
+                    tickFormatter={
+                      formatMonth
+                    }
                   />
 
                   <YAxis />
@@ -469,11 +449,8 @@ export default function AdminAnalytics() {
                     dataKey="amount"
                     fill="#198754"
                   />
-
                 </BarChart>
-
               </ResponsiveContainer>
-
             )}
 
           </div>
@@ -483,6 +460,5 @@ export default function AdminAnalytics() {
       </div>
 
     </div>
-
   );
 }

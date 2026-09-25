@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import ConfirmActionModal from "../../components/common/ConfirmActionModal";
+import { OPTION_BILLING_TYPES } from "../../constants/optionsOptions";
 
 export default function AdminOptions() {
   // =========================
@@ -714,22 +715,20 @@ bg-light
                     Mode de facturation
                   </label>
 
-                  <select
-                    className="form-select"
-                    name="billing_type"
-                    value={form.billing_type}
-                    onChange={handleChange}
-                  >
-
-                    <option value="fixed">
-                      Forfait
-                    </option>
-
-                    <option value="daily">
-                      Journalier
-                    </option>
-
-                  </select>
+<select
+  className="form-select"
+  name="billing_type"
+  value={form.billing_type}
+  onChange={handleChange}
+>
+  {Object.entries(OPTION_BILLING_TYPES).map(
+    ([value, label]) => (
+      <option key={value} value={value}>
+        {label}
+      </option>
+    )
+  )}
+</select>
 
                 </div>
 

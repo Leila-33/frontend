@@ -1,22 +1,26 @@
+import { formatAmount } from "../../utils/priceUtils";
+
 /**
  * Affiche les informations principales
  * du véhicule associé à une offre.
  */
-export default function QuoteVehicleCard({
-  quote,
-}) {
+export default function QuoteVehicleCard({ quote }) {
+  const vehicle = quote?.vehicle;
+
+  // ==========================================================
+  // VÉHICULE
+  // ==========================================================
+
   const vehicleName =
-    [
-      quote?.vehicle?.brand,
-      quote?.vehicle?.model,
-    ]
+    [vehicle?.brand, vehicle?.model]
       .filter(Boolean)
       .join(" ") || "Véhicule non renseigné";
 
-  const basePrice =
-    quote?.base_price != null
-      ? Number(quote.base_price).toLocaleString("fr-FR")
-      : "Non renseigné";
+  // ==========================================================
+  // PRIX CATALOGUE
+  // ==========================================================
+
+  const hasBasePrice = quote?.base_price != null;
 
   return (
     <div className="card border-0 shadow-sm rounded-4 h-100">
@@ -31,7 +35,10 @@ export default function QuoteVehicleCard({
         </div>
 
         <div className="text-muted">
-          Prix catalogue : {basePrice} €
+          Prix catalogue :{" "}
+          {hasBasePrice
+            ? `${formatAmount(quote.base_price)}`
+            : "Non renseigné"}
         </div>
 
       </div>

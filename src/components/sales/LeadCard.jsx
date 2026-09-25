@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { formatAmount } from "../../utils/priceUtils";
 
 /**
  * Carte représentant un lead commercial.
@@ -58,9 +59,7 @@ export default function LeadCard({
    */
   const formattedPrice =
     lead?.vehicle?.price != null
-      ? `${Number(
-        lead.vehicle.price
-      ).toLocaleString("fr-FR")} €`
+      ? formatAmount(lead.vehicle.price)
       : "Prix non renseigné";
 
   // =====================================================

@@ -2,20 +2,145 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import apiFetch from "../../services/apiFetch";
-import { STATUS } from "../../utils/status";
 
+import {
+  APPLICATION_STATUSES,
+} from "../../constants/applicationOptions";
+
+import {
+  USER_DASHBOARD_STAT_CARDS,
+} from "../../constants/dashboardOptions";
+
+import {
+  formatDate,
+  formatDateTime,
+} from "../../utils/dateUtils";
+
+
+// ==========================================================
+// DONNÉES PAR DÉFAUT DU DASHBOARD
+// ==========================================================
+
+const DEFAULT_DASHBOARD = {
+  total_applications: 0,
+  active_applications: 0,
+  approved_applications: 0,
+  pending_applications: 0,
+  applications: [],
+  upcoming_test_drive: null,
+  unread_notifications: 0,
+  notifications: [],
+};
+
+
+// ==========================================================
+// CARTE STATISTIQUE
+// ==========================================================
+
+function StatCard({
+  title,
+  value,
+  icon,
+  color,
+  description,
+  descriptionColor = "muted",
+}) {
+  return (
+    <div className="col-md-6 col-xl-3">
+
+      <div className="card border-0 shadow-sm rounded-5 h-100">
+
+        <div className="card-body p-4">
+
+          <div className="d-flex justify-content-between align-items-center">
+
+            {/* ------------------------------------------------
+                INFORMATIONS
+                ------------------------------------------------ */}
+
+            <div>
+
+              <small className="text-muted fw-semibold">
+                {title}
+              </small>
+
+              <h2 className="fw-bold mt-2 mb-0">
+                {value}
+              </h2>
+
+            </div>
+
+
+            {/* ------------------------------------------------
+                ICÔNE
+                ------------------------------------------------ */}
+
+            <div
+              className={`
+                rounded-circle
+                bg-${color}
+                ${
+                  color === "warning"
+                    ? "text-dark"
+                    : "text-white"
+                }
+                d-flex
+                align-items-center
+                justify-content-center
+              `}
+              style={{
+                width: 60,
+                height: 60,
+                fontSize: 24,
+              }}
+            >
+              <i className={`bi ${icon}`}></i>
+            </div>
+
+          </div>
+
+
+          {/* ------------------------------------------------
+              DESCRIPTION
+              ------------------------------------------------ */}
+
+          <div className="mt-4">
+
+            <small
+              className={
+                descriptionColor === "muted"
+                  ? "text-muted"
+                  : `text-${descriptionColor}`
+              }
+            >
+              {description}
+            </small>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
+
+
+// ==========================================================
+// DASHBOARD UTILISATEUR
+// ==========================================================
 
 /**
  * DashboardPage
  *
  * Tableau de bord de l'utilisateur connecté.
  *
- * Le dashboard récupère toutes ses données
- * depuis une seule route backend :
+ * Les données sont récupérées depuis une seule route :
  *
  * GET /dashboard
  *
- * Le backend retourne :
+ * Le backend retourne notamment :
  *
  * - total_applications
  * - active_applications
@@ -26,45 +151,48 @@ import { STATUS } from "../../utils/status";
  * - unread_notifications
  * - notifications
  *
- * Le frontend a donc uniquement pour responsabilité
- * d'afficher les données reçues.
+ * Le frontend est principalement responsable
+ * de la présentation de ces données.
  */
 export default function DashboardPage() {
 
-  /**
-   * Données du dashboard retournées par l'API.
-   *
-   * Valeur initiale permettant d'éviter les erreurs
-   * pendant le chargement.
-   */
-  const [dashboard, setDashboard] = useState({
-    total_applications: 0,
-    active_applications: 0,
-    approved_applications: 0,
-    pending_applications: 0,
-    applications: [],
-    upcoming_test_drive: null,
-    unread_notifications: 0,
-    notifications: [],
-  });
+  // ========================================================
+  // ÉTAT
+  // ========================================================
+
+  const [dashboard, setDashboard] = useState(
+    DEFAULT_DASHBOARD
+  );
+
+  const [loading, setLoading] = useState(true);
 
 
-  // ============================================================
+  // ========================================================
   // CHARGEMENT DU DASHBOARD
-  // ============================================================
+  // ========================================================
 
-  /**
-   * Chargement des données du tableau de bord.
-   */
   useEffect(() => {
 
     const fetchDashboard = async () => {
 
       try {
 
-        const response = await apiFetch("/dashboard");
+        const response = await apiFetch(
+          "/dashboard"
+        );
 
-        setDashboard(response);
+        setDashboard({
+          ...DEFAULT_DASHBOARD,
+          ...response,
+
+          // Sécurise les listes utilisées
+          // avec .map().
+          applications:
+            response.applications ?? [],
+
+          notifications:
+            response.notifications ?? [],
+        });
 
       } catch (err) {
 
@@ -72,6 +200,10 @@ export default function DashboardPage() {
           "Erreur lors du chargement du dashboard :",
           err
         );
+
+      } finally {
+
+        setLoading(false);
 
       }
     };
@@ -82,15 +214,11 @@ export default function DashboardPage() {
   }, []);
 
 
-  // ============================================================
+  // ========================================================
   // DONNÉES DU DASHBOARD
-  // ============================================================
+  // ========================================================
 
   const {
-    total_applications,
-    active_applications,
-    approved_applications,
-    pending_applications,
     applications,
     upcoming_test_drive,
     unread_notifications,
@@ -98,9 +226,40 @@ export default function DashboardPage() {
   } = dashboard;
 
 
-  // ============================================================
+  // ========================================================
+  // AFFICHAGE DU CHARGEMENT
+  // ========================================================
+
+  if (loading) {
+
+    return (
+
+      <div className="container py-5">
+
+        <div className="text-center text-muted">
+
+          <div
+            className="spinner-border"
+            role="status"
+            aria-hidden="true"
+          ></div>
+
+          <p className="mt-3 mb-0">
+            Chargement du tableau de bord...
+          </p>
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
+
+  // ========================================================
   // AFFICHAGE
-  // ============================================================
+  // ========================================================
 
   return (
 
@@ -109,29 +268,39 @@ export default function DashboardPage() {
       style={{ maxWidth: 1400 }}
     >
 
-      {/* ========================================================
+      {/* ====================================================
           HERO / EN-TÊTE
-          ======================================================== */}
+          ==================================================== */}
 
       <div
         className="p-4 p-lg-5 rounded-5 mb-4 text-white position-relative overflow-hidden"
         style={{
           background:
-            "linear-gradient(135deg, #111 0%, #1f1f1f 100%)"
+            "linear-gradient(135deg, #111 0%, #1f1f1f 100%)",
         }}
       >
 
         <div className="position-relative">
 
-          {/* Icône + titre */}
+          {/* ------------------------------------------------
+              ICÔNE + TITRE
+              ------------------------------------------------ */}
+
           <div className="d-flex align-items-center gap-3 mb-3">
 
             <div
-              className="d-flex align-items-center justify-content-center rounded-circle bg-white text-dark"
+              className="
+                d-flex
+                align-items-center
+                justify-content-center
+                rounded-circle
+                bg-white
+                text-dark
+              "
               style={{
                 width: 60,
                 height: 60,
-                fontSize: 28
+                fontSize: 28,
               }}
             >
               <i className="bi bi-speedometer2"></i>
@@ -153,7 +322,10 @@ export default function DashboardPage() {
           </div>
 
 
-          {/* Actions principales */}
+          {/* ------------------------------------------------
+              ACTIONS PRINCIPALES
+              ------------------------------------------------ */}
+
           <div className="d-flex flex-wrap gap-3 mt-4">
 
             <Link
@@ -180,250 +352,48 @@ export default function DashboardPage() {
       </div>
 
 
+      {/* ====================================================
+          STATISTIQUES DES DOSSIERS
+          ==================================================== */}
 
-{/* ========================================================
-    STATISTIQUES
-    ======================================================== */}
+      <div className="row g-4 mb-4">
 
-<div className="row g-4 mb-4">
+        {USER_DASHBOARD_STAT_CARDS.map((card) => (
 
+          <StatCard
+            key={card.key}
+            title={card.title}
+            value={dashboard[card.key]}
+            icon={card.icon}
+            color={card.color}
+            description={card.description}
+            descriptionColor={
+              card.descriptionColor
+            }
+          />
 
-  {/* --------------------------------------------------------
-      TOTAL DES DOSSIERS
-      -------------------------------------------------------- */}
-
-  <div className="col-md-6 col-xl-3">
-
-    <div className="card border-0 shadow-sm rounded-5 h-100">
-
-      <div className="card-body p-4">
-
-        <div className="d-flex justify-content-between align-items-center">
-
-          <div>
-
-            <small className="text-muted fw-semibold">
-              TOTAL DOSSIERS
-            </small>
-
-            <h2 className="fw-bold mt-2 mb-0">
-              {total_applications}
-            </h2>
-
-          </div>
-
-
-          <div
-            className="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
-            style={{
-              width: 60,
-              height: 60,
-              fontSize: 24
-            }}
-          >
-            <i className="bi bi-folder-fill"></i>
-          </div>
-
-        </div>
-
-
-        <div className="mt-4">
-
-          <small className="text-muted">
-            Tous vos dossiers
-          </small>
-
-        </div>
+        ))}
 
       </div>
 
-    </div>
 
-  </div>
-
-
-  {/* --------------------------------------------------------
-      DOSSIERS ACTIFS
-      -------------------------------------------------------- */}
-
-  <div className="col-md-6 col-xl-3">
-
-    <div className="card border-0 shadow-sm rounded-5 h-100">
-
-      <div className="card-body p-4">
-
-        <div className="d-flex justify-content-between align-items-center">
-
-          <div>
-
-            <small className="text-muted fw-semibold">
-              DOSSIERS ACTIFS
-            </small>
-
-            <h2 className="fw-bold mt-2 mb-0">
-              {active_applications}
-            </h2>
-
-          </div>
-
-
-          <div
-            className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
-            style={{
-              width: 60,
-              height: 60,
-              fontSize: 24
-            }}
-          >
-            <i className="bi bi-folder2-open"></i>
-          </div>
-
-        </div>
-
-
-        <div className="mt-4">
-
-          <small className="text-muted">
-            {pending_applications} en attente
-          </small>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  {/* --------------------------------------------------------
-      DOSSIERS APPROUVÉS
-      -------------------------------------------------------- */}
-
-  <div className="col-md-6 col-xl-3">
-
-    <div className="card border-0 shadow-sm rounded-5 h-100">
-
-      <div className="card-body p-4">
-
-        <div className="d-flex justify-content-between align-items-center">
-
-          <div>
-
-            <small className="text-muted fw-semibold">
-              DOSSIERS APPROUVÉS
-            </small>
-
-            <h2 className="fw-bold mt-2 mb-0">
-              {approved_applications}
-            </h2>
-
-          </div>
-
-
-          <div
-            className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
-            style={{
-              width: 60,
-              height: 60,
-              fontSize: 24
-            }}
-          >
-            <i className="bi bi-check2-circle"></i>
-          </div>
-
-        </div>
-
-
-        <div className="mt-4">
-
-          <small className="text-success">
-            Dossiers approuvés
-          </small>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  {/* --------------------------------------------------------
-      NOTIFICATIONS NON LUES
-      -------------------------------------------------------- */}
-
-  <div className="col-md-6 col-xl-3">
-
-    <div className="card border-0 shadow-sm rounded-5 h-100">
-
-      <div className="card-body p-4">
-
-        <div className="d-flex justify-content-between align-items-center">
-
-          <div>
-
-            <small className="text-muted fw-semibold">
-              NOTIFICATIONS
-            </small>
-
-            <h2 className="fw-bold mt-2 mb-0">
-              {unread_notifications}
-            </h2>
-
-          </div>
-
-
-          <div
-            className="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center"
-            style={{
-              width: 60,
-              height: 60,
-              fontSize: 24
-            }}
-          >
-            <i className="bi bi-bell-fill"></i>
-          </div>
-
-        </div>
-
-
-        <div className="mt-4">
-
-          <small className="text-muted">
-            Non lues
-          </small>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-
-      {/* ========================================================
+      {/* ====================================================
           CONTENU PRINCIPAL
-          ======================================================== */}
+          ==================================================== */}
 
       <div className="row g-4">
 
 
-        {/* ========================================================
+        {/* ==================================================
             COLONNE GAUCHE
-            ======================================================== */}
+            ================================================== */}
 
         <div className="col-lg-8">
 
 
-          {/* --------------------------------------------------------
+          {/* ------------------------------------------------
               PROCHAIN ESSAI ROUTIER
-              -------------------------------------------------------- */}
+              ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5 mb-4">
 
@@ -441,7 +411,7 @@ export default function DashboardPage() {
 
 
                 <Link
-                  to="/test-drives"
+                  to="/mytestdrives"
                   className="btn btn-sm btn-outline-dark rounded-pill"
                 >
                   Voir tout
@@ -450,7 +420,9 @@ export default function DashboardPage() {
               </div>
 
 
-              {/* Aucun essai confirmé */}
+              {/* ------------------------------------------------
+                  AUCUN ESSAI CONFIRMÉ
+                  ------------------------------------------------ */}
 
               {!upcoming_test_drive && (
 
@@ -470,24 +442,36 @@ export default function DashboardPage() {
               )}
 
 
-              {/* Essai confirmé */}
+              {/* ------------------------------------------------
+                  ESSAI CONFIRMÉ
+                  ------------------------------------------------ */}
 
               {upcoming_test_drive && (
 
                 <div
                   className="p-4 rounded-5"
                   style={{
-                    background: "#f8f9fa"
+                    background: "#f8f9fa",
                   }}
                 >
 
-                  <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                  <div
+                    className="
+                      d-flex
+                      flex-column
+                      flex-md-row
+                      justify-content-between
+                      align-items-md-center
+                      gap-3
+                    "
+                  >
 
                     <div>
 
                       <h4 className="fw-bold mb-2">
 
                         {upcoming_test_drive.vehicle?.brand}{" "}
+
                         {upcoming_test_drive.vehicle?.model}
 
                       </h4>
@@ -497,9 +481,9 @@ export default function DashboardPage() {
 
                         <i className="bi bi-calendar-event me-2"></i>
 
-                        {new Date(
+                        {formatDateTime(
                           upcoming_test_drive.appointment_date
-                        ).toLocaleString()}
+                        )}
 
                       </div>
 
@@ -524,9 +508,9 @@ export default function DashboardPage() {
           </div>
 
 
-          {/* --------------------------------------------------------
+          {/* ------------------------------------------------
               DOSSIERS RÉCENTS
-              -------------------------------------------------------- */}
+              ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5">
 
@@ -555,7 +539,7 @@ export default function DashboardPage() {
 
               <div className="d-flex flex-column gap-3">
 
-                {applications.map(app => (
+                {applications.map((app) => (
 
                   <Link
                     key={app.id}
@@ -563,64 +547,62 @@ export default function DashboardPage() {
                     className="text-decoration-none text-dark"
                   >
 
-                    <div
-                      className="p-4 rounded-5 border bg-white"
-                    >
+                    <div className="p-4 rounded-5 border bg-white">
 
                       <div className="d-flex justify-content-between align-items-center">
 
+                        {/* ------------------------------------
+                            INFORMATIONS DU DOSSIER
+                            ------------------------------------ */}
 
                         <div>
-
-                          {/* Identifiant du dossier */}
 
                           <div className="fw-bold mb-2">
 
                             Dossier #
 
-                            {
-                              app.id
-                                ? app.id.slice(0, 8)
-                                : "N/A"
-                            }
+                            {app.id
+                              ? app.id.slice(0, 8)
+                              : "N/A"}
 
                           </div>
 
-
-                          {/* Date de création */}
 
                           <div className="small text-muted">
 
                             <i className="bi bi-clock me-1"></i>
 
-                            {
-                              app.created_at &&
-                              new Date(
-                                app.created_at
-                              ).toLocaleDateString()
-                            }
+                            {formatDate(
+                              app.created_at
+                            )}
 
                           </div>
 
                         </div>
 
 
-                        {/* Statut */}
+                        {/* ------------------------------------
+                            STATUT
+                            ------------------------------------ */}
 
                         <span
-                          className={
-                            `badge rounded-pill px-3 py-2 bg-${
-                              STATUS[app.status]?.color
-                              ?? "secondary"
-                            }`
-                          }
+                          className={`
+                            badge
+                            rounded-pill
+                            px-3
+                            py-2
+                            bg-${
+                              APPLICATION_STATUSES[
+                                app.status
+                              ]?.color ?? "secondary"
+                            }
+                          `}
                         >
-
                           {
-                            STATUS[app.status]?.label
-                            ?? app.status
+                            APPLICATION_STATUSES[
+                              app.status
+                            ]?.label ?? app.status
                           }
-
                         </span>
 
                       </div>
@@ -632,7 +614,9 @@ export default function DashboardPage() {
                 ))}
 
 
-                {/* Aucun dossier */}
+                {/* ------------------------------------------------
+                    AUCUN DOSSIER
+                    ------------------------------------------------ */}
 
                 {applications.length === 0 && (
 
@@ -660,16 +644,16 @@ export default function DashboardPage() {
         </div>
 
 
-        {/* ========================================================
+        {/* ==================================================
             COLONNE DROITE
-            ======================================================== */}
+            ================================================== */}
 
         <div className="col-lg-4">
 
 
-          {/* --------------------------------------------------------
+          {/* ------------------------------------------------
               ACTIONS RAPIDES
-              -------------------------------------------------------- */}
+              ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5 mb-4">
 
@@ -685,7 +669,6 @@ export default function DashboardPage() {
 
 
               <div className="d-grid gap-3">
-
 
                 <Link
                   to="/vehicles"
@@ -711,6 +694,15 @@ export default function DashboardPage() {
                 >
                   <i className="bi bi-bell me-2"></i>
                   Notifications
+
+                  {unread_notifications > 0 && (
+
+                    <span className="badge bg-warning text-dark rounded-pill ms-2">
+                      {unread_notifications}
+                    </span>
+
+                  )}
+
                 </Link>
 
               </div>
@@ -720,9 +712,9 @@ export default function DashboardPage() {
           </div>
 
 
-          {/* --------------------------------------------------------
+          {/* ------------------------------------------------
               ACTIVITÉ RÉCENTE
-              -------------------------------------------------------- */}
+              ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5">
 
@@ -735,6 +727,14 @@ export default function DashboardPage() {
                   <i className="bi bi-activity me-2"></i>
 
                   Activité récente
+
+                  {unread_notifications > 0 && (
+
+                    <span className="badge bg-warning text-dark rounded-pill ms-2">
+                      {unread_notifications}
+                    </span>
+
+                  )}
 
                 </h5>
 
@@ -751,14 +751,16 @@ export default function DashboardPage() {
 
               <div className="d-flex flex-column gap-4">
 
-                {notifications.map(notif => (
+                {notifications.map((notif) => (
 
                   <div
                     key={notif.id}
                     className="d-flex gap-3"
                   >
 
-                    {/* Icône */}
+                    {/* ----------------------------------------
+                        ICÔNE
+                        ---------------------------------------- */}
 
                     <div
                       className={`
@@ -768,14 +770,14 @@ export default function DashboardPage() {
                         justify-content-center
                         ${
                           notif.status !== "read"
-                            ? "bg-warning"
-                            : "bg-light"
+                            ? "bg-warning text-dark"
+                            : "bg-light text-muted"
                         }
                       `}
                       style={{
                         width: 42,
                         height: 42,
-                        flexShrink: 0
+                        flexShrink: 0,
                       }}
                     >
 
@@ -784,7 +786,9 @@ export default function DashboardPage() {
                     </div>
 
 
-                    {/* Contenu */}
+                    {/* ----------------------------------------
+                        CONTENU
+                        ---------------------------------------- */}
 
                     <div>
 
@@ -799,11 +803,9 @@ export default function DashboardPage() {
 
 
                       <div className="small text-muted mt-1">
-
-                        {new Date(
+                        {formatDateTime(
                           notif.created_at
-                        ).toLocaleString()}
-
+                        )}
                       </div>
 
                     </div>
@@ -813,7 +815,9 @@ export default function DashboardPage() {
                 ))}
 
 
-                {/* Aucune notification */}
+                {/* ------------------------------------------------
+                    AUCUNE NOTIFICATION
+                    ------------------------------------------------ */}
 
                 {notifications.length === 0 && (
 

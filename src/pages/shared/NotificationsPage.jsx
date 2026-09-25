@@ -6,7 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 import "../../styles/notifications.css";
 
-
+import { formatDate, formatTime } from "../../utils/dateUtils";
 // ==========================================================
 // COMPOSANT
 // ==========================================================
@@ -186,62 +186,6 @@ export default function NotificationsPage() {
     );
 
   };
-
-
-  // ========================================================
-  // FORMATAGE DE LA DATE
-  // ========================================================
-
-  const formatDate = (date) => {
-
-    if (!date) {
-      return "";
-    }
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return "";
-    }
-
-    return parsedDate.toLocaleDateString(
-      "fr-FR",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      }
-    );
-
-  };
-
-
-  // ========================================================
-  // FORMATAGE DE L'HEURE
-  // ========================================================
-
-  const formatTime = (date) => {
-
-    if (!date) {
-      return "";
-    }
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return "";
-    }
-
-    return parsedDate.toLocaleTimeString(
-      "fr-FR",
-      {
-        hour: "2-digit",
-        minute: "2-digit"
-      }
-    );
-
-  };
-
 
   // ========================================================
   // TYPE D'ENTITÉ

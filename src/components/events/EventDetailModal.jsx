@@ -1,3 +1,4 @@
+import { formatDateTime } from "../../utils/dateUtils";
 /**
  * Modale affichant le détail d'un événement CRM.
  *
@@ -18,9 +19,7 @@ export default function EventDetailModal({
   /**
    * Formate la date de création de l'événement.
    */
-  const formattedDate = event?.created_at
-    ? new Date(event.created_at).toLocaleString("fr-FR")
-    : "Date non renseignée";
+  const formattedDate = formatDateTime(event.created_at)
 
   /**
    * Prépare les métadonnées pour un affichage JSON lisible.

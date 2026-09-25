@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 
 import WarrantyPlansComparisonTable
   from "../../components/warranties/WarrantyPlansComparisonTable";
-
+import { WARRANTY_PLAN_TYPES } from "../../constants/warrantyOptions";
 
 // ==========================================================
 // PAGE DE GESTION DES PLANS DE GARANTIE
@@ -103,40 +103,40 @@ export default function WarrantyPlansPage() {
 
 
 
-// ========================================================
-// RÉCUPÉRATION DES PLANS DE GARANTIE
-// ========================================================
+  // ========================================================
+  // RÉCUPÉRATION DES PLANS DE GARANTIE
+  // ========================================================
 
-const fetchPlans = useCallback(
-  async () => {
+  const fetchPlans = useCallback(
+    async () => {
 
-    try {
+      try {
 
-      const data = await apiFetch(
-        "/admin/warranty-plans"
-      );
+        const data = await apiFetch(
+          "/admin/warranty-plans"
+        );
 
-      setPlans(data);
+        setPlans(data);
 
-    } catch (err) {
+      } catch (err) {
 
-      toast.error(
-        err?.message ||
-        "Erreur lors du chargement des plans"
-      );
-    }
-  },
-  []
-);
+        toast.error(
+          err?.message ||
+          "Erreur lors du chargement des plans"
+        );
+      }
+    },
+    []
+  );
 
 
-// ========================================================
-// CHARGEMENT INITIAL
-// ========================================================
+  // ========================================================
+  // CHARGEMENT INITIAL
+  // ========================================================
 
-useEffect(() => {
-  fetchPlans();
-}, [fetchPlans]);
+  useEffect(() => {
+    fetchPlans();
+  }, [fetchPlans]);
 
 
 
@@ -732,11 +732,10 @@ useEffect(() => {
 
 
               <input
-                className={`form-control ${
-                  formErrors.name
+                className={`form-control ${formErrors.name
                     ? "is-invalid"
                     : ""
-                }`}
+                  }`}
                 name="name"
                 value={form.name}
                 onChange={handleChange}
@@ -772,23 +771,13 @@ useEffect(() => {
                 value={form.plan_type}
                 onChange={handleChange}
               >
-
-                <option value="basic">
-                  Basic
-                </option>
-
-                <option value="standard">
-                  Standard
-                </option>
-
-                <option value="premium">
-                  Premium
-                </option>
-
-                <option value="custom">
-                  Custom
-                </option>
-
+                {Object.entries(WARRANTY_PLAN_TYPES).map(
+                  ([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  )
+                )}
               </select>
 
             </div>
@@ -806,11 +795,10 @@ useEffect(() => {
 
 
               <textarea
-                className={`form-control ${
-                  formErrors.description
+                className={`form-control ${formErrors.description
                     ? "is-invalid"
                     : ""
-                }`}
+                  }`}
                 rows="3"
                 name="description"
                 value={form.description}
@@ -841,11 +829,10 @@ useEffect(() => {
 
               <input
                 type="number"
-                className={`form-control ${
-                  formErrors.duration_months
+                className={`form-control ${formErrors.duration_months
                     ? "is-invalid"
                     : ""
-                }`}
+                  }`}
                 name="duration_months"
                 value={form.duration_months}
                 onChange={handleChange}
@@ -875,11 +862,10 @@ useEffect(() => {
 
               <input
                 type="number"
-                className={`form-control ${
-                  formErrors.mileage_limit
+                className={`form-control ${formErrors.mileage_limit
                     ? "is-invalid"
                     : ""
-                }`}
+                  }`}
                 name="mileage_limit"
                 value={form.mileage_limit ?? ""}
                 onChange={handleChange}
@@ -909,11 +895,10 @@ useEffect(() => {
 
               <input
                 type="number"
-                className={`form-control ${
-                  formErrors.price
+                className={`form-control ${formErrors.price
                     ? "is-invalid"
                     : ""
-                }`}
+                  }`}
                 name="price"
                 value={form.price}
                 onChange={handleChange}
@@ -942,11 +927,10 @@ useEffect(() => {
 
 
               <div
-                className={`border rounded-3 p-3 d-flex flex-wrap gap-4 ${
-                  formErrors.coverage
+                className={`border rounded-3 p-3 d-flex flex-wrap gap-4 ${formErrors.coverage
                     ? "border-danger"
                     : ""
-                }`}
+                  }`}
               >
 
                 {/* Liste des couvertures disponibles. */}

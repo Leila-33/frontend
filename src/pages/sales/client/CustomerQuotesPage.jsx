@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import apiFetch from "../../../services/apiFetch";
-
+import { formatAmount } from "../../../utils/priceUtils";
 import {
   QUOTE_STATUSES,
 } from "../../../constants/quoteOptions";
@@ -117,23 +117,7 @@ export default function CustomerQuotesPage() {
     return groupedQuotes;
   }, [quotes]);
 
-  // =====================================================
-  // FORMATAGE
-  // =====================================================
 
-  /**
-   * Formate un montant en euros.
-   *
-   * Une valeur absente est affichée comme
-   * "Non renseigné" plutôt que "NaN".
-   */
-  const formatAmount = (value) => {
-    if (value == null) {
-      return "Non renseigné";
-    }
-
-    return `${Number(value).toLocaleString("fr-FR")} €`;
-  };
 
   // =====================================================
   // RENDU D'UNE SECTION
@@ -206,18 +190,14 @@ export default function CustomerQuotesPage() {
                         </strong>
                       </p>
 
-                      <p className="mb-0">
-                        Mensualité :{" "}
-                        <strong>
-                          {quote?.monthly_payment != null
-                            ? `${Number(
-                                quote.monthly_payment
-                              ).toLocaleString(
-                                "fr-FR"
-                              )} €/mois`
-                            : "Non renseignée"}
-                        </strong>
-                      </p>
+<p className="mb-0">
+  Mensualité :{" "}
+  <strong>
+    {quote?.monthly_payment != null
+      ? `${formatAmount(quote.monthly_payment)}/mois`
+      : "Non renseignée"}
+  </strong>
+</p>
                     </div>
 
                     {/* =================================

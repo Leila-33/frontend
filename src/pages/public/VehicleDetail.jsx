@@ -11,7 +11,7 @@ import {
 } from "react-icons/bs";
 
 import apiFetch from "../../services/apiFetch";
-import { ENGINE_LABELS } from "../../constants/vehicleLabels";
+import { ENGINE_TYPES } from "../../constants/vehicleOptions";
 import { useAuth } from "../../contexts/AuthContext";
 import { computePricing } from "../../utils/pricing";
 
@@ -23,8 +23,8 @@ import TestDriveModal from "../../components/test-drives/TestDriveModal";
 
 import "../../styles/badges.css";
 import "../../styles/modalvehicledetail.css";
-import { formatDate, formatPrice } from "../../utils/formatters";
-
+import { formatAmount } from "../../utils/priceUtils";
+import { formatDateForApi } from "../../utils/dateUtils";
 /**
  * Page de détail d'un véhicule.
  *
@@ -613,11 +613,11 @@ const loadExistingTestDrive = useCallback(async () => {
           vehicle: getApplicationVehicle(),
 
           dates: {
-            start: formatDate(
+            start: formatDateForApi(
               selectedDates?.start
             ),
 
-            end: formatDate(
+            end: formatDateForApi(
               selectedDates?.end
             ),
           },
@@ -959,7 +959,7 @@ const loadExistingTestDrive = useCallback(async () => {
               <span className="d-flex align-items-center gap-1">
                 <BsFuelPump size={14} />
 
-                {ENGINE_LABELS[
+                {ENGINE_TYPES[
                   vehicle.engine_type
                 ] || "Non précisé"}
               </span>
@@ -1319,8 +1319,7 @@ const loadExistingTestDrive = useCallback(async () => {
                 "
               >
 
-                {formatPrice(vehicle.price)}
-                {" €"}
+                {formatAmount(vehicle.price)}
 
                 {vehicle.type === "rent" && (
 
@@ -1867,7 +1866,7 @@ const loadExistingTestDrive = useCallback(async () => {
                       {" · "}
 
                       <strong>
-                        {formatPrice(totalPrice)} €
+                        {formatAmount(totalPrice)}
                       </strong>
 
                     </div>

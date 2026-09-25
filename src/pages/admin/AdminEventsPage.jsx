@@ -9,10 +9,8 @@ import {
   getEventTypeColor,
   getEventTypeLabel,
 } from "../../utils/eventUtils";
-
-/* =========================================================
-   PAGE
-========================================================= */
+import { useDebounce } from "../../hooks/useDebounce";
+import { formatDate, formatTime } from "../../utils/dateUtils";
 
 export default function AdminEventsPage() {
 
@@ -49,85 +47,126 @@ export default function AdminEventsPage() {
     limit: 20,
   });
 
+  // =====================================================
+  // MISE À JOUR D'UN FILTRE
+  // =====================================================
+
+  /**
+   * Met à jour un filtre et réinitialise la pagination
+   * à la première page.
+   */
+  const updateFilter = (key, value) => {
+    setFilters((previous) => ({
+      ...previous,
+      [key]: value,
+      page: 1,
+    }));
+  };
+
+  // =======================================================
+  // RECHERCHE
+  // =======================================================
+
+  // Valeur saisie directement dans le champ de recherche.
+  const [searchInput, setSearchInput] = useState("");
+
+  // Valeur utilisée pour la recherche après 400 ms
+  // sans nouvelle frappe.
+  const debouncedSearch = useDebounce(
+    searchInput,
+    400
+  );
+
+  // =======================================================
+  // SYNCHRONISATION DE LA RECHERCHE
+  // =======================================================
+
+  useEffect(() => {
+    setFilters((previous) => ({
+      ...previous,
+      search: debouncedSearch,
+      page: 1,
+    }));
+  }, [debouncedSearch]);
 
   /* =======================================================
      CHARGEMENT DES ÉVÉNEMENTS
   ======================================================= */
-/**
- * Récupère les événements correspondant aux filtres actifs.
- *
- * La valeur `all` signifie qu'aucun filtre de catégorie
- * n'est appliqué et ne doit donc pas être envoyée à l'API.
- */
-const fetchEvents = useCallback(
-  async (page) => {
+  /**
+   * Récupère les événements correspondant aux filtres actifs.
+   *
+   * La valeur `all` signifie qu'aucun filtre de catégorie
+   * n'est appliqué et ne doit donc pas être envoyée à l'API.
+   */
+  const fetchEvents = useCallback(
+    async (page) => {
 
-    try {
+      try {
 
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(filters.limit),
-      });
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: String(filters.limit),
+        });
 
-      // =====================================================
-      // RECHERCHE
-      // =====================================================
+        // =====================================================
+        // RECHERCHE
+        // =====================================================
 
-      if (filters.search.trim()) {
-        params.set(
-          "search",
-          filters.search.trim()
+        if (filters.search.trim()) {
+          params.set(
+            "search",
+            filters.search.trim()
+          );
+        }
+
+        // =====================================================
+        // CATÉGORIE
+        // =====================================================
+
+        if (filters.category !== "all") {
+          params.set(
+            "event_category",
+            filters.category
+          );
+        }
+
+        // =====================================================
+        // DATE
+        // =====================================================
+
+        if (filters.date) {
+          params.set(
+            "date",
+            filters.date
+          );
+        }
+
+        // =====================================================
+        // REQUÊTE API
+        // =====================================================
+
+        const data = await apiFetch(
+          `/admin/events?${params.toString()}`
         );
-      }
 
-      // =====================================================
-      // CATÉGORIE
-      // =====================================================
+        setResponse(data);
 
-      if (filters.category !== "all") {
-        params.set(
-          "event_category",
-          filters.category
+      } catch (err) {
+
+        toast.error(
+          err?.message ||
+          "Erreur lors du chargement des événements"
         );
+
       }
-
-      // =====================================================
-      // DATE
-      // =====================================================
-
-      if (filters.date) {
-        params.set(
-          "date",
-          filters.date
-        );
-      }
-
-      // =====================================================
-      // REQUÊTE API
-      // =====================================================
-
-      const data = await apiFetch(
-        `/admin/events?${params.toString()}`
-      );
-
-      setResponse(data);
-
-    } catch (err) {
-
-      toast.error(
-        err?.message ||
-        "Erreur lors du chargement des événements"
-      );
-
-    }
-  },
-  [
-    filters.limit,
-    filters.search,
-    filters.category,
-    filters.date,
-  ]
-);
+    },
+    [
+      filters.limit,
+      filters.search,
+      filters.category,
+      filters.date,
+    ]
+  );
 
 
   /* =======================================================
@@ -176,7 +215,9 @@ const fetchEvents = useCallback(
 
       <EventFilters
         filters={filters}
-        setFilters={setFilters}
+        searchInput={searchInput}
+        onSearchChange={setSearchInput}
+        onFilterChange={updateFilter}
         onRefresh={() => fetchEvents(filters.page)}
       />
 
@@ -285,30 +326,26 @@ const fetchEvents = useCallback(
 
                 <tr key={event.id}>
 
-                  {/* DATE */}
+                  {/* =================================================
+                      DATE
+                  ================================================= */}
 
                   <td>
 
                     <div className="fw-semibold">
-
-                      {new Date(
-                        event.created_at
-                      ).toLocaleDateString()}
-
+                      {formatDate(event.created_at)}
                     </div>
 
                     <small className="text-muted">
-
-                      {new Date(
-                        event.created_at
-                      ).toLocaleTimeString()}
-
+                      {formatTime(event.created_at)}
                     </small>
 
                   </td>
 
 
-                  {/* TYPE */}
+                  {/* =================================================
+                      TYPE
+                  ================================================= */}
 
                   <td>
 
@@ -317,52 +354,51 @@ const fetchEvents = useCallback(
                         event.type
                       )}`}
                     >
-
                       {getEventTypeLabel(event.type)}
-
                     </span>
 
                   </td>
 
 
-                  {/* CATÉGORIE */}
+                  {/* =================================================
+        CATÉGORIE
+    ================================================= */}
 
                   <td>
 
                     <span className="text-muted">
-
                       {getEventCategoryLabel(event.type)}
-
                     </span>
 
                   </td>
 
 
-                  {/* MESSAGE */}
+                  {/* =================================================
+        MESSAGE
+    ================================================= */}
 
                   <td>
-
                     <span>
-
                       {event.message || "-"}
-
                     </span>
-
                   </td>
 
 
-                  {/* UTILISATEUR */}
+                  {/* =================================================
+        UTILISATEUR
+    ================================================= */}
 
                   <td>
-
                     {event.user_id ?? "-"}
-
                   </td>
 
 
-                  {/* ACTIONS */}
+                  {/* =================================================
+                      ACTIONS
+                  ================================================= */}
 
                   <td>
+
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-secondary"
@@ -375,6 +411,7 @@ const fetchEvents = useCallback(
                         aria-hidden="true"
                       />
                     </button>
+
                   </td>
 
                 </tr>

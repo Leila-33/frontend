@@ -1,52 +1,31 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import { useState, useEffect, useCallback } from "react";
 
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-
 import apiFetch from "../../services/apiFetch";
 import { uploadToS3 } from "../../services/uploadService";
-
-import { ENGINE_LABELS } from "../../constants/vehicleLabels";
-
+import { ENGINE_TYPES } from "../../constants/vehicleOptions";
 import { useAuth } from "../../contexts/AuthContext";
-
 import ApplicationTimeline from "../../components/applications/ApplicationTimeline";
 import PaymentStatus from "../../components/applications/PaymentStatus";
-
-import { STATUS } from "../../utils/status";
+import { APPLICATION_STATUSES } from "../../constants/applicationOptions";
 import { computePricing } from "../../utils/pricing";
-
 import { BsCheckCircleFill } from "react-icons/bs";
-
-import { DOCUMENT_STATUS, REQUIRED_DOCUMENT_TYPES, DOCUMENT_LABELS } from "../../utils/status";
-
-
+import { formatAmount } from "../../utils/priceUtils";
+import {
+  DOCUMENT_STATUS,
+  REQUIRED_DOCUMENT_TYPES,
+  DOCUMENT_LABELS,
+} from "../../constants/documentOptions";
+import { TRADE_IN_CONDITIONS } from "../../constants/vehicleOptions";
 
 export default function Application() {
-
-
   const navigate = useNavigate();
   const location = useLocation();
 
-  const {
-    id: applicationId,
-    vehicleId
-  } = useParams();
+  const { id: applicationId, vehicleId } = useParams();
 
-  const {
-    isClient,
-    user
-  } = useAuth();
-
+  const { isClient, user } = useAuth();
 
   // =========================
   // 2. ROUTE STATE
@@ -56,7 +35,6 @@ export default function Application() {
   const stateDates = location.state?.dates || null;
   const stateVehicle = location.state?.vehicle || null;
 
-
   // =========================
   // 3. TOUS LES ÉTATS
   // =========================
@@ -65,17 +43,15 @@ export default function Application() {
 
   const [vehicle, setVehicle] = useState(stateVehicle);
 
-  const [selectedDates, setSelectedDates] =
-    useState(stateDates);
+  const [selectedDates, setSelectedDates] = useState(stateDates);
 
   const [uploadErrors, setUploadErrors] = useState({});
 
-  const [tradeInValue, setTradeInValue] =
-    useState(0);
+  const [tradeInValue, setTradeInValue] = useState(0);
 
   const [deleteModal, setDeleteModal] = useState({
     open: false,
-    reason: ""
+    reason: "",
   });
 
   const [filePreviews, setFilePreviews] = useState({});
@@ -103,7 +79,7 @@ export default function Application() {
 
     selected_dates: selectedDates || {
       start: "",
-      end: ""
+      end: "",
     },
 
     // =========================
@@ -145,30 +121,28 @@ export default function Application() {
       identity: {
         status: "missing",
         file: null,
-        comment: ""
+        comment: "",
       },
 
       address_proof: {
         status: "missing",
         file: null,
-        comment: ""
+        comment: "",
       },
 
       payslip: {
         status: "missing",
         file: null,
-        comment: ""
+        comment: "",
       },
 
       rib: {
         status: "missing",
         file: null,
-        comment: ""
-      }
-    }
+        comment: "",
+      },
+    },
   });
-
-
 
   // =========================
   // 4. CONSTANTES CALCULÉES
@@ -177,10 +151,7 @@ export default function Application() {
   const isCreateMode = !applicationId;
 
   const isEditable =
-    isCreateMode ||
-    ["draft", "rejected"].includes(
-      application?.status
-    );
+    isCreateMode || ["draft", "rejected"].includes(application?.status);
 
   const vehicleData = form.vehicle;
 
@@ -193,41 +164,28 @@ export default function Application() {
     tradeInValue
   );
 
-  const canUseTradeIn =
-    pricing.downPayment < pricing.totalPrice;
+  const canUseTradeIn = pricing.downPayment < pricing.totalPrice;
 
-  const isOverPaid =
-    pricing.rawFinancedAmount < 0;
-
+  const isOverPaid = pricing.rawFinancedAmount < 0;
 
   // =========================
   // 5. FONCTIONS DE RÉCUPÉRATION
   // =========================
 
-
   const fetchVehicle = useCallback(async () => {
-
     try {
-
-      const data = await apiFetch(
-        `/vehicles/${vehicleId}`,
-      );
+      const data = await apiFetch(`/vehicles/${vehicleId}`);
 
       setVehicle(data);
-
     } catch (err) {
-
       console.error(err);
 
-      toast.error(
-        "Véhicule introuvable"
-      );
+      toast.error("Véhicule introuvable");
 
       navigate("/", {
-        replace: true
+        replace: true,
       });
     }
-
   }, [vehicleId, navigate]);
 
   const fetchApplication = useCallback(
@@ -241,20 +199,13 @@ export default function Application() {
         // RÉCUPÉRATION DU DOSSIER
         // =========================
 
-        const data = await apiFetch(
-          `/applications/${id}`,
-          {
-            method: "GET"
-          }
-        );
-
-        // =========================
-        // DOSSIER SUPPRIMÉ
-        // =========================
+        const data = await apiFetch(`/applications/${id}`, {
+          method: "GET",
+        });
 
         if (!data) {
-          navigate("/application-deleted", {
-            replace: true
+          navigate("/application-not-found", {
+            replace: true,
           });
 
           return;
@@ -262,7 +213,7 @@ export default function Application() {
 
         if (data.deleted_at) {
           navigate("/application-deleted", {
-            replace: true
+            replace: true,
           });
 
           return;
@@ -278,25 +229,22 @@ export default function Application() {
         // TRADE-IN
         // =========================
 
-        setTradeInValue(
-          data.trade_in?.estimated_value ?? 0
-        );
+        setTradeInValue(data.trade_in?.estimated_value ?? 0);
 
         // =========================
         // MAP DOCUMENTS
         // =========================
 
-        const documentsMap =
-          Object.fromEntries(
-            REQUIRED_DOCUMENT_TYPES.map((type) => [
-              type,
-              {
-                status: "missing",
-                file: null,
-                comment: ""
-              }
-            ])
-          );
+        const documentsMap = Object.fromEntries(
+          REQUIRED_DOCUMENT_TYPES.map((type) => [
+            type,
+            {
+              status: "missing",
+              file: null,
+              comment: "",
+            },
+          ])
+        );
 
         (data.documents || []).forEach((doc) => {
           if (!documentsMap[doc.type]) {
@@ -308,7 +256,7 @@ export default function Application() {
             file: null,
             comment: doc.comment || "",
             s3_key: doc.s3_key,
-            download_url: doc.download_url
+            download_url: doc.download_url,
           };
         });
 
@@ -316,9 +264,9 @@ export default function Application() {
         // OPTIONS
         // =========================
 
-        const optionsSelected = (
-          data.options_selected || []
-        ).map((optionId) => String(optionId));
+        const optionsSelected = (data.options_selected || []).map((optionId) =>
+          String(optionId)
+        );
 
         // =========================
         // FORM
@@ -331,52 +279,39 @@ export default function Application() {
           // INFORMATIONS CLIENT
           // =========================
 
-          first_name:
-            data.first_name ?? "",
+          first_name: data.first_name ?? "",
 
-          last_name:
-            data.last_name ?? "",
+          last_name: data.last_name ?? "",
 
-          email:
-            data.email ?? "",
+          email: data.email ?? "",
 
-          phone:
-            data.phone ?? "",
+          phone: data.phone ?? "",
 
-          address:
-            data.address ?? "",
+          address: data.address ?? "",
 
-          birth_date:
-            data.birth_date
-              ? data.birth_date.split("T")[0]
-              : "",
+          birth_date: data.birth_date ? data.birth_date.split("T")[0] : "",
 
           // =========================
           // INFORMATIONS FINANCIÈRES
           // =========================
 
-          monthly_income:
-            data.monthly_income ?? "",
+          monthly_income: data.monthly_income ?? "",
 
-          monthly_expenses:
-            data.monthly_expenses ?? "",
+          monthly_expenses: data.monthly_expenses ?? "",
 
-          employment_status:
-            data.employment_status ?? "",
+          employment_status: data.employment_status ?? "",
 
           // =========================
           // VÉHICULE
           // =========================
 
-          vehicle:
-            data.vehicle ?? null,
+          vehicle: data.vehicle ?? null,
 
           // =========================
           // LOCATION
           // =========================
 
-          selected_dates:
-            data.selected_dates ?? null,
+          selected_dates: data.selected_dates ?? null,
 
           // =========================
           // OPTIONS
@@ -388,72 +323,59 @@ export default function Application() {
           // FINANCEMENT
           // =========================
 
-          down_payment:
-            data.financing?.down_payment ?? "",
+          down_payment: data.financing?.down_payment ?? "",
 
-          duration_months:
-            String(
-              data.financing?.duration_months ?? 36
-            ),
+          duration_months: String(data.financing?.duration_months ?? 36),
 
           // =========================
           // REMISE
           // =========================
 
-          discount:
-            data.discount ?? "",
+          discount: data.discount ?? "",
 
           // =========================
           // TRADE-IN
           // =========================
 
-          trade_in_enabled:
-            !!data.trade_in,
+          trade_in_enabled: !!data.trade_in,
 
-          trade_brand:
-            data.trade_in?.brand ?? "",
+          trade_brand: data.trade_in?.brand ?? "",
 
-          trade_model:
-            data.trade_in?.model ?? "",
+          trade_model: data.trade_in?.model ?? "",
 
-          trade_year:
-            data.trade_in?.year ?? "",
+          trade_year: data.trade_in?.year ?? "",
 
-          trade_mileage:
-            data.trade_in?.mileage ?? "",
+          trade_mileage: data.trade_in?.mileage ?? "",
 
-          trade_condition:
-            data.trade_in?.condition ?? "good",
+          trade_condition: data.trade_in?.condition ?? "good",
 
           // =========================
           // DOCUMENTS
           // =========================
 
-          documents: documentsMap
+          documents: documentsMap,
         }));
       } catch (err) {
         console.error(err);
+        // Redirection spécifique si le dossier est introuvable.
+        if (err?.status === 404) {
+          navigate("/application-not-found", {
+            replace: true,
+          });
 
+          return;
+        }
         // =========================
         // MESSAGE D'ERREUR
         // =========================
 
-        let message =
-          "Erreur lors du chargement du dossier.";
+        let message = "Erreur lors du chargement du dossier.";
 
-        if (
-          Array.isArray(err?.data?.detail)
-        ) {
-          message = err.data.detail
-            .map((error) => error.message)
-            .join(" | ");
-        } else if (
-          typeof err?.data?.detail === "string"
-        ) {
+        if (Array.isArray(err?.data?.detail)) {
+          message = err.data.detail.map((error) => error.message).join(" | ");
+        } else if (typeof err?.data?.detail === "string") {
           message = err.data.detail;
-        } else if (
-          typeof err?.message === "string"
-        ) {
+        } else if (typeof err?.message === "string") {
           message = err.message;
         }
 
@@ -462,10 +384,7 @@ export default function Application() {
         throw err;
       }
     },
-    [
-      applicationId,
-      navigate
-    ]
+    [applicationId, navigate]
   );
 
   // =========================
@@ -497,12 +416,7 @@ export default function Application() {
 
     if (data.trade_year === "" || data.trade_year == null) {
       errors.trade_year = "Année requise";
-
-    } else if (
-      !Number.isInteger(year) ||
-      year < 1900 ||
-      year > currentYear
-    ) {
+    } else if (!Number.isInteger(year) || year < 1900 || year > currentYear) {
       errors.trade_year = "Année invalide";
     }
 
@@ -513,11 +427,7 @@ export default function Application() {
 
     if (data.trade_mileage === "" || data.trade_mileage == null) {
       errors.trade_mileage = "Kilométrage requis";
-
-    } else if (
-      !Number.isFinite(mileage) ||
-      mileage < 0
-    ) {
+    } else if (!Number.isFinite(mileage) || mileage < 0) {
       errors.trade_mileage = "Kilométrage invalide";
     }
 
@@ -530,7 +440,6 @@ export default function Application() {
 
     return errors;
   };
-
 
   const isTradeInValid = () => {
     if (!form.trade_in_enabled) return false;
@@ -552,7 +461,6 @@ export default function Application() {
   };
 
   const validate = (f, ref = application) => {
-
     const e = {};
 
     const isSale = pricing.isSale;
@@ -577,24 +485,17 @@ export default function Application() {
       const age =
         today.getFullYear() -
         birth.getFullYear() -
-        (
-          today <
-            new Date(
-              today.getFullYear(),
-              birth.getMonth(),
-              birth.getDate()
-            )
-            ? 1
-            : 0
-        );
+        (today <
+        new Date(today.getFullYear(), birth.getMonth(), birth.getDate())
+          ? 1
+          : 0);
 
       if (age < 18) {
         e.birth_date = "Vous devez avoir au moins 18 ans";
       }
     }
 
-    const emailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!f.email?.trim()) {
       e.email = "Email requis";
@@ -602,8 +503,7 @@ export default function Application() {
       e.email = "Email invalide";
     }
 
-    const phoneRegex =
-      /^(\+33|0)[1-9](\d{2}){4}$/;
+    const phoneRegex = /^(\+33|0)[1-9](\d{2}){4}$/;
 
     if (!f.phone || !phoneRegex.test(f.phone)) {
       e.phone = "Téléphone invalide";
@@ -624,7 +524,6 @@ export default function Application() {
     // SALE RULES
     // =========================
     if (isSale) {
-
       const income = Number(f.monthly_income);
       const expenses = Number(f.monthly_expenses || 0);
 
@@ -637,8 +536,7 @@ export default function Application() {
       }
 
       if (income > 0 && expenses >= income) {
-        e.monthly_expenses =
-          "Les charges doivent être inférieures aux revenus";
+        e.monthly_expenses = "Les charges doivent être inférieures aux revenus";
       }
 
       if (!f.employment_status) {
@@ -649,36 +547,28 @@ export default function Application() {
       // FINANCE VALIDATION (FROM computePricing)
       // =========================
       if (pricing.isInvalidFinance) {
-        e.financial =
-          "Montage financier invalide";
+        e.financial = "Montage financier invalide";
       }
       if (isOverPaid) {
-        e.financial = "L'apport et la reprise ne peuvent pas dépasser le prix du véhicule";
+        e.financial =
+          "L'apport et la reprise ne peuvent pas dépasser le prix du véhicule";
       }
       if (pricing.downPayment < 0) {
         e.down_payment = "Apport invalide";
       }
 
-      if (
-        pricing.totalPrice > 0 &&
-        pricing.downPayment > pricing.totalPrice
-      ) {
-        e.down_payment =
-          "L'apport ne peut pas dépasser le prix total";
+      if (pricing.totalPrice > 0 && pricing.downPayment > pricing.totalPrice) {
+        e.down_payment = "L'apport ne peut pas dépasser le prix total";
       }
 
       // =========================
       // FINANCIAL RISK
       // =========================
       const ratio =
-        income > 0
-          ? (expenses + pricing.downPayment / 12) /
-          income
-          : 1;
+        income > 0 ? (expenses + pricing.downPayment / 12) / income : 1;
 
       if (ratio > 0.5) {
-        e.financial_risk =
-          "Taux d'endettement trop élevé (recommandé < 50%)";
+        e.financial_risk = "Taux d'endettement trop élevé (recommandé < 50%)";
       }
 
       // =========================
@@ -693,24 +583,15 @@ export default function Application() {
     // DOCUMENTS
     // =========================
     const docRequired = (key, label) => {
+      const existingDoc = ref?.documents?.find((d) => d.type === key);
 
-      const existingDoc =
-        ref?.documents?.find(d => d.type === key);
+      const uploadedFile = f.documents?.[key]?.file;
 
-      const uploadedFile =
-        f.documents?.[key]?.file;
+      const approved = existingDoc?.status === "validated";
 
-      const approved =
-        existingDoc?.status === "validated";
+      const pending = existingDoc?.status === "pending";
 
-      const pending =
-        existingDoc?.status === "pending";
-
-      if (
-        !approved &&
-        !pending &&
-        !uploadedFile
-      ) {
+      if (!approved && !pending && !uploadedFile) {
         e[`doc_${key}`] = `${label} requis`;
       }
     };
@@ -723,40 +604,32 @@ export default function Application() {
     return e;
   };
 
-
   const errors = validate(form, application);
 
   const allErrors = {
     ...errors,
-    ...uploadErrors
+    ...uploadErrors,
   };
-
 
   // =========================
   // 7. FONCTIONS DE GESTION
   // =========================
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     setForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
-
 
   // =========================
   // VALIDATION TECHNIQUE DU FICHIER
   // =========================
 
   const validateFile = (file) => {
-    const allowedTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/png"
-    ];
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
 
     const maxSize = 5 * 1024 * 1024;
 
@@ -791,7 +664,7 @@ export default function Application() {
     if (fileError) {
       setUploadErrors((prev) => ({
         ...prev,
-        [`doc_${type}`]: fileError
+        [`doc_${type}`]: fileError,
       }));
 
       // Permet de sélectionner à nouveau
@@ -823,13 +696,11 @@ export default function Application() {
         ...prev.documents,
         [type]: {
           file,
-          comment: ""
-        }
-      }
+          comment: "",
+        },
+      },
     }));
   };
-
-
 
   // =========================
   // SÉLECTION D'UNE OPTION
@@ -841,11 +712,9 @@ export default function Application() {
     const id = String(optionId);
 
     setForm((prev) => {
-      const selected =
-        prev.optionsSelected || [];
+      const selected = prev.optionsSelected || [];
 
-      const exists =
-        selected.includes(id);
+      const exists = selected.includes(id);
 
       return {
         ...prev,
@@ -855,10 +724,8 @@ export default function Application() {
         //
         // Sinon, elle est ajoutée.
         optionsSelected: exists
-          ? selected.filter(
-            (selectedId) => selectedId !== id
-          )
-          : [...selected, id]
+          ? selected.filter((selectedId) => selectedId !== id)
+          : [...selected, id],
       };
     });
   };
@@ -868,7 +735,7 @@ export default function Application() {
 
     setForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -887,7 +754,7 @@ export default function Application() {
         model: form.trade_model,
         year: Number(form.trade_year),
         mileage: Number(form.trade_mileage),
-        condition: form.trade_condition
+        condition: form.trade_condition,
       };
 
       const res = await apiFetch("/trade-in/estimate", {
@@ -898,41 +765,26 @@ export default function Application() {
       setTradeInValue(res.estimated_value || 0);
 
       toast.success("Estimation reprise mise à jour");
-
     } catch (err) {
       toast.error("Erreur estimation reprise");
     }
   };
 
-
-
   const handlePayment = async () => {
-
     try {
+      const res = await apiFetch("/payments/checkout", {
+        method: "POST",
 
-      const res = await apiFetch(
-        "/payments/checkout",
-        {
-          method: "POST",
+        body: {
+          application_id: application.id,
+        },
+      });
 
-          body: {
-
-            application_id: application.id,
-
-          }
-        }
-      );
-
-      window.location.href =
-        res.checkout_url;
-
+      window.location.href = res.checkout_url;
     } catch (err) {
-
       console.error(err);
 
-      toast.error(
-        "Erreur paiement"
-      );
+      toast.error("Erreur paiement");
     }
   };
 
@@ -941,26 +793,20 @@ export default function Application() {
   };
 
   const confirmDelete = async () => {
-
     try {
-
       await apiFetch(`/applications/${applicationId}`, {
-        method: "DELETE"
+        method: "DELETE",
       });
 
       setDeleteModal({ open: false });
 
       navigate("/applications");
-
     } catch (err) {
-
       console.error(err);
 
       toast.error("Erreur lors de la suppression");
-
     }
-  }
-
+  };
 
   // =========================
   // 9. SAUVEGARDE ET SOUMISSION
@@ -989,7 +835,7 @@ export default function Application() {
       if (existingDocument?.status === "validated") {
         uploadedDocuments.push({
           type,
-          s3_key: existingDocument.s3_key
+          s3_key: existingDocument.s3_key,
         });
 
         continue;
@@ -1004,7 +850,7 @@ export default function Application() {
 
         uploadedDocuments.push({
           type,
-          s3_key
+          s3_key,
         });
 
         continue;
@@ -1014,13 +860,10 @@ export default function Application() {
       // DOCUMENT EN ATTENTE
       // =========================
 
-      if (
-        existingDocument?.status === "pending" &&
-        existingDocument.s3_key
-      ) {
+      if (existingDocument?.status === "pending" && existingDocument.s3_key) {
         uploadedDocuments.push({
           type,
-          s3_key: existingDocument.s3_key
+          s3_key: existingDocument.s3_key,
         });
       }
     }
@@ -1037,10 +880,7 @@ export default function Application() {
 
     // allErrors inclut les erreurs métier
     // ainsi que les erreurs de fichiers.
-    if (
-      isSubmit &&
-      Object.keys(allErrors).length > 0
-    ) {
+    if (isSubmit && Object.keys(allErrors).length > 0) {
       toast.error("Veuillez corriger les erreurs");
 
       return;
@@ -1051,8 +891,7 @@ export default function Application() {
       // DOCUMENTS
       // =========================
 
-      const uploadedDocuments =
-        await buildUploadedDocuments();
+      const uploadedDocuments = await buildUploadedDocuments();
 
       // =========================
       // FINANCEMENT
@@ -1060,9 +899,9 @@ export default function Application() {
 
       const financingPayload = pricing.isSale
         ? {
-          down_payment: pricing.downPayment,
-          duration_months: pricing.durationMonths
-        }
+            down_payment: pricing.downPayment,
+            duration_months: pricing.durationMonths,
+          }
         : null;
 
       // =========================
@@ -1074,14 +913,14 @@ export default function Application() {
       const tradeInPayload =
         pricing.isSale && form.trade_in_enabled
           ? {
-            enabled: true,
-            estimated_value: tradeInValue,
-            brand: form.trade_brand,
-            model: form.trade_model,
-            year: Number(form.trade_year),
-            mileage: Number(form.trade_mileage),
-            condition: form.trade_condition
-          }
+              enabled: true,
+              estimated_value: tradeInValue,
+              brand: form.trade_brand,
+              model: form.trade_model,
+              year: Number(form.trade_year),
+              mileage: Number(form.trade_mileage),
+              condition: form.trade_condition,
+            }
           : null;
 
       // =========================
@@ -1094,7 +933,7 @@ export default function Application() {
         // =========================
 
         ...(applicationId && {
-          id: applicationId
+          id: applicationId,
         }),
 
         vehicle_id: form.vehicle?.id,
@@ -1122,9 +961,7 @@ export default function Application() {
 
         // Les options ne sont disponibles
         // que pour une location.
-        selected_option_ids: pricing.isRent
-          ? form.optionsSelected || []
-          : [],
+        selected_option_ids: pricing.isRent ? form.optionsSelected || [] : [],
 
         // =========================
         // FINANCEMENT
@@ -1143,7 +980,7 @@ export default function Application() {
         // =========================
 
         ...(pricing.isRent && {
-          selected_dates: form.selected_dates
+          selected_dates: form.selected_dates,
         }),
 
         // =========================
@@ -1153,20 +990,16 @@ export default function Application() {
         ...(pricing.isSale && {
           employment_status: form.employment_status,
 
-          monthly_income: Number(
-            form.monthly_income || 0
-          ),
+          monthly_income: Number(form.monthly_income || 0),
 
-          monthly_expenses: Number(
-            form.monthly_expenses || 0
-          )
+          monthly_expenses: Number(form.monthly_expenses || 0),
         }),
 
         // =========================
         // DOCUMENTS
         // =========================
 
-        documents: uploadedDocuments
+        documents: uploadedDocuments,
       };
 
       // =========================
@@ -1179,13 +1012,11 @@ export default function Application() {
 
       const res = await apiFetch(endpoint, {
         method: "POST",
-        body: payload
+        body: payload,
       });
 
       toast.success(
-        isSubmit
-          ? "Dossier soumis avec succès"
-          : "Brouillon sauvegardé"
+        isSubmit ? "Dossier soumis avec succès" : "Brouillon sauvegardé"
       );
       // =========================
       // NAVIGATION
@@ -1196,12 +1027,9 @@ export default function Application() {
       // par l'URL du dossier créé.
 
       if (!applicationId && res?.id) {
-        navigate(
-          `/applications/${res.id}`,
-          {
-            replace: true
-          }
-        );
+        navigate(`/applications/${res.id}`, {
+          replace: true,
+        });
 
         return res;
       }
@@ -1218,28 +1046,22 @@ export default function Application() {
       }
 
       return res;
-
     } catch (err) {
-      toast.error(
-        err.message ||
-        "Erreur lors de l'enregistrement"
-      );
+      toast.error(err.message || "Erreur lors de l'enregistrement");
     }
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     await persistApplication({
-      mode: "submit"
+      mode: "submit",
     });
   };
 
   const saveDraft = async () => {
-
     await persistApplication({
-      mode: "draft"
+      mode: "draft",
     });
-
   };
 
   // =========================
@@ -1262,40 +1084,30 @@ export default function Application() {
     // NOUVEAU FICHIER
     // =========================
 
-    const formDoc =
-      form.documents?.[type];
+    const formDoc = form.documents?.[type];
 
-    const newFile =
-      formDoc?.file;
+    const newFile = formDoc?.file;
 
     // =========================
     // STATUT
     // =========================
 
-    const status =
-      newFile
-        ? "pending"
-        : doc?.status || "missing";
+    const status = newFile ? "pending" : doc?.status || "missing";
 
     // Récupération de la configuration
     // correspondant au statut.
-    const statusConfig =
-      DOCUMENT_STATUS[status] ||
-      DOCUMENT_STATUS.missing;
+    const statusConfig = DOCUMENT_STATUS[status] || DOCUMENT_STATUS.missing;
 
-    const isApproved =
-      status === "validated";
+    const isApproved = status === "validated";
 
     // =========================
     // ERREUR
     // =========================
 
-    const error =
-      allErrors?.[`doc_${type}`];
+    const error = allErrors?.[`doc_${type}`];
 
     // URL temporaire du nouveau fichier.
-    const previewUrl =
-      filePreviews[type];
+    const previewUrl = filePreviews[type];
 
     return (
       <div
@@ -1309,15 +1121,12 @@ export default function Application() {
         ${error ? "border-danger" : ""}
       `}
       >
-
         {/* =========================
           HEADER
           ========================= */}
 
         <div className="d-flex justify-content-between align-items-start gap-3">
-
           <div className="d-flex align-items-center gap-3">
-
             {/* Icône du statut */}
             <div
               className={`
@@ -1326,33 +1135,23 @@ export default function Application() {
               align-items-center
               justify-content-center
               bg-${statusConfig.color}
-              ${statusConfig.color === "warning"
-                  ? "text-dark"
-                  : "text-white"
-                }
+              ${statusConfig.color === "warning" ? "text-dark" : "text-white"}
             `}
               style={{
                 width: "42px",
                 height: "42px",
-                minWidth: "42px"
+                minWidth: "42px",
               }}
             >
-              <i
-                className={`bi ${statusConfig.icon}`}
-              ></i>
+              <i className={`bi ${statusConfig.icon}`}></i>
             </div>
 
             {/* Nom et description */}
             <div>
-              <strong className="d-block">
-                {label}
-              </strong>
+              <strong className="d-block">{label}</strong>
 
-              <small className="text-muted">
-                {statusConfig.description}
-              </small>
+              <small className="text-muted">{statusConfig.description}</small>
             </div>
-
           </div>
 
           {/* =========================
@@ -1366,19 +1165,13 @@ export default function Application() {
             px-3
             py-2
             bg-${statusConfig.color}
-            ${statusConfig.color === "warning"
-                ? "text-dark"
-                : ""
-              }
+            ${statusConfig.color === "warning" ? "text-dark" : ""}
           `}
           >
-            <i
-              className={`bi ${statusConfig.icon} me-1`}
-            ></i>
+            <i className={`bi ${statusConfig.icon} me-1`}></i>
 
             {statusConfig.label}
           </span>
-
         </div>
 
         {/* =========================
@@ -1386,24 +1179,15 @@ export default function Application() {
           ========================= */}
 
         <div className="mt-3">
-
           <input
             type="file"
             className="form-control"
             accept=".pdf,.jpg,.jpeg,.png"
-            disabled={
-              !isEditable ||
-              isApproved
-            }
-            onChange={(e) =>
-              handleFileChange(e, type)
-            }
+            disabled={!isEditable || isApproved}
+            onChange={(e) => handleFileChange(e, type)}
           />
 
-          <div className="form-text">
-            PDF, JPG ou PNG — 5 Mo maximum
-          </div>
-
+          <div className="form-text">PDF, JPG ou PNG — 5 Mo maximum</div>
         </div>
 
         {/* =========================
@@ -1412,18 +1196,12 @@ export default function Application() {
 
         {newFile && (
           <div className="alert alert-primary mt-3 mb-0 py-2">
-
             <div className="d-flex align-items-center gap-2">
-
               <i className="bi bi-file-earmark-arrow-up"></i>
 
-              <span
-                className="small text-truncate"
-                title={newFile.name}
-              >
+              <span className="small text-truncate" title={newFile.name}>
                 {newFile.name}
               </span>
-
             </div>
 
             {previewUrl && (
@@ -1436,7 +1214,6 @@ export default function Application() {
                 Aperçu du fichier sélectionné
               </a>
             )}
-
           </div>
         )}
 
@@ -1446,15 +1223,10 @@ export default function Application() {
 
         {doc?.s3_key && !newFile && (
           <div className="alert alert-light border mt-3 mb-0 py-2">
-
             <div className="d-flex align-items-center gap-2">
-
               <i className="bi bi-file-earmark-check text-success"></i>
 
-              <span className="small">
-                Document déjà envoyé
-              </span>
-
+              <span className="small">Document déjà envoyé</span>
             </div>
 
             {doc.download_url && (
@@ -1467,7 +1239,6 @@ export default function Application() {
                 Voir le document actuel
               </a>
             )}
-
           </div>
         )}
 
@@ -1482,9 +1253,7 @@ export default function Application() {
           >
             <i className="bi bi-exclamation-circle"></i>
 
-            <span className="small">
-              {error}
-            </span>
+            <span className="small">{error}</span>
           </div>
         )}
 
@@ -1492,31 +1261,19 @@ export default function Application() {
           MOTIF DU REFUS
           ========================= */}
 
-        {status === "rejected" &&
-          doc?.comment && (
-            <div className="alert alert-danger mt-3 mb-0 py-2">
+        {status === "rejected" && doc?.comment && (
+          <div className="alert alert-danger mt-3 mb-0 py-2">
+            <div className="d-flex gap-2">
+              <i className="bi bi-chat-left-text"></i>
 
-              <div className="d-flex gap-2">
+              <div>
+                <strong className="small">Motif du refus</strong>
 
-                <i className="bi bi-chat-left-text"></i>
-
-                <div>
-
-                  <strong className="small">
-                    Motif du refus
-                  </strong>
-
-                  <div className="small mt-1">
-                    {doc.comment}
-                  </div>
-
-                </div>
-
+                <div className="small mt-1">{doc.comment}</div>
               </div>
-
             </div>
-          )}
-
+          </div>
+        )}
       </div>
     );
   };
@@ -1535,13 +1292,11 @@ export default function Application() {
     }
 
     const timeoutId = setTimeout(() => {
-      const element = document.getElementById(
-        "documents"
-      );
+      const element = document.getElementById("documents");
 
       element?.scrollIntoView({
         behavior: "smooth",
-        block: "start"
+        block: "start",
       });
     }, 100);
 
@@ -1550,8 +1305,6 @@ export default function Application() {
       clearTimeout(timeoutId);
     };
   }, [highlight]);
-
-
 
   // =========================
   // RÉINITIALISATION REPRISE
@@ -1575,50 +1328,35 @@ export default function Application() {
         trade_model: "",
         trade_year: "",
         trade_mileage: "",
-        trade_condition: "good"
+        trade_condition: "good",
       }));
 
       // La valeur estimée de la reprise
       // doit également être réinitialisée.
       setTradeInValue(0);
     }
-  }, [
-    pricing.downPayment,
-    pricing.totalPrice,
-    form.trade_in_enabled
-  ]);
-
+  }, [pricing.downPayment, pricing.totalPrice, form.trade_in_enabled]);
 
   useEffect(() => {
-
     const initialize = async () => {
-
       // =========================
       // EDIT MODE
       // =========================
 
       if (applicationId) {
-
         try {
-
           await fetchApplication(applicationId);
-
         } catch (err) {
-
           // Dossier inexistant
           if (err?.status === 404) {
-
             navigate("/", {
-              replace: true
+              replace: true,
             });
 
             return;
           }
 
-          console.error(
-            "Erreur lors du chargement du dossier :",
-            err
-          );
+          console.error("Erreur lors du chargement du dossier :", err);
         }
 
         return;
@@ -1629,9 +1367,8 @@ export default function Application() {
       // =========================
 
       if (!vehicleId) {
-
         navigate("/", {
-          replace: true
+          replace: true,
         });
 
         return;
@@ -1642,21 +1379,14 @@ export default function Application() {
       // =========================
 
       if (!vehicle) {
-
         try {
-
           await fetchVehicle();
-
         } catch (err) {
-
-          console.error(
-            "Erreur lors du chargement du véhicule :",
-            err
-          );
+          console.error("Erreur lors du chargement du véhicule :", err);
 
           // Impossible de continuer sans véhicule
           navigate("/", {
-            replace: true
+            replace: true,
           });
 
           return;
@@ -1668,47 +1398,35 @@ export default function Application() {
       // =========================
 
       try {
-
         const existing = await apiFetch(
           `/applications/by-vehicle/${vehicleId}`
         );
 
         // Un brouillon existe déjà
         if (existing?.id) {
-
-          navigate(
-            `/applications/${existing.id}`,
-            {
-              replace: true
-            }
-          );
+          navigate(`/applications/${existing.id}`, {
+            replace: true,
+          });
 
           return;
         }
-
       } catch (err) {
-
         // 404 = aucun brouillon existant.
         // C'est normal en mode création.
         if (err?.status !== 404) {
-
-          console.error(
-            "Erreur lors de la recherche du brouillon :",
-            err
-          );
+          console.error("Erreur lors de la recherche du brouillon :", err);
         }
       }
     };
 
     initialize();
-
   }, [
     applicationId,
     vehicleId,
     fetchApplication,
     fetchVehicle,
     navigate,
-    vehicle
+    vehicle,
   ]);
 
   // =========================
@@ -1720,15 +1438,11 @@ export default function Application() {
 
     // Création d'une URL temporaire
     // pour chaque nouveau fichier.
-    Object.entries(form.documents || {}).forEach(
-      ([type, document]) => {
-        if (document?.file) {
-          previews[type] = URL.createObjectURL(
-            document.file
-          );
-        }
+    Object.entries(form.documents || {}).forEach(([type, document]) => {
+      if (document?.file) {
+        previews[type] = URL.createObjectURL(document.file);
       }
-    );
+    });
 
     setFilePreviews(previews);
 
@@ -1736,11 +1450,9 @@ export default function Application() {
     // lorsque les fichiers changent
     // ou lorsque le composant est démonté.
     return () => {
-      Object.values(previews).forEach(
-        (previewUrl) => {
-          URL.revokeObjectURL(previewUrl);
-        }
-      );
+      Object.values(previews).forEach((previewUrl) => {
+        URL.revokeObjectURL(previewUrl);
+      });
     };
   }, [form.documents]);
 
@@ -1750,12 +1462,7 @@ export default function Application() {
 
   // Le formulaire est valide uniquement
   // lorsqu'aucune erreur n'est présente.
-  const isFormValid =
-    Object.keys(allErrors).length === 0;
-
-
-
-
+  const isFormValid = Object.keys(allErrors).length === 0;
 
   // =========================
   // 12. RENDU JSX
@@ -1763,12 +1470,10 @@ export default function Application() {
 
   return (
     <div className="container py-5">
-
       {/* =========================
         HEADER
          ========================= */}
       <div className="text-center mb-5 position-relative">
-
         {/* =========================
             DELETE BUTTON
         ========================= */}
@@ -1788,9 +1493,7 @@ export default function Application() {
          TITLE
         ========================= */}
         <h1 className="fw-bold mb-2">
-          {isCreateMode
-            ? "Nouveau dossier"
-            : `Dossier #${applicationId}`}
+          {isCreateMode ? "Nouveau dossier" : `Dossier #${applicationId}`}
         </h1>
 
         <p className="text-muted mb-0">
@@ -1807,30 +1510,25 @@ export default function Application() {
         {application?.status && (
           <div className="mt-3">
             <span
-              className={`badge bg-${STATUS[application.status]?.color}`}
+              className={`badge bg-${APPLICATION_STATUSES[application.status]?.color}`}
             >
-              {STATUS[application.status]?.label}
+              {APPLICATION_STATUSES[application.status]?.label}
             </span>
           </div>
         )}
-
       </div>
 
       <form onSubmit={handleSubmit}>
-
         <div className="row g-4">
-
           {/* =========================
             MAIN CONTENT
         ========================= */}
           <div className="col-lg-8">
-
             {/* =========================
               IDENTITÉ
           ========================= */}
             <div className="card border-0 shadow-sm rounded-4 mb-4">
               <div className="card-body p-4 p-lg-5">
-
                 <div className="mb-4">
                   <h4 className="fw-semibold mb-1">
                     Informations personnelles
@@ -1842,7 +1540,6 @@ export default function Application() {
                 </div>
 
                 <div className="row g-3">
-
                   {/* NOM */}
                   <div className="col-md-6">
                     <label className="form-label" htmlFor="last_name">
@@ -1861,9 +1558,7 @@ export default function Application() {
                     />
 
                     {errors.last_name && (
-                      <small className="text-danger">
-                        {errors.last_name}
-                      </small>
+                      <small className="text-danger">{errors.last_name}</small>
                     )}
                   </div>
 
@@ -1885,9 +1580,7 @@ export default function Application() {
                     />
 
                     {errors.first_name && (
-                      <small className="text-danger">
-                        {errors.first_name}
-                      </small>
+                      <small className="text-danger">{errors.first_name}</small>
                     )}
                   </div>
 
@@ -1908,9 +1601,7 @@ export default function Application() {
                     />
 
                     {errors.birth_date && (
-                      <small className="text-danger">
-                        {errors.birth_date}
-                      </small>
+                      <small className="text-danger">{errors.birth_date}</small>
                     )}
                   </div>
 
@@ -1932,9 +1623,7 @@ export default function Application() {
                     />
 
                     {errors.phone && (
-                      <small className="text-danger">
-                        {errors.phone}
-                      </small>
+                      <small className="text-danger">{errors.phone}</small>
                     )}
                   </div>
 
@@ -1957,9 +1646,7 @@ export default function Application() {
                     />
 
                     {errors.email && (
-                      <small className="text-danger">
-                        {errors.email}
-                      </small>
+                      <small className="text-danger">{errors.email}</small>
                     )}
                   </div>
 
@@ -1982,14 +1669,10 @@ export default function Application() {
                     />
 
                     {errors.address && (
-                      <small className="text-danger">
-                        {errors.address}
-                      </small>
+                      <small className="text-danger">{errors.address}</small>
                     )}
                   </div>
-
                 </div>
-
               </div>
             </div>
             {vehicleData?.type === "sale" && (
@@ -1999,7 +1682,6 @@ export default function Application() {
                   ========================= */}
                 <div className="card border-0 shadow-sm rounded-4 mb-4">
                   <div className="card-body p-4 p-lg-5">
-
                     <div className="mb-4">
                       <h4 className="fw-semibold mb-1">
                         Situation professionnelle
@@ -2024,7 +1706,6 @@ export default function Application() {
                         {errors.employment_status}
                       </small>
                     )}
-
                   </div>
                 </div>
 
@@ -2033,7 +1714,6 @@ export default function Application() {
                   ========================= */}
                 <div className="card border-0 shadow-sm rounded-4 mb-4">
                   <div className="card-body p-4 p-lg-5">
-
                     <div className="mb-4">
                       <h4 className="fw-semibold mb-1">
                         Informations financières
@@ -2045,12 +1725,8 @@ export default function Application() {
                     </div>
 
                     <div className="row g-3">
-
                       <div className="col-md-6">
-
-                        <label className="form-label">
-                          Revenus mensuels
-                        </label>
+                        <label className="form-label">Revenus mensuels</label>
 
                         <input
                           type="number"
@@ -2069,10 +1745,7 @@ export default function Application() {
                       </div>
 
                       <div className="col-md-6">
-
-                        <label className="form-label">
-                          Charges mensuelles
-                        </label>
+                        <label className="form-label">Charges mensuelles</label>
 
                         <input
                           type="number"
@@ -2089,9 +1762,7 @@ export default function Application() {
                           </small>
                         )}
                       </div>
-
                     </div>
-
                   </div>
                 </div>
 
@@ -2101,25 +1772,17 @@ export default function Application() {
 
                 {/* FINANCING */}
                 <div className="card border-0 shadow-sm rounded-4 mb-4">
-
                   <div className="card-body p-4 p-lg-5">
-
                     <div className="mb-4">
-
-                      <h4 className="fw-semibold mb-1">
-                        Financement
-                      </h4>
+                      <h4 className="fw-semibold mb-1">Financement</h4>
 
                       <p className="text-muted small mb-0">
                         Simulez une solution adaptée à votre budget
                       </p>
-
                     </div>
 
                     <div className="row g-3">
-
                       <div className="col-md-6">
-
                         <label className="form-label">
                           Apport personnel (€)
                         </label>
@@ -2128,8 +1791,9 @@ export default function Application() {
                           name="down_payment"
                           value={form.down_payment}
                           onChange={handleChange}
-                          className={`form-control form-control-lg ${errors.down_payment ? "is-invalid" : ""
-                            }`}
+                          className={`form-control form-control-lg ${
+                            errors.down_payment ? "is-invalid" : ""
+                          }`}
                           disabled={!isEditable}
                           placeholder="Ex : 3000"
                           min="0"
@@ -2145,11 +1809,9 @@ export default function Application() {
                         <div className="small text-muted mt-2">
                           Réduit vos mensualités
                         </div>
-
                       </div>
                       {pricing.financedAmount > 0 && (
                         <div className="col-md-6">
-
                           <label className="form-label">
                             Durée du financement
                           </label>
@@ -2158,8 +1820,9 @@ export default function Application() {
                             name="duration_months"
                             value={form.duration_months}
                             onChange={handleChange}
-                            className={`form-select form-select-lg ${errors.duration_months ? "is-invalid" : ""
-                              }`}
+                            className={`form-select form-select-lg ${
+                              errors.duration_months ? "is-invalid" : ""
+                            }`}
                             disabled={!isEditable}
                           >
                             <option value="24">24 mois</option>
@@ -2173,8 +1836,8 @@ export default function Application() {
                               {errors.duration_months}
                             </div>
                           )}
-
-                        </div>)}
+                        </div>
+                      )}
                       {pricing.financedAmount === 0 && (
                         <div className="alert alert-success py-2 d-flex align-items-center gap-2">
                           <BsCheckCircleFill className="text-success" />
@@ -2192,9 +1855,7 @@ export default function Application() {
                         {errors.financial_risk}
                       </div>
                     )}
-
                   </div>
-
                 </div>
 
                 {/* TRADE-IN */}
@@ -2215,12 +1876,12 @@ export default function Application() {
                         ...(enabled
                           ? {}
                           : {
-                            trade_brand: "",
-                            trade_model: "",
-                            trade_year: "",
-                            trade_mileage: "",
-                            trade_condition: "good"
-                          })
+                              trade_brand: "",
+                              trade_model: "",
+                              trade_year: "",
+                              trade_mileage: "",
+                              trade_condition: "good",
+                            }),
                       }));
                     }}
                   />
@@ -2228,7 +1889,6 @@ export default function Application() {
                   <label className="form-check-label">
                     Reprise de véhicule
                   </label>
-
                 </div>
               </>
             )}
@@ -2236,30 +1896,25 @@ export default function Application() {
             {form.trade_in_enabled && (
               <div className="card border-0 shadow-sm rounded-4 mb-4">
                 <div className="card-body p-4">
-
                   <div className="mb-4">
-                    <h5 className="fw-semibold mb-1">
-                      Votre ancien véhicule
-                    </h5>
+                    <h5 className="fw-semibold mb-1">Votre ancien véhicule</h5>
                     <p className="text-muted small mb-0">
                       Estimation automatique de reprise
                     </p>
                   </div>
 
                   <div className="row g-3">
-
                     {/* MARQUE */}
                     <div className="col-md-6">
-                      <label className="form-label">
-                        Marque
-                      </label>
+                      <label className="form-label">Marque</label>
 
                       <input
                         name="trade_brand"
                         value={form.trade_brand ?? ""}
                         onChange={handleTradeInChange}
-                        className={`form-control ${allErrors.trade_brand ? "is-invalid" : ""
-                          }`}
+                        className={`form-control ${
+                          allErrors.trade_brand ? "is-invalid" : ""
+                        }`}
                         placeholder="Peugeot"
                       />
 
@@ -2270,16 +1925,15 @@ export default function Application() {
 
                     {/* MODELE */}
                     <div className="col-md-6">
-                      <label className="form-label">
-                        Modèle
-                      </label>
+                      <label className="form-label">Modèle</label>
 
                       <input
                         name="trade_model"
                         value={form.trade_model ?? ""}
                         onChange={handleTradeInChange}
-                        className={`form-control ${allErrors.trade_model ? "is-invalid" : ""
-                          }`}
+                        className={`form-control ${
+                          allErrors.trade_model ? "is-invalid" : ""
+                        }`}
                         placeholder="308"
                       />
 
@@ -2290,17 +1944,16 @@ export default function Application() {
 
                     {/* ANNEE */}
                     <div className="col-md-4">
-                      <label className="form-label">
-                        Année
-                      </label>
+                      <label className="form-label">Année</label>
 
                       <input
                         type="number"
                         name="trade_year"
                         value={form.trade_year ?? ""}
                         onChange={handleTradeInChange}
-                        className={`form-control ${allErrors.trade_year ? "is-invalid" : ""
-                          }`}
+                        className={`form-control ${
+                          allErrors.trade_year ? "is-invalid" : ""
+                        }`}
                         min="1900"
                         max={new Date().getFullYear()}
                         placeholder="2020"
@@ -2313,17 +1966,16 @@ export default function Application() {
 
                     {/* KM */}
                     <div className="col-md-4">
-                      <label className="form-label">
-                        Kilométrage
-                      </label>
+                      <label className="form-label">Kilométrage</label>
 
                       <input
                         type="number"
                         name="trade_mileage"
                         value={form.trade_mileage ?? ""}
                         onChange={handleTradeInChange}
-                        className={`form-control ${allErrors.trade_mileage ? "is-invalid" : ""
-                          }`}
+                        className={`form-control ${
+                          allErrors.trade_mileage ? "is-invalid" : ""
+                        }`}
                         min="0"
                         placeholder="50000"
                       />
@@ -2335,29 +1987,33 @@ export default function Application() {
 
                     {/* CONDITION */}
                     <div className="col-md-4">
-                      <label className="form-label">
-                        État du véhicule
-                      </label>
+                      <label className="form-label">État du véhicule</label>
 
                       <select
                         name="trade_condition"
                         value={form.trade_condition ?? "good"}
                         onChange={handleTradeInChange}
-                        className={`form-select ${allErrors.trade_condition ? "is-invalid" : ""
-                          }`}
+                        className={`form-select ${
+                          allErrors.trade_condition ? "is-invalid" : ""
+                        }`}
                       >
                         <option value="">Choisir</option>
-                        <option value="excellent">Excellent</option>
-                        <option value="good">Bon</option>
-                        <option value="average">Moyen</option>
-                        <option value="poor">Mauvais</option>
+
+                        {Object.entries(TRADE_IN_CONDITIONS).map(
+                          ([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          )
+                        )}
                       </select>
 
-                      <div className="invalid-feedback">
-                        {allErrors.trade_condition}
-                      </div>
+                      {allErrors.trade_condition && (
+                        <div className="invalid-feedback">
+                          {allErrors.trade_condition}
+                        </div>
+                      )}
                     </div>
-
                   </div>
 
                   {/* ACTION */}
@@ -2375,37 +2031,30 @@ export default function Application() {
                   {/* RESULTAT */}
                   {tradeInValue > 0 && (
                     <div className="mt-4 border rounded-4 p-4 bg-light">
-
                       <div className="small text-muted mb-2">
                         Valeur estimée de reprise
                       </div>
 
                       <div className="fw-bold fs-2">
-                        {Number(tradeInValue).toLocaleString()} €
+                        {formatAmount(tradeInValue)}
                       </div>
-
                     </div>
                   )}
-
                 </div>
               </div>
             )}
-
 
             {/* =========================
               DOCUMENTS
           ========================= */}
             <div className="card border-0 shadow-sm rounded-4">
               <div className="card-body p-4 p-lg-5">
-
                 <div className="mb-4">
-
                   <h4
                     id="documents"
-                    className={`fw-semibold mb-1 ${highlight === "document_request"
-                      ? "text-danger"
-                      : ""
-                      }`}
+                    className={`fw-semibold mb-1 ${
+                      highlight === "document_request" ? "text-danger" : ""
+                    }`}
                   >
                     Documents
                   </h4>
@@ -2413,33 +2062,23 @@ export default function Application() {
                   <p className="text-muted small mb-0">
                     Déposez les justificatifs nécessaires
                   </p>
-
                 </div>
                 {REQUIRED_DOCUMENT_TYPES.map((type) =>
-                  renderDoc(
-                    type,
-                    DOCUMENT_LABELS[type] ?? type
-                  )
+                  renderDoc(type, DOCUMENT_LABELS[type] ?? type)
                 )}
-
               </div>
             </div>
-
           </div>
 
           {/* =========================
                 SIDEBAR
             ========================= */}
           <div className="col-lg-4">
-
             <div className="d-flex flex-column gap-4">
-
               {/* VEHICLE */}
               {vehicleData && (
                 <div className="card border-0 shadow-sm rounded-4">
-
                   <div className="card-body p-4">
-
                     <div className="small text-muted mb-2">
                       Véhicule sélectionné
                     </div>
@@ -2449,81 +2088,68 @@ export default function Application() {
                     </h4>
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
-
                       <span
-                        className={`badge rounded-pill px-3 py-2 ${vehicleData.type === "sale"
-                          ? "bg-success"
-                          : "bg-primary"
-                          }`}
+                        className={`badge rounded-pill px-3 py-2 ${
+                          vehicleData.type === "sale"
+                            ? "bg-success"
+                            : "bg-primary"
+                        }`}
                       >
-                        {vehicleData.type === "sale"
-                          ? "Vente"
-                          : "Location"}
+                        {vehicleData.type === "sale" ? "Vente" : "Location"}
                       </span>
 
-                      <div className="fw-bold fs-5">
-                        {pricing.totalPrice} €
-                      </div>
-
+                      <div className="fw-bold fs-5">{pricing.totalPrice} €</div>
                     </div>
 
                     <div className="text-muted small d-flex flex-wrap gap-2">
-
-                      {vehicleData.year && (
-                        <span>{vehicleData.year}</span>
-                      )}
+                      {vehicleData.year && <span>{vehicleData.year}</span>}
 
                       {vehicleData.mileage && (
-                        <span>
-                          • {vehicleData.mileage} km
-                        </span>
+                        <span>• {vehicleData.mileage} km</span>
                       )}
 
                       {vehicleData.engine_type && (
-                        <span>
-                          • {ENGINE_LABELS[vehicleData.engine_type]}
-                        </span>
+                        <span>• {ENGINE_TYPES[vehicleData.engine_type]}</span>
                       )}
-
                     </div>
 
                     {selectedDatesData?.start && (
                       <div className="border rounded-4 p-3 mt-4 bg-light">
-
                         <div className="small text-muted mb-2">
                           Période sélectionnée
                         </div>
 
                         <div className="d-flex justify-content-between mb-2">
                           <span>Début</span>
-                          <strong>{new Date(selectedDatesData.start).toLocaleDateString()}</strong>
+                          <strong>
+                            {new Date(
+                              selectedDatesData.start
+                            ).toLocaleDateString()}
+                          </strong>
                         </div>
 
                         <div className="d-flex justify-content-between">
                           <span>Fin</span>
-                          <strong>{new Date(selectedDatesData.end).toLocaleDateString()}</strong>
+                          <strong>
+                            {new Date(
+                              selectedDatesData.end
+                            ).toLocaleDateString()}
+                          </strong>
                         </div>
-
                       </div>
                     )}
-
                   </div>
                 </div>
               )}
 
-              {/* OPTIONS */}
               {/* ========================= */}
               {/* OPTIONS - LOCATION */}
               {/* ========================= */}
 
               {vehicleData?.type === "rent" && (
                 <div className="card border-0 shadow-sm rounded-4 mb-4">
-
                   <div className="card-body p-4">
-
-                    <h5 className="fw-semibold mb-4">
-                      Options
-                    </h5>
+                    <h5 className="fw-semibold mb-4">Options</h5>
 
                     {/* ========================= */}
                     {/* OPTIONS INCLUSES */}
@@ -2531,13 +2157,9 @@ export default function Application() {
 
                     {vehicleData.included_options?.length > 0 && (
                       <div className="mb-4">
-
-                        <div className="small text-muted mb-2">
-                          Inclus
-                        </div>
+                        <div className="small text-muted mb-2">Inclus</div>
 
                         <div className="d-flex flex-wrap gap-2">
-
                           {vehicleData.included_options.map((opt) => (
                             <span
                               key={opt.id}
@@ -2546,9 +2168,7 @@ export default function Application() {
                               {opt.name}
                             </span>
                           ))}
-
                         </div>
-
                       </div>
                     )}
 
@@ -2558,30 +2178,24 @@ export default function Application() {
 
                     {vehicleData.optional_options?.length > 0 && (
                       <div>
-
                         <div className="small text-muted mb-3">
                           Options disponibles
                         </div>
 
                         {vehicleData.optional_options.map((opt) => {
+                          const checked = form.optionsSelected?.includes(
+                            String(opt.id)
+                          );
 
-                          const checked =
-                            form.optionsSelected?.includes(
-                              String(opt.id)
-                            );
+                          const price = Number(opt.price ?? 0);
 
-                          const price =
-                            Number(opt.price ?? 0);
-
-                          const isDaily =
-                            opt.billing_type === "daily";
+                          const isDaily = opt.billing_type === "daily";
 
                           return (
                             <div
                               key={opt.id}
                               className="form-check border rounded-3 p-3 mb-2"
                             >
-
                               <input
                                 type="checkbox"
                                 className="form-check-input"
@@ -2594,15 +2208,13 @@ export default function Application() {
                                 {opt.name}
 
                                 <div className="small text-muted">
-                                  +{price.toLocaleString("fr-FR")} €
+                                  +{formatAmount(price)}
                                   {isDaily ? " / jour" : ""}
                                 </div>
                               </label>
-
                             </div>
                           );
                         })}
-
                       </div>
                     )}
 
@@ -2611,43 +2223,26 @@ export default function Application() {
                     {/* ========================= */}
 
                     <div className="border rounded-4 p-4 mt-4 bg-light">
-
                       <div className="d-flex justify-content-between mb-2">
+                        <span className="text-muted">Base</span>
 
-                        <span className="text-muted">
-                          Base
-                        </span>
-
-                        <strong>
-                          {pricing.basePrice.toLocaleString("fr-FR")} €
-                        </strong>
-
+                        <strong>{formatAmount(pricing.basePrice)}</strong>
                       </div>
 
                       <div className="d-flex justify-content-between">
+                        <span className="text-muted">Options</span>
 
-                        <span className="text-muted">
-                          Options
-                        </span>
-
-                        <strong>
-                          +{pricing.optionalPrice.toLocaleString("fr-FR")} €
-                        </strong>
-
+                        <strong>+{formatAmount(pricing.optionalPrice)}</strong>
                       </div>
 
                       <hr />
 
                       <div className="d-flex justify-content-between align-items-center">
-
-                        <span className="fw-semibold">
-                          Total
-                        </span>
+                        <span className="fw-semibold">Total</span>
 
                         <h4 className="fw-bold mb-0">
-                          {pricing.totalPrice.toLocaleString("fr-FR")} €
+                          {formatAmount(pricing.totalPrice)}
                         </h4>
-
                       </div>
 
                       {/* Paiement du montant total de la location */}
@@ -2656,14 +2251,10 @@ export default function Application() {
                         application={application}
                         onPay={handlePayment}
                       />
-
                     </div>
-
                   </div>
-
                 </div>
               )}
-
 
               {/* ========================= */}
               {/* RÉCAPITULATIF - VENTE */}
@@ -2671,9 +2262,7 @@ export default function Application() {
 
               {vehicleData?.type === "sale" && (
                 <div className="card border-0 shadow-sm rounded-4 bg-light">
-
                   <div className="card-body p-4">
-
                     <div className="small text-muted mb-3">
                       Estimation financière
                     </div>
@@ -2683,15 +2272,9 @@ export default function Application() {
                     {/* ========================= */}
 
                     <div className="d-flex justify-content-between mb-2">
+                      <span className="text-muted">Prix véhicule</span>
 
-                      <span className="text-muted">
-                        Prix véhicule
-                      </span>
-
-                      <strong>
-                        {pricing.basePrice.toLocaleString("fr-FR")} €
-                      </strong>
-
+                      <strong>{formatAmount(pricing.basePrice)}</strong>
                     </div>
 
                     {/* ========================= */}
@@ -2700,15 +2283,9 @@ export default function Application() {
 
                     {pricing.optionalPrice > 0 && (
                       <div className="d-flex justify-content-between mb-2">
+                        <span className="text-muted">Options</span>
 
-                        <span className="text-muted">
-                          Options
-                        </span>
-
-                        <strong>
-                          +{pricing.optionalPrice.toLocaleString("fr-FR")} €
-                        </strong>
-
+                        <strong>+{formatAmount(pricing.optionalPrice)}</strong>
                       </div>
                     )}
 
@@ -2718,15 +2295,9 @@ export default function Application() {
 
                     {pricing.discount > 0 && (
                       <div className="d-flex justify-content-between mb-2">
+                        <span className="text-muted">Remise</span>
 
-                        <span className="text-muted">
-                          Remise
-                        </span>
-
-                        <strong>
-                          -{pricing.discount.toLocaleString("fr-FR")} €
-                        </strong>
-
+                        <strong>-{formatAmount(pricing.discount)}</strong>
                       </div>
                     )}
 
@@ -2735,15 +2306,9 @@ export default function Application() {
                     {/* ========================= */}
 
                     <div className="d-flex justify-content-between mb-2">
+                      <span className="text-muted">Apport</span>
 
-                      <span className="text-muted">
-                        Apport
-                      </span>
-
-                      <strong>
-                        -{pricing.downPayment.toLocaleString("fr-FR")} €
-                      </strong>
-
+                      <strong>-{formatAmount(pricing.downPayment)}</strong>
                     </div>
 
                     {/* ========================= */}
@@ -2752,15 +2317,9 @@ export default function Application() {
 
                     {tradeInValue > 0 && (
                       <div className="d-flex justify-content-between mb-2">
+                        <span className="text-muted">Reprise véhicule</span>
 
-                        <span className="text-muted">
-                          Reprise véhicule
-                        </span>
-
-                        <strong>
-                          -{tradeInValue.toLocaleString("fr-FR")} €
-                        </strong>
-
+                        <strong>-{formatAmount(tradeInValue)}</strong>
                       </div>
                     )}
 
@@ -2771,9 +2330,7 @@ export default function Application() {
                     {/* ========================= */}
 
                     {pricing.isCash ? (
-
                       <div className="border rounded-4 bg-success-subtle p-4 text-center">
-
                         <div className="fw-bold text-success mb-2">
                           Paiement comptant
                         </div>
@@ -2783,7 +2340,7 @@ export default function Application() {
                         </div>
 
                         <div className="mt-3 fw-semibold fs-5">
-                          Total : {pricing.totalPrice.toLocaleString("fr-FR")} €
+                          Total : {formatAmount(pricing.totalPrice)}
                         </div>
 
                         {/* Paiement du prix total en comptant */}
@@ -2792,39 +2349,24 @@ export default function Application() {
                           application={application}
                           onPay={handlePayment}
                         />
-
                       </div>
-
                     ) : (
-
                       <>
-
                         <div className="d-flex justify-content-between mb-3">
-
-                          <span className="fw-semibold">
-                            Montant financé
-                          </span>
+                          <span className="fw-semibold">Montant financé</span>
 
                           <strong>
-                            {pricing.financedAmount.toLocaleString("fr-FR")} €
+                            {formatAmount(pricing.financedAmount)}
                           </strong>
-
                         </div>
 
                         <div className="border rounded-4 bg-white p-4 text-center shadow-sm">
-
                           <div className="small text-muted mb-2">
                             Mensualité estimée
                           </div>
 
                           <h2 className="fw-bold mb-1">
-                            {pricing.monthlyPayment.toLocaleString(
-                              "fr-FR",
-                              {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                              }
-                            )} €
+                            {formatAmount(pricing.monthlyPayment)}
                           </h2>
 
                           <div className="text-muted small">
@@ -2840,39 +2382,30 @@ export default function Application() {
                           {/* ========================= */}
 
                           <div className="mt-4 border-top pt-3">
-
                             <div className="small text-muted mb-1">
                               Acompte à payer
                             </div>
 
                             <div className="fw-bold fs-5">
-                              {pricing.downPayment.toLocaleString("fr-FR")} €
+                              {formatAmount(pricing.downPayment)}
                             </div>
 
                             <PaymentStatus
                               application={application}
                               onPay={handlePayment}
                             />
-
                           </div>
-
                         </div>
-
                       </>
-
                     )}
-
                   </div>
-
                 </div>
               )}
 
               {/* ACTIONS */}
               {isEditable && isClient && (
                 <div className="card border-0 shadow-sm rounded-4">
-
                   <div className="card-body p-4">
-
                     <div className="d-grid gap-3">
                       <button
                         type="button"
@@ -2891,19 +2424,13 @@ export default function Application() {
                       >
                         Soumettre le dossier
                       </button>
-
                     </div>
-
                   </div>
                 </div>
               )}
-
             </div>
-
           </div>
-
         </div>
-
       </form>
 
       {application?.events?.length > 0 && (
@@ -2916,7 +2443,6 @@ export default function Application() {
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content rounded-4 shadow">
-
               {/* HEADER */}
               <div className="modal-header border-0">
                 <h5 className="modal-title fw-semibold">
@@ -2925,46 +2451,35 @@ export default function Application() {
 
                 <button
                   className="btn-close"
-                  onClick={() =>
-                    setDeleteModal({ open: false })
-                  }
+                  onClick={() => setDeleteModal({ open: false })}
                 />
               </div>
 
               {/* BODY */}
               <div className="modal-body">
                 <p className="mb-0 text-muted">
-                  Es-tu sûr de vouloir supprimer ce dossier <strong>brouillon</strong> ?
-                  Cette action est irréversible.
+                  Es-tu sûr de vouloir supprimer ce dossier{" "}
+                  <strong>brouillon</strong> ? Cette action est irréversible.
                 </p>
               </div>
 
               {/* FOOTER */}
               <div className="modal-footer border-0">
-
                 <button
                   className="btn btn-light"
-                  onClick={() =>
-                    setDeleteModal({ open: false })
-                  }
+                  onClick={() => setDeleteModal({ open: false })}
                 >
                   Annuler
                 </button>
 
-                <button
-                  className="btn btn-danger px-4"
-                  onClick={confirmDelete}
-                >
+                <button className="btn btn-danger px-4" onClick={confirmDelete}>
                   🗑️ Supprimer
                 </button>
-
               </div>
-
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

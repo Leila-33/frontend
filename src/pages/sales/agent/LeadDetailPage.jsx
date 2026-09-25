@@ -3,21 +3,16 @@ import {
   useEffect,
   useState,
 } from "react";
-
 import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-
 import { toast } from "react-toastify";
-
 import apiFetch from "../../../services/apiFetch";
-
-
 import { LEAD_STATUSES } from "../../../constants/leadOptions";
 import { QUOTE_STATUSES } from "../../../constants/quoteOptions";
-
 import ConfirmActionModal from "../../../components/common/ConfirmActionModal";
+import { formatAmount } from "../../../utils/priceUtils";
 
 /**
  * Page de détail d'un prospect commercial.
@@ -445,13 +440,7 @@ export default function LeadDetailPage() {
                     />
 
                     <span>
-                      {vehicle.price != null
-                        ? `${Number(
-                            vehicle.price
-                          ).toLocaleString(
-                            "fr-FR"
-                          )} €`
-                        : "Prix non renseigné"}
+                      {formatAmount(vehicle.price)}
                     </span>
 
                   </div>

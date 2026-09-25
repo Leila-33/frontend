@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 // PUBLIC
 import Home from "../pages/Home";
@@ -53,7 +54,8 @@ import QuoteFormContainer from "../pages/sales/agent/QuoteFormContainer.jsx";
 // SHARED
 import NotificationsPage from "../pages/shared/NotificationsPage";
 import NotFound from "../pages/NotFound";
-import TestDriveDetails from "../pages/client/TestDriveDetails.jsx";
+import TestDriveDetails from "../pages/shared/TestDriveDetails.jsx";
+import ApplicationNotFound from "../pages/shared/ApplicationNotFound.jsx";
 
 // COMPONENTS
 import Navbar from "../components/Navbar";
@@ -73,11 +75,9 @@ import SalesLayout from "../layouts/SalesLayout.jsx";
 export default function AppRoutes() {
   return (
     <BrowserRouter>
-
       <Navbar />
 
       <Routes>
-
         {/* ========================= */}
         {/* PUBLIC */}
         {/* ========================= */}
@@ -92,6 +92,10 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="application-deleted" element={<ApplicationDeleted />} />
+          <Route
+            path="application-not-found"
+            element={<ApplicationNotFound />}
+          />
         </Route>
 
         {/* ========================= */}
@@ -100,16 +104,28 @@ export default function AppRoutes() {
 
         <Route
           path="/register"
-          element={<GuestRoute><Register /></GuestRoute>}
+          element={
+            <GuestRoute>
+              <Register />
+            </GuestRoute>
+          }
         />
 
         <Route
           path="/login"
-          element={<GuestRoute><Login /></GuestRoute>}
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
         />
         <Route
           path="/activate-account"
-          element={<GuestRoute><ActivateAccountPage /></GuestRoute>}
+          element={
+            <GuestRoute>
+              <ActivateAccountPage />
+            </GuestRoute>
+          }
         />
 
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -120,8 +136,7 @@ export default function AppRoutes() {
 
         <Route element={<SavAgentRoute />}>
           <Route path="sav" element={<SavLayout />}>
-
-            <Route index element={<SavDashboardPage />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
 
             <Route path="dashboard" element={<SavDashboardPage />} />
 
@@ -130,7 +145,6 @@ export default function AppRoutes() {
 
             <Route path="stats" element={<SavStatisticsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
-
           </Route>
         </Route>
 
@@ -140,24 +154,19 @@ export default function AppRoutes() {
 
         <Route element={<SalesAgentRoute />}>
           <Route path="sales" element={<SalesLayout />}>
-
             {/* IMPORTANT */}
-            <Route index element={<SalesDashboard />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
 
             <Route path="dashboard" element={<SalesDashboard />} />
             <Route path="leads" element={<LeadsPage />} />
             <Route path="leads/:id" element={<LeadDetailPage />} />
+            <Route path="/sales/quotes/new" element={<QuoteFormContainer />} />
             <Route
-  path="/sales/quotes/new"
-  element={<QuoteFormContainer />}
-/>
-            <Route
-  path="/sales/quotes/:id/edit"
-  element={<QuoteFormContainer />}
-/>
+              path="/sales/quotes/:id/edit"
+              element={<QuoteFormContainer />}
+            />
             <Route path="quotes/:id" element={<QuoteDetailPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
-
           </Route>
         </Route>
 
@@ -167,19 +176,27 @@ export default function AppRoutes() {
 
         <Route element={<ClientRoute />}>
           <Route element={<UserLayout />}>
-
             <Route path="dashboard" element={<DashboardPage />} />
 
             <Route path="applications" element={<Applications />} />
             <Route path="applications/:id" element={<ApplicationDetails />} />
-            <Route path="applications/new/:vehicleId" element={<ApplicationDetails />} />
+            <Route
+              path="applications/new/:vehicleId"
+              element={<ApplicationDetails />}
+            />
 
             <Route path="mytestdrives" element={<MyTestDrives />} />
             <Route path="test-drives/:id" element={<TestDriveDetails />} />
 
             <Route path="support-tickets" element={<ClientTicketsPage />} />
-            <Route path="support-tickets/create" element={<CreateTicketPage />} />
-            <Route path="support-tickets/:id" element={<ClientTicketDetailPage />} />
+            <Route
+              path="support-tickets/create"
+              element={<CreateTicketPage />}
+            />
+            <Route
+              path="support-tickets/:id"
+              element={<ClientTicketDetailPage />}
+            />
 
             <Route path="favorites" element={<FavoritesPage />} />
 
@@ -188,11 +205,8 @@ export default function AppRoutes() {
             <Route path="quotes" element={<CustomerQuotesPage />} />
             <Route path="quotes/:id" element={<CustomerQuoteDetailPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
-
           </Route>
         </Route>
-
-
 
         {/* ========================= */}
         {/* ADMIN */}
@@ -200,14 +214,16 @@ export default function AppRoutes() {
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
-
-            <Route index element={<Dashboard />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
 
             <Route path="analytics" element={<Analytics />} />
 
             <Route path="applications" element={<AdminApplications />} />
-            <Route path="applications/:id" element={<AdminApplicationDetails />} />
+            <Route
+              path="applications/:id"
+              element={<AdminApplicationDetails />}
+            />
 
             <Route path="vehicles" element={<AdminVehicles />} />
             <Route path="vehicle/:id" element={<VehicleDetail />} />
@@ -222,7 +238,6 @@ export default function AppRoutes() {
             <Route path="warranty-plans" element={<WarrantyPlansPage />} />
             <Route path="activity" element={<AdminEventsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
-
           </Route>
         </Route>
 
@@ -231,9 +246,7 @@ export default function AppRoutes() {
         {/* ========================= */}
 
         <Route path="*" element={<NotFound />} />
-
       </Routes>
-
     </BrowserRouter>
   );
 }

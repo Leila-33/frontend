@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import apiFetch from "../../services/apiFetch";
 import ConfirmActionModal from "../../components/common/ConfirmActionModal";
-import { STATUS, VEHICLE_TYPE } from "../../utils/status";
 import ApplicationActions from "../../components/applications/ApplicationActions";
 import Pagination from "../../components/common/Pagination";
+import { APPLICATION_ACTION_MODAL_CONFIG, APPLICATION_STATUSES } from "../../constants/applicationOptions";
+import { VEHICLE_TYPES } from "../../constants/vehicleOptions";
+import { useDebounce } from "../../hooks/useDebounce";
+import { formatDate } from "../../utils/dateUtils";
 
-export default function AdminDossiers() {
-
-  // Permet de naviguer vers la page de détail d'un dossier.
-  const navigate = useNavigate();
-
+export default function AdminApplications() {
 
   // ---------------- MODALE DE CONFIRMATION ----------------
 
@@ -42,7 +41,7 @@ export default function AdminDossiers() {
     page: 1,
     limit: 10,
     total: 0,
-    pages: 1
+    total_pages: 1,
   });
 
 
@@ -53,11 +52,38 @@ export default function AdminDossiers() {
     search: ""
   });
 
+// ==========================================================
+// RECHERCHE AVEC DEBOUNCE
+// ==========================================================
+
+// Valeur de recherche mise à jour après une courte pause
+// afin d'éviter une requête à chaque frappe.
+const debouncedSearch = useDebounce(
+  filters.search,
+  400
+);
 
   // Critère de tri utilisé pour la récupération des dossiers.
-  const [sort, setSort] = useState("createdAt_desc");
+  const [sort, setSort] = useState("created_at_desc");
 
+// Fermeture de la modale
+  const closeModal = () => {
+  setModal({
+    open: false,
+    type: null,
+    id: null,
+  });
+};
 
+// ==========================================================
+// CONFIGURATION DE LA MODALE
+// ==========================================================
+
+// Récupère le titre et la description correspondant
+// à l'action sélectionnée.
+const modalConfig =
+  APPLICATION_ACTION_MODAL_CONFIG[modal.type];
+  
   // ---------------- CONFIRMATION D'UNE ACTION ----------------
 
   const handleConfirm = async () => {
@@ -110,11 +136,17 @@ export default function AdminDossiers() {
 
 
       // Exécute l'action correspondant au type sélectionné.
-      await actions[modal.type]?.();
+const action = actions[modal.type];
 
+if (!action) {
+  throw new Error(
+    "Action administrative inconnue."
+  );
+}
 
-      // Informe l'administrateur que l'action a réussi.
-      toast.success("Action effectuée");
+await action();
+
+toast.success("Action effectuée");
 
 
       // Ferme et réinitialise la modale.
@@ -184,7 +216,7 @@ export default function AdminDossiers() {
           filters.type !== "all"
         ) {
           params.append(
-            "type",
+            "application_type",
             filters.type
           );
         }
@@ -192,13 +224,13 @@ export default function AdminDossiers() {
 
         // Ajoute la recherche uniquement si elle contient
         // un texte après suppression des espaces inutiles.
-        if (filters.search?.trim()) {
+if (debouncedSearch?.trim()) {
 
-          params.append(
-            "search",
-            filters.search.trim()
-          );
-        }
+  params.append(
+    "search",
+    debouncedSearch.trim()
+  );
+}
 
 
         // Ajoute le critère de tri.
@@ -223,7 +255,7 @@ export default function AdminDossiers() {
           page: data.page,
           limit: data.limit,
           total: data.total,
-          pages: data.pages
+          total_pages: data.total_pages,
         });
 
 
@@ -244,51 +276,33 @@ export default function AdminDossiers() {
 
     // La fonction dépend de ces valeurs :
     // lorsqu'une valeur change, useCallback recrée la fonction.
-    [filters, sort, viewMode]
-  );
+[
+  filters.status,
+  filters.type,
+  debouncedSearch,
+  sort,
+  viewMode,
+]  );
 
 
   // ---------------- ACTUALISATION DES DONNÉES ----------------
 
-  useEffect(() => {
+useEffect(() => {
+  setPagination((current) => ({
+    ...current,
+    page: 1,
+  }));
 
-    // Délai de 500 ms avant d'effectuer la recherche.
-    // Cela évite d'envoyer une requête à chaque caractère
-    // lorsque l'administrateur saisit une recherche.
-    const timeout = setTimeout(() => {
+  fetchApplications(1);
+}, [
+  filters.status,
+  filters.type,
+  debouncedSearch,
+  sort,
+  viewMode,
+  fetchApplications,
+]);
 
-      // Lorsqu'un filtre change, on recommence à la première page.
-      fetchApplications(1);
-
-    }, 500);
-
-
-    // Annule le précédent timer si les dépendances
-    // changent avant la fin des 500 ms.
-    return () => clearTimeout(timeout);
-
-  }, [
-    filters,
-    sort,
-    viewMode,
-    fetchApplications
-  ]);
-
-
-  // Lorsque les filtres, le tri ou le mode d'affichage changent,
-  // la pagination est également réinitialisée à la première page.
-  useEffect(() => {
-
-    setPagination(prev => ({
-      ...prev,
-      page: 1
-    }));
-
-  }, [
-    filters,
-    sort,
-    viewMode
-  ]);
 
 
   // ---------------- INTERFACE ----------------
@@ -375,130 +389,142 @@ export default function AdminDossiers() {
           ========================= */}
 
       <div className="card border-0 shadow-sm rounded-4 mb-4">
-
         <div className="card-body p-4">
-
           <div className="row g-3">
 
-
-            {/* -------- RECHERCHE -------- */}
+            {/* =====================================================
+          RECHERCHE
+          ===================================================== */}
 
             <div className="col-lg-4">
+              <label
+                htmlFor="application-search"
+                className="visually-hidden"
+              >
+                Rechercher un dossier
+              </label>
 
               <input
+                id="application-search"
+                type="search"
                 className="form-control form-control-lg"
                 placeholder="Rechercher nom, prénom..."
                 value={filters.search}
-
-                // Met à jour la recherche saisie par
-                // l'administrateur.
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    search: e.target.value
-                  })
+                onChange={(event) =>
+                  setFilters((current) => ({
+                    ...current,
+                    search: event.target.value,
+                  }))
                 }
               />
-
             </div>
 
+            {/* =====================================================
+          FILTRE STATUT
+          ===================================================== */}
 
-            {/* -------- FILTRE STATUT -------- */}
-
-            {/* Le filtre de statut n'est pas affiché
-                dans la vue des dossiers annulés. */}
             {viewMode !== "cancelled" && (
-
               <div className="col-lg-3">
+                <label
+                  htmlFor="application-status"
+                  className="visually-hidden"
+                >
+                  Filtrer par statut
+                </label>
 
                 <select
+                  id="application-status"
                   className="form-select form-select-lg"
                   value={filters.status}
-
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      status: e.target.value
-                    })
+                  onChange={(event) =>
+                    setFilters((current) => ({
+                      ...current,
+                      status: event.target.value,
+                    }))
                   }
                 >
-
                   <option value="all">
                     Tous statuts
                   </option>
 
-                  <option value="draft">
-                    Brouillon
-                  </option>
-
-                  <option value="submitted">
-                    Soumis
-                  </option>
-
-                  <option value="processing">
-                    En cours
-                  </option>
-
-                  <option value="approved">
-                    Validé
-                  </option>
-
-                  <option value="rejected">
-                    Refusé
-                  </option>
-
+                  {Object.entries(APPLICATION_STATUSES)
+                    .filter(
+                      ([status]) =>
+                        status !== "cancelled" &&
+                        status !== "archived"
+                    )
+                    .map(([status, config]) => (
+                      <option
+                        key={status}
+                        value={status}
+                      >
+                        {config.label}
+                      </option>
+                    ))}
                 </select>
-
               </div>
             )}
 
-
-            {/* -------- FILTRE TYPE -------- */}
+            {/* =====================================================
+          FILTRE TYPE
+          ===================================================== */}
 
             <div className="col-lg-3">
+              <label
+                htmlFor="application-type"
+                className="visually-hidden"
+              >
+                Filtrer par type
+              </label>
 
               <select
+                id="application-type"
                 className="form-select form-select-lg"
                 value={filters.type}
-
-                onChange={(e) =>
-                  setFilters({
-                    ...filters,
-                    type: e.target.value
-                  })
+                onChange={(event) =>
+                  setFilters((current) => ({
+                    ...current,
+                    type: event.target.value,
+                  }))
                 }
               >
-
                 <option value="all">
                   Tous types
                 </option>
 
-                <option value="sale">
-                  Vente
-                </option>
-
-                <option value="rent">
-                  Location
-                </option>
-
+                {Object.entries(VEHICLE_TYPES).map(
+                  ([type, config]) => (
+                    <option
+                      key={type}
+                      value={type}
+                    >
+                      {config.label}
+                    </option>
+                  )
+                )}
               </select>
-
             </div>
 
-
-            {/* -------- TRI -------- */}
+            {/* =====================================================
+          TRI
+          ===================================================== */}
 
             <div className="col-lg-2">
+              <label
+                htmlFor="application-sort"
+                className="visually-hidden"
+              >
+                Trier les dossiers
+              </label>
 
               <select
+                id="application-sort"
                 className="form-select form-select-lg"
                 value={sort}
-
-                onChange={(e) =>
-                  setSort(e.target.value)
+                onChange={(event) =>
+                  setSort(event.target.value)
                 }
               >
-
                 <option value="created_at_desc">
                   Date ↓
                 </option>
@@ -510,15 +536,11 @@ export default function AdminDossiers() {
                 <option value="status">
                   Statut
                 </option>
-
               </select>
-
             </div>
 
           </div>
-
         </div>
-
       </div>
 
 
@@ -594,10 +616,10 @@ export default function AdminDossiers() {
                     {/* Le libellé et la couleur sont déterminés
                         à partir de la constante VEHICLE_TYPE. */}
                     <span
-                      className={`badge bg-${VEHICLE_TYPE[d.type]?.color
+                      className={`badge bg-${VEHICLE_TYPES[d.type]?.color
                         }`}
                     >
-                      {VEHICLE_TYPE[d.type]?.label}
+                      {VEHICLE_TYPES[d.type]?.label}
                     </span>
 
                   </td>
@@ -617,10 +639,10 @@ export default function AdminDossiers() {
                     {/* Le libellé et la couleur du statut
                         sont centralisés dans STATUS. */}
                     <span
-                      className={`badge bg-${STATUS[d.status]?.color
+                      className={`badge bg-${APPLICATION_STATUSES[d.status]?.color
                         }`}
                     >
-                      {STATUS[d.status]?.label}
+                      {APPLICATION_STATUSES[d.status]?.label}
                     </span>
 
                   </td>
@@ -630,11 +652,8 @@ export default function AdminDossiers() {
 
                   <td>
 
-                    {d.submitted_at
-                      ? new Date(
-                        d.submitted_at
-                      ).toLocaleDateString()
-                      : "-"}
+                    {formatDate(d.submitted_at)
+                      }
 
                   </td>
 
@@ -645,15 +664,17 @@ export default function AdminDossiers() {
                     <div className="d-flex gap-2 justify-content-start">
 
                       {/* Consultation du dossier */}
-                      <button
-                        className="btn btn-light btn-sm rounded-circle shadow-sm"
-                        onClick={() =>
-                          navigate(`/admin/applications/${d.id}`)
-                        }
-                        title="Voir le dossier"
-                      >
-                        <i className="bi bi-search" />
-                      </button>
+                      <Link
+  to={`/admin/applications/${d.id}`}
+  className="btn btn-light btn-sm rounded-circle shadow-sm"
+  title="Voir le dossier"
+  aria-label="Voir le dossier"
+>
+  <i
+    className="bi bi-search"
+    aria-hidden="true"
+  />
+</Link>
 
                       {/* Actions métier du dossier */}
                       <ApplicationActions
@@ -683,71 +704,25 @@ export default function AdminDossiers() {
           PAGINATION
           ========================= */}
 
-<Pagination
-  page={pagination.page}
-  totalPages={pagination.pages}
-  onPageChange={fetchApplications}
-/>
+      <Pagination
+        page={pagination.page}
+        totalPages={pagination.total_pages}
+        onPageChange={fetchApplications}
+      />
 
 
       {/* =========================
           MODALE DE CONFIRMATION
           ========================= */}
 
-      <ConfirmActionModal
-
-        // Contrôle l'affichage de la modale.
-        open={modal.open}
-
-        // Permet à la modale de connaître l'action concernée.
-        type={modal.type}
-
-
-        // Le titre de la modale dépend de l'action sélectionnée.
-        title={
-          modal.type === "delete"
-            ? "Supprimer le dossier"
-
-            : modal.type === "archive"
-              ? "Archiver le dossier"
-
-              : modal.type === "restore_cancelled"
-                ? "Restaurer le dossier annulé"
-
-                : "Restaurer le dossier"
-        }
-
-
-        // Le message de confirmation est adapté
-        // à l'action sélectionnée.
-        description={
-          modal.type === "delete"
-            ? "Cette action est irréversible."
-
-            : modal.type === "archive"
-              ? "Le dossier sera masqué mais conservé."
-
-              : modal.type === "restore_cancelled"
-                ? "Le dossier annulé sera réactivé dans le workflow."
-
-                : "Le dossier sera restauré."
-        }
-
-
-        // Ferme la modale sans exécuter l'action.
-        onCancel={() =>
-          setModal({
-            open: false,
-            type: null,
-            id: null
-          })
-        }
-
-
-        // Exécute l'action après confirmation.
-        onConfirm={handleConfirm}
-
-      />
+<ConfirmActionModal
+  open={modal.open}
+  type={modal.type}
+  title={modalConfig?.title}
+  description={modalConfig?.description}
+  onCancel={closeModal}
+  onConfirm={handleConfirm}
+/>
 
     </div>
   );

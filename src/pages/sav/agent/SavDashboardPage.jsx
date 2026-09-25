@@ -6,7 +6,7 @@ import apiFetch from "../../../services/apiFetch";
 
 import TicketStatusBadge from "../../../components/sav/TicketStatusBadge";
 import TicketPriorityBadge from "../../../components/sav/TicketPriorityBadge";
-
+import { formatDateTime } from "../../../utils/dateUtils";
 
 export default function SavDashboardPage() {
 
@@ -411,11 +411,7 @@ export default function SavDashboardPage() {
 
                     <td>
 
-                      {ticket.created_at
-                        ? new Date(
-                            ticket.created_at
-                          ).toLocaleDateString("fr-FR")
-                        : "—"}
+                      {formatDateTime(ticket.created_at)}
 
                     </td>
 

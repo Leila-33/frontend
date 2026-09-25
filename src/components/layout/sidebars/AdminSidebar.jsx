@@ -35,7 +35,7 @@ export default function AdminSidebar({
           ====================================================== */}
 
       <SidebarNavItem
-        to="/admin"
+        to="/admin/dashboard"
         icon="bi bi-grid"
         onClick={onClickLink}
         end
@@ -136,7 +136,7 @@ export default function AdminSidebar({
       >
         Utilisateurs
       </SidebarNavItem>
-      
+
       {/* ======================================================
           NOTIFICATIONS
           ====================================================== */}

@@ -9,18 +9,11 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 import {
-  testDriveStatusConfig
-} from "../../utils/testDrive";
-
-import {
-  formatAppointmentDate
-} from "../../utils/date";
-
-import {
   getMyTestDrives
 } from "../../services/testDriveService";
 
-import { TEST_DRIVE_STEPS, DATE_DISPLAY_STATUSES, TABS } from "../../utils/testDrive";
+import { TEST_DRIVE_STEPS, TEST_DRIVE_STAT_CARDS, TEST_DRIVE_TABS } from "../../constants/testDriveOptions";
+import { getTestDriveStatusColor, getTestDriveStatusLabel, getTestDriveStatusClassName, getAppointmentLabel } from "../../utils/testDriveUtils";
 
 
 export default function MyTestDrives() {
@@ -58,7 +51,10 @@ export default function MyTestDrives() {
 
   const totalTestDrives = testDrives.length;
 
-
+  const statValues = {
+    total: totalTestDrives,
+    ...statusCounts,
+  };
   // ========================================================
   // ESSAIS À VENIR
   // ========================================================
@@ -80,7 +76,7 @@ export default function MyTestDrives() {
 
   const tabs = useMemo(() => {
 
-    return TABS.map((tab) => {
+    return TEST_DRIVE_TABS.map((tab) => {
 
       if (tab.key === "all") {
         return {
@@ -109,9 +105,9 @@ export default function MyTestDrives() {
       activeTab === "all"
         ? testDrives
         : testDrives.filter(
-            (testDrive) =>
-              testDrive.status === activeTab
-          );
+          (testDrive) =>
+            testDrive.status === activeTab
+        );
 
     // On crée une copie avant le tri
     // afin de ne jamais modifier directement le state.
@@ -193,40 +189,6 @@ export default function MyTestDrives() {
       (TEST_DRIVE_STEPS.length - 1)
     ) * 100;
   };
-
-
-  // ========================================================
-  // AFFICHER LA DATE
-  // ========================================================
-
-  const getAppointmentLabel = (testDrive) => {
-
-    if (
-      DATE_DISPLAY_STATUSES.includes(
-        testDrive.status
-      )
-    ) {
-
-      return new Date(
-        testDrive.appointment_date
-      ).toLocaleDateString(
-        "fr-FR",
-        {
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }
-      );
-
-    }
-
-    return formatAppointmentDate(
-      testDrive.appointment_date
-    );
-  };
-
-
-
 
 
   // ========================================================
@@ -354,254 +316,51 @@ export default function MyTestDrives() {
           ================================================== */}
 
       {totalTestDrives > 0 && (
-
         <div className="row g-3 mb-4">
-
-          <div className="col-6 col-lg-3">
-
+          {TEST_DRIVE_STAT_CARDS.map((stat) => (
             <div
-              className="
-                card
-                border-0
-                shadow-sm
-                rounded-4
-                h-100
-              "
+              key={stat.key}
+              className="col-6 col-lg-3"
             >
+              <div className="card border-0 shadow-sm rounded-4 h-100">
+                <div className="card-body p-3 p-lg-4">
+                  <div className="d-flex justify-content-between align-items-center">
 
-              <div className="card-body p-3 p-lg-4">
+                    <div>
+                      <small className="text-muted">
+                        {stat.label}
+                      </small>
 
-                <div
-                  className="
-                    d-flex
-                    justify-content-between
-                    align-items-center
-                  "
-                >
+                      <h3 className="fw-bold mb-0 mt-1">
+                        {statValues[stat.key] ?? 0}
+                      </h3>
+                    </div>
 
-                  <div>
-
-                    <small className="text-muted">
-                      Total
-                    </small>
-
-                    <h3 className="fw-bold mb-0 mt-1">
-                      {totalTestDrives}
-                    </h3>
+                    <div
+                      className={`
+                  d-flex
+                  align-items-center
+                  justify-content-center
+                  rounded-3
+                  ${stat.colorClass}
+                `}
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                      }}
+                    >
+                      <i
+                        className={`bi ${stat.icon} fs-5`}
+                        aria-hidden="true"
+                      />
+                    </div>
 
                   </div>
-
-
-                  <div
-                    className="
-                      d-flex
-                      align-items-center
-                      justify-content-center
-                      bg-primary-subtle
-                      text-primary
-                      rounded-3
-                    "
-                    style={{
-                      width: "44px",
-                      height: "44px"
-                    }}
-                  >
-                    <i className="bi bi-calendar3 fs-5" />
-                  </div>
-
                 </div>
-
               </div>
-
             </div>
-
-          </div>
-
-
-          <div className="col-6 col-lg-3">
-
-            <div
-              className="
-                card
-                border-0
-                shadow-sm
-                rounded-4
-                h-100
-              "
-            >
-
-              <div className="card-body p-3 p-lg-4">
-
-                <div
-                  className="
-                    d-flex
-                    justify-content-between
-                    align-items-center
-                  "
-                >
-
-                  <div>
-
-                    <small className="text-muted">
-                      En attente
-                    </small>
-
-                    <h3 className="fw-bold mb-0 mt-1">
-                      {statusCounts.pending || 0}
-                    </h3>
-
-                  </div>
-
-
-                  <div
-                    className="
-                      d-flex
-                      align-items-center
-                      justify-content-center
-                      bg-warning-subtle
-                      text-warning-emphasis
-                      rounded-3
-                    "
-                    style={{
-                      width: "44px",
-                      height: "44px"
-                    }}
-                  >
-                    <i className="bi bi-hourglass-split fs-5" />
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div className="col-6 col-lg-3">
-
-            <div
-              className="
-                card
-                border-0
-                shadow-sm
-                rounded-4
-                h-100
-              "
-            >
-
-              <div className="card-body p-3 p-lg-4">
-
-                <div
-                  className="
-                    d-flex
-                    justify-content-between
-                    align-items-center
-                  "
-                >
-
-                  <div>
-
-                    <small className="text-muted">
-                      Confirmés
-                    </small>
-
-                    <h3 className="fw-bold mb-0 mt-1">
-                      {statusCounts.confirmed || 0}
-                    </h3>
-
-                  </div>
-
-
-                  <div
-                    className="
-                      d-flex
-                      align-items-center
-                      justify-content-center
-                      bg-success-subtle
-                      text-success
-                      rounded-3
-                    "
-                    style={{
-                      width: "44px",
-                      height: "44px"
-                    }}
-                  >
-                    <i className="bi bi-check-circle fs-5" />
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div className="col-6 col-lg-3">
-
-            <div
-              className="
-                card
-                border-0
-                shadow-sm
-                rounded-4
-                h-100
-              "
-            >
-
-              <div className="card-body p-3 p-lg-4">
-
-                <div
-                  className="
-                    d-flex
-                    justify-content-between
-                    align-items-center
-                  "
-                >
-
-                  <div>
-
-                    <small className="text-muted">
-                      Terminés
-                    </small>
-
-                    <h3 className="fw-bold mb-0 mt-1">
-                      {statusCounts.completed || 0}
-                    </h3>
-
-                  </div>
-
-
-                  <div
-                    className="
-                      d-flex
-                      align-items-center
-                      justify-content-center
-                      bg-info-subtle
-                      text-info-emphasis
-                      rounded-3
-                    "
-                    style={{
-                      width: "44px",
-                      height: "44px"
-                    }}
-                  >
-                    <i className="bi bi-flag fs-5" />
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
+          ))}
         </div>
-
       )}
 
 
@@ -641,10 +400,9 @@ export default function MyTestDrives() {
                   px-3
                   py-2
                   text-nowrap
-                  ${
-                    activeTab === tab.key
-                      ? "btn-primary"
-                      : "btn-light"
+                  ${activeTab === tab.key
+                    ? "btn-primary"
+                    : "btn-light"
                   }
                 `}
                 onClick={() =>
@@ -663,10 +421,9 @@ export default function MyTestDrives() {
                     ms-2
                     badge
                     rounded-pill
-                    ${
-                      activeTab === tab.key
-                        ? "bg-white text-primary"
-                        : "bg-secondary-subtle text-secondary"
+                    ${activeTab === tab.key
+                      ? "bg-white text-primary"
+                      : "bg-secondary-subtle text-secondary"
                     }
                   `}
                 >
@@ -785,13 +542,6 @@ export default function MyTestDrives() {
 
           {filteredTestDrives.map((testDrive) => {
 
-            const status =
-              testDriveStatusConfig[
-                testDrive.status
-              ] ||
-              testDriveStatusConfig.pending;
-
-
             const progress =
               getProgress(testDrive.status);
 
@@ -905,10 +655,10 @@ export default function MyTestDrives() {
                           rounded-pill
                           px-3
                           py-2
-                          ${status.className}
+                          ${getTestDriveStatusClassName(testDrive.status)}
                         `}
                       >
-                        {status.label}
+                        {getTestDriveStatusLabel(testDrive.status)}
                       </span>
 
                     </div>
@@ -970,153 +720,151 @@ export default function MyTestDrives() {
                         ================================== */}
 
                     {!isCancelled &&
-                     !isRejected && (
+                      !isRejected && (
 
-                      <div className="mt-4">
+                        <div className="mt-4">
 
-                        <div
-                          className="
+                          <div
+                            className="
                             d-flex
                             justify-content-between
                             align-items-center
                             mb-2
                           "
-                        >
+                          >
 
-                          <small
-                            className="
+                            <small
+                              className="
                               text-muted
                               fw-semibold
                             "
-                          >
-                            Progression
-                          </small>
+                            >
+                              Progression
+                            </small>
 
-                          <small
-                            className="
+                            <small
+                              className="
                               text-muted
                             "
-                          >
-                            {Math.round(progress)}%
-                          </small>
+                            >
+                              {Math.round(progress)}%
+                            </small>
 
-                        </div>
+                          </div>
 
 
-                        <div
-                          className="
+                          <div
+                            className="
                             progress
                             mb-3
                           "
-                          style={{
-                            height: "7px"
-                          }}
-                        >
+                            style={{
+                              height: "7px"
+                            }}
+                          >
+
+                            <div
+                              className={`
+                              progress-bar
+                              ${getTestDriveStatusColor(testDrive.status) || ""}
+                            `}
+                              role="progressbar"
+                              style={{
+                                width: `${progress}%`
+                              }}
+                            />
+
+                          </div>
+
 
                           <div
-                            className={`
-                              progress-bar
-                              ${status.progressClassName || ""}
-                            `}
-                            role="progressbar"
-                            style={{
-                              width: `${progress}%`
-                            }}
-                          />
-
-                        </div>
-
-
-                        <div
-                          className="
+                            className="
                             d-flex
                             justify-content-between
                           "
-                        >
+                          >
 
-                          {TEST_DRIVE_STEPS.map(
-                            (step, index) => {
+                            {TEST_DRIVE_STEPS.map(
+                              (step, index) => {
 
-                              const currentStep =
-                                TEST_DRIVE_STEPS.findIndex(
-                                  (item) =>
-                                    item.key ===
-                                    testDrive.status
-                                );
-
-
-                              const completed =
-                                currentStep >= index;
+                                const currentStep =
+                                  TEST_DRIVE_STEPS.findIndex(
+                                    (item) =>
+                                      item.key ===
+                                      testDrive.status
+                                  );
 
 
-                              return (
+                                const completed =
+                                  currentStep >= index;
 
-                                <div
-                                  key={step.key}
-                                  className="
+
+                                return (
+
+                                  <div
+                                    key={step.key}
+                                    className="
                                     d-flex
                                     flex-column
                                     align-items-center
                                     gap-1
                                   "
-                                  style={{
-                                    width: "33%"
-                                  }}
-                                >
+                                    style={{
+                                      width: "33%"
+                                    }}
+                                  >
 
-                                  <div
-                                    className={`
+                                    <div
+                                      className={`
                                       d-flex
                                       align-items-center
                                       justify-content-center
                                       rounded-circle
-                                      ${
-                                        completed
+                                      ${completed
                                           ? "bg-primary text-white"
                                           : "bg-light text-muted"
-                                      }
+                                        }
                                     `}
-                                    style={{
-                                      width: "30px",
-                                      height: "30px",
-                                      fontSize: "13px"
-                                    }}
-                                  >
+                                      style={{
+                                        width: "30px",
+                                        height: "30px",
+                                        fontSize: "13px"
+                                      }}
+                                    >
 
-                                    <i
-                                      className={
-                                        step.icon
-                                      }
-                                    />
+                                      <i
+                                        className={
+                                          step.icon
+                                        }
+                                      />
+
+                                    </div>
+
+
+                                    <small
+                                      className={`
+                                      text-center
+                                      ${completed
+                                          ? "text-dark fw-semibold"
+                                          : "text-muted"
+                                        }
+                                    `}
+                                    >
+                                      {step.label}
+                                    </small>
 
                                   </div>
 
+                                );
 
-                                  <small
-                                    className={`
-                                      text-center
-                                      ${
-                                        completed
-                                          ? "text-dark fw-semibold"
-                                          : "text-muted"
-                                      }
-                                    `}
-                                  >
-                                    {step.label}
-                                  </small>
+                              }
+                            )}
 
-                                </div>
-
-                              );
-
-                            }
-                          )}
+                          </div>
 
                         </div>
 
-                      </div>
-
-                    )}
+                      )}
 
 
                     {/* ==================================
@@ -1126,8 +874,8 @@ export default function MyTestDrives() {
                     {(isCancelled ||
                       isRejected) && (
 
-                      <div
-                        className="
+                        <div
+                          className="
                           alert
                           alert-light
                           border
@@ -1138,28 +886,28 @@ export default function MyTestDrives() {
                           align-items-center
                           gap-2
                         "
-                      >
+                        >
 
-                        <i
-                          className={
-                            isCancelled
-                              ? "bi bi-x-circle text-danger"
-                              : "bi bi-exclamation-circle text-danger"
-                          }
-                        />
+                          <i
+                            className={
+                              isCancelled
+                                ? "bi bi-x-circle text-danger"
+                                : "bi bi-exclamation-circle text-danger"
+                            }
+                          />
 
-                        <small className="text-muted">
+                          <small className="text-muted">
 
-                          {isCancelled
-                            ? "Cet essai routier a été annulé."
-                            : "Cette demande d'essai routier a été refusée."
-                          }
+                            {isCancelled
+                              ? "Cet essai routier a été annulé."
+                              : "Cette demande d'essai routier a été refusée."
+                            }
 
-                        </small>
+                          </small>
 
-                      </div>
+                        </div>
 
-                    )}
+                      )}
 
 
                     {/* ==================================

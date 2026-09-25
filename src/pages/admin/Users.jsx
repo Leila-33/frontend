@@ -1,53 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Pagination from "../../components/common/Pagination";
 import apiFetch from "../../services/apiFetch";
-
-
-// ==========================================================
-// CONFIGURATION DES RÔLES
-// ==========================================================
-
-/**
- * Retourne la couleur Bootstrap associée à un rôle.
- *
- * Cette fonction permet d'éviter de répéter
- * les classes Bootstrap directement dans le JSX.
- */
-function getRoleColor(role) {
-
-  const colors = {
-    admin: "danger",
-    sav_agent: "primary",
-    sales_agent: "success",
-    client: "secondary",
-  };
-
-  return colors[role] ?? "dark";
-}
-
-
-/**
- * Retourne le libellé français associé à un rôle.
- */
-function getRoleLabel(role) {
-
-  const labels = {
-    admin: "Admin",
-    sav_agent: "Agent SAV",
-    sales_agent: "Commercial",
-    client: "Client",
-  };
-
-  return labels[role] ?? role;
-}
-
-
-// ==========================================================
-// COMPOSANT PRINCIPAL
-// ==========================================================
+import {
+  ROLE_CONFIG,
+  getRoleColor,
+  getRoleLabel,
+} from "../../constants/roleOptions";
+import { useDebounce } from "../../hooks/useDebounce";
+import { formatDate } from "../../utils/dateUtils";
 
 export default function AdminUsersPage() {
 
@@ -89,6 +51,19 @@ export default function AdminUsersPage() {
 
   const [searchInput, setSearchInput] = useState("");
 
+  // ==========================================================
+// RECHERCHE AVEC DEBOUNCE
+// ==========================================================
+
+/**
+ * Attend 400 ms après la dernière frappe
+ * avant de mettre à jour la valeur utilisée
+ * pour la recherche.
+ */
+const debouncedSearch = useDebounce(
+  searchInput,
+  400
+);
 
   // ========================================================
   // FILTRES
@@ -101,6 +76,14 @@ export default function AdminUsersPage() {
     sort: "created_at_desc",
   });
 
+// Synchronisation avec les filtres API
+useEffect(() => {
+  setFilters((previous) => ({
+    ...previous,
+    search: debouncedSearch,
+    page: 1,
+  }));
+}, [debouncedSearch]);
 
   // ========================================================
   // ÉTAT DE L'INTERFACE
@@ -144,31 +127,6 @@ useEffect(() => {
     (value ?? "")
       .toString()
       .trim();
-
-
-  // ========================================================
-  // RECHERCHE AVEC DEBOUNCE
-  // ========================================================
-
-  useEffect(() => {
-
-    // Attend 400 ms après la dernière frappe
-    // avant d'appliquer la recherche.
-    const timer = setTimeout(() => {
-
-      setFilters((previous) => ({
-        ...previous,
-        search: searchInput,
-      }));
-
-    }, 400);
-
-
-    // Annule le timer précédent si l'utilisateur
-    // continue à saisir du texte.
-    return () => clearTimeout(timer);
-
-  }, [searchInput]);
 
 
   // ========================================================
@@ -812,512 +770,564 @@ useEffect(() => {
 
 
       {/* ==================================================
-          FILTRES
-          ================================================== */}
+    FILTRES
+    ================================================== */}
 
-      <div
-        className="
-          card
-          p-3
-          mb-4
-          shadow-sm
-          border-0
-          rounded-4
-        "
+<div className="card p-3 mb-4 shadow-sm border-0 rounded-4">
+
+  <div className="row g-3 align-items-center">
+
+    {/* ==================================================
+        RECHERCHE
+        ================================================== */}
+
+    <div className="col-lg-5">
+
+      <div className="input-group">
+
+        <span className="input-group-text bg-white">
+          <i
+            className="bi bi-search text-muted"
+            aria-hidden="true"
+          />
+        </span>
+
+        <label
+          htmlFor="user-search"
+          className="visually-hidden"
+        >
+          Rechercher un utilisateur
+        </label>
+
+        <input
+          id="user-search"
+          type="search"
+          className="form-control"
+          placeholder="Rechercher un nom ou un email..."
+          value={searchInput}
+          onChange={(event) =>
+            setSearchInput(event.target.value)
+          }
+        />
+
+      </div>
+
+    </div>
+
+
+    {/* ==================================================
+        FILTRE RÔLE
+        ================================================== */}
+
+    <div className="col-lg-2">
+
+      <label
+        htmlFor="user-role-filter"
+        className="visually-hidden"
+      >
+        Filtrer par rôle
+      </label>
+
+      <select
+        id="user-role-filter"
+        className="form-select"
+        value={filters.role}
+        onChange={(event) =>
+          setFilters((previous) => ({
+            ...previous,
+            role: event.target.value,
+          }))
+        }
       >
 
-        <div className="row g-3 align-items-center">
+        <option value="all">
+          Tous rôles
+        </option>
+
+        {Object.entries(ROLE_CONFIG).map(
+          ([role, config]) => (
+            <option
+              key={role}
+              value={role}
+            >
+              {config.label}
+            </option>
+          )
+        )}
+
+      </select>
+
+    </div>
 
 
-          {/* RECHERCHE */}
+    {/* ==================================================
+        FILTRE STATUT
+        ================================================== */}
 
-          <div className="col-lg-5">
+    <div className="col-lg-2">
 
-            <div className="input-group">
+      <label
+        htmlFor="user-status-filter"
+        className="visually-hidden"
+      >
+        Filtrer par statut
+      </label>
 
-              <span className="input-group-text bg-white">
+      <select
+        id="user-status-filter"
+        className="form-select"
+        value={filters.status}
+        onChange={(event) =>
+          setFilters((previous) => ({
+            ...previous,
+            status: event.target.value,
+          }))
+        }
+      >
 
-                <i className="bi bi-search text-muted" />
+        <option value="all">
+          Tous statuts
+        </option>
 
-              </span>
+        <option value="active">
+          Actifs
+        </option>
 
+        <option value="pending">
+          En attente
+        </option>
+
+        <option value="inactive">
+          Désactivés
+        </option>
+
+        <option value="archived">
+          Archivés
+        </option>
+
+      </select>
+
+    </div>
+
+
+    {/* ==================================================
+        TRI
+        ================================================== */}
+
+    <div className="col-lg-2">
+
+      <label
+        htmlFor="user-sort"
+        className="visually-hidden"
+      >
+        Trier les utilisateurs
+      </label>
+
+      <select
+        id="user-sort"
+        className="form-select"
+        value={filters.sort}
+        onChange={(event) =>
+          setFilters((previous) => ({
+            ...previous,
+            sort: event.target.value,
+          }))
+        }
+      >
+
+        <option value="created_at_desc">
+          Plus récents
+        </option>
+
+        <option value="created_at_asc">
+          Plus anciens
+        </option>
+
+        <option value="name_asc">
+          Nom A → Z
+        </option>
+
+        <option value="name_desc">
+          Nom Z → A
+        </option>
+
+      </select>
+
+    </div>
+
+
+    {/* ==================================================
+        ACTUALISER
+        ================================================== */}
+
+    <div className="col-lg-1">
+
+      <button
+        type="button"
+        className="btn btn-outline-primary w-100"
+        title="Actualiser"
+        aria-label="Actualiser la liste des utilisateurs"
+        onClick={() =>
+          fetchUsers(response.page)
+        }
+      >
+        <i
+          className="bi bi-arrow-repeat"
+          aria-hidden="true"
+        />
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+{/* ==================================================
+    TABLEAU
+    ================================================== */}
+
+<div className="card shadow-sm border-0 rounded-4 overflow-hidden">
+
+  <div className="table-responsive">
+
+    <table className="table align-middle mb-0">
+
+      <thead className="table-light">
+
+        <tr>
+
+          {/* ==================================================
+              SÉLECTION GLOBALE
+              ================================================== */}
+
+          <th scope="col">
+
+            {!isArchivedView && (
               <input
-                type="search"
-                className="form-control"
-                placeholder="Rechercher un nom ou un email..."
-                value={searchInput}
-                onChange={(event) =>
-                  setSearchInput(
-                    event.target.value
-                  )
+                type="checkbox"
+                className="form-check-input"
+                checked={
+                  response.items.length > 0 &&
+                  selectedIds.length ===
+                    response.items.length
                 }
+                onChange={toggleSelectAll}
+                aria-label="Sélectionner tous les utilisateurs"
+              />
+            )}
+
+          </th>
+
+
+          {/* ==================================================
+              NOM
+              ================================================== */}
+
+          <th scope="col">
+            Nom
+          </th>
+
+
+          {/* ==================================================
+              EMAIL
+              ================================================== */}
+
+          <th scope="col">
+            Email
+          </th>
+
+
+          {/* ==================================================
+              RÔLE
+              ================================================== */}
+
+          <th scope="col">
+            Rôle
+          </th>
+
+
+          {/* ==================================================
+              STATUT
+              ================================================== */}
+
+          <th scope="col">
+            Statut
+          </th>
+
+
+          {/* ==================================================
+              DATE DE CRÉATION
+              ================================================== */}
+
+          <th scope="col">
+            Créé le
+          </th>
+
+
+          {/* ==================================================
+              ACTIONS
+              ================================================== */}
+
+          <th scope="col">
+            Actions
+          </th>
+
+        </tr>
+
+      </thead>
+
+
+      <tbody>
+
+        {/* ==================================================
+            ÉTAT VIDE
+            ================================================== */}
+
+        {response.items.length === 0 && (
+
+          <tr>
+
+            <td
+              colSpan={7}
+              className="text-center py-5 text-muted"
+            >
+
+              <i
+                className="bi bi-people fs-2 d-block mb-2"
+                aria-hidden="true"
               />
 
-            </div>
+              Aucun utilisateur trouvé
 
-          </div>
+            </td>
 
+          </tr>
 
-          {/* FILTRE RÔLE */}
+        )}
 
-          <div className="col-lg-2">
 
-            <select
-              className="form-select"
-              value={filters.role}
-              onChange={(event) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  role: event.target.value,
-                }))
-              }
-            >
+        {/* ==================================================
+            UTILISATEURS
+            ================================================== */}
 
-              <option value="all">
-                Tous rôles
-              </option>
+        {response.items.map((user) => {
 
-              <option value="admin">
-                Admin
-              </option>
+          const roleConfig =
+            ROLE_CONFIG[user.role];
 
-              <option value="sav_agent">
-                Agent SAV
-              </option>
+          return (
 
-              <option value="sales_agent">
-                Commercial
-              </option>
+            <tr key={user.id}>
 
-              <option value="client">
-                Client
-              </option>
+              {/* ==================================================
+                  SÉLECTION
+                  ================================================== */}
 
-            </select>
+              <td>
 
-          </div>
+                {!isArchivedView && (
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={selectedIds.includes(
+                      user.id
+                    )}
+                    onChange={() =>
+                      toggleSelected(user.id)
+                    }
+                    aria-label={`Sélectionner ${user.first_name} ${user.last_name}`}
+                  />
+                )}
 
+              </td>
 
-          {/* FILTRE STATUT */}
 
-          <div className="col-lg-2">
+              {/* ==================================================
+                  NOM
+                  ================================================== */}
 
-            <select
-              className="form-select"
-              value={filters.status}
-              onChange={(event) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  status: event.target.value,
-                }))
-              }
-            >
+              <td className="fw-semibold">
 
-              <option value="all">
-                Tous statuts
-              </option>
+                {user.first_name}{" "}
+                {user.last_name}
 
-              <option value="active">
-                Actifs
-              </option>
+              </td>
 
-              <option value="pending">
-                En attente
-              </option>
 
-              <option value="inactive">
-                Désactivés
-              </option>
+              {/* ==================================================
+                  EMAIL
+                  ================================================== */}
 
-              <option value="archived">
-                Archivés
-              </option>
+              <td className="text-muted">
+                {user.email}
+              </td>
 
-            </select>
 
-          </div>
+              {/* ==================================================
+                  RÔLE
+                  ================================================== */}
 
+              <td>
 
-          {/* TRI */}
+                {editingRole === user.id ? (
 
-          <div className="col-lg-2">
-
-            <select
-              className="form-select"
-              value={filters.sort}
-              onChange={(event) =>
-                setFilters((previous) => ({
-                  ...previous,
-                  sort: event.target.value,
-                }))
-              }
-            >
-
-              <option value="created_at_desc">
-                Plus récents
-              </option>
-
-              <option value="created_at_asc">
-                Plus anciens
-              </option>
-
-              <option value="name_asc">
-                Nom A → Z
-              </option>
-
-              <option value="name_desc">
-                Nom Z → A
-              </option>
-
-            </select>
-
-          </div>
-
-
-          {/* ACTUALISER */}
-
-          <div className="col-lg-1">
-
-            <button
-              type="button"
-              className="
-                btn
-                btn-outline-primary
-                w-100
-              "
-              title="Actualiser"
-              onClick={() =>
-                fetchUsers(
-                  response.page
-                )
-              }
-            >
-
-              <i className="bi bi-arrow-repeat" />
-
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* ==================================================
-          TABLEAU
-          ================================================== */}
-
-      <div
-        className="
-          card
-          shadow-sm
-          border-0
-          rounded-4
-          overflow-hidden
-        "
-      >
-
-        <div className="table-responsive">
-
-          <table
-            className="
-              table
-              align-middle
-              mb-0
-            "
-          >
-
-            <thead className="table-light">
-
-              <tr>
-
-                {/* SÉLECTION GLOBALE */}
-
-                <th>
-
-{!isArchivedView && (
-  <input
-    type="checkbox"
-    checked={
-      response.items.length > 0 &&
-      selectedIds.length === response.items.length
-    }
-    onChange={toggleSelectAll}
-  />
-)}
-
-
-                </th>
-
-
-                <th>
-                  Nom
-                </th>
-
-                <th>
-                  Email
-                </th>
-
-                <th>
-                  Rôle
-                </th>
-
-                <th>
-                  Statut
-                </th>
-
-                <th>
-                  Créé le
-                </th>
-
-                <th>
-                  Actions
-                </th>
-
-              </tr>
-
-            </thead>
-
-
-            <tbody>
-
-
-              {/* ÉTAT VIDE */}
-
-              {response.items.length === 0 && (
-
-                <tr>
-
-                  <td
-                    colSpan={7}
-                    className="
-                      text-center
-                      py-5
-                      text-muted
-                    "
+                  <select
+                    className="form-select form-select-sm"
+                    value={user.role}
+                    onChange={(event) =>
+                      updateRole(
+                        user.id,
+                        event.target.value
+                      )
+                    }
+                    onBlur={() =>
+                      setEditingRole(null)
+                    }
+                    autoFocus
+                    aria-label={`Modifier le rôle de ${user.first_name} ${user.last_name}`}
                   >
 
-                    <i
-                      className="
-                        bi
-                        bi-people
-                        fs-2
-                        d-block
-                        mb-2
-                      "
-                    />
+                    {Object.entries(ROLE_CONFIG).map(
+                      ([role, config]) => (
 
-                    Aucun utilisateur trouvé
-
-                  </td>
-
-                </tr>
-
-              )}
-
-
-              {/* UTILISATEURS */}
-
-              {response.items.map((user) => (
-
-                <tr key={user.id}>
-
-
-                  {/* SÉLECTION */}
-
-                  <td>
-
-{!isArchivedView && (
-  <input
-    type="checkbox"
-    checked={selectedIds.includes(user.id)}
-    onChange={() => toggleSelected(user.id)}
-  />
-)}
-
-                  </td>
-
-
-                  {/* NOM */}
-
-                  <td className="fw-semibold">
-
-                    {user.first_name}{" "}
-                    {user.last_name}
-
-                  </td>
-
-
-                  {/* EMAIL */}
-
-                  <td className="text-muted">
-
-                    {user.email}
-
-                  </td>
-
-
-                  {/* RÔLE */}
-
-                  <td>
-
-                    {editingRole ===
-                    user.id ? (
-
-                      <select
-                        className="
-                          form-select
-                          form-select-sm
-                        "
-                        value={user.role}
-                        onChange={(event) =>
-                          updateRole(
-                            user.id,
-                            event.target.value
-                          )
-                        }
-                        onBlur={() =>
-                          setEditingRole(null)
-                        }
-                        autoFocus
-                      >
-
-                        <option value="admin">
-                          Admin
+                        <option
+                          key={role}
+                          value={role}
+                        >
+                          {config.label}
                         </option>
 
-                        <option value="sav_agent">
-                          Agent SAV
-                        </option>
-
-                        <option value="sales_agent">
-                          Commercial
-                        </option>
-
-                        <option value="client">
-                          Client
-                        </option>
-
-                      </select>
-
-                    ) : (
-
-                      <span
-                        className={`
-                          badge
-                          bg-${getRoleColor(
-                            user.role
-                          )}
-                        `}
-                        role="button"
-                        title="Modifier le rôle"
-                        onClick={() =>
-                          setEditingRole(
-                            user.id
-                          )
-                        }
-                      >
-
-                        {getRoleLabel(
-                          user.role
-                        )}
-
-                      </span>
-
+                      )
                     )}
 
-                  </td>
+                  </select>
 
+                ) : (
 
-                  {/* STATUT */}
+                  <span
+                    className={`badge bg-${
+                      roleConfig?.color ?? "dark"
+                    }`}
+                    role="button"
+                    tabIndex={0}
+                    title="Modifier le rôle"
+                    aria-label={`Modifier le rôle de ${user.first_name} ${user.last_name}`}
+                    onClick={() =>
+                      setEditingRole(user.id)
+                    }
+                    onKeyDown={(event) => {
 
-                  <td>
+                      if (
+                        event.key === "Enter" ||
+                        event.key === " "
+                      ) {
+                        event.preventDefault();
 
-                    {user.is_deleted ? (
-
-                      <span className="badge bg-dark">
-                        Archivé
-                      </span>
-
-                    ) : !user.is_verified ? (
-
-                      <span
-                        className="
-                          badge
-                          bg-warning
-                          text-dark
-                        "
-                      >
-                        En attente
-                      </span>
-
-                    ) : user.is_active ? (
-
-                      <span className="badge bg-success">
-                        Actif
-                      </span>
-
-                    ) : (
-
-                      <span className="badge bg-secondary">
-                        Désactivé
-                      </span>
-
-                    )}
-
-                  </td>
-
-
-                  {/* DATE DE CRÉATION */}
-
-                  <td className="text-muted">
-
-                    {user.created_at
-                      ? new Date(
-                          user.created_at
-                        ).toLocaleDateString(
-                          "fr-FR"
-                        )
-                      : "-"}
-
-                  </td>
-
-
-                  {/* ACTIONS */}
-
-                  <td>
-
-                    <button
-                      type="button"
-                      className="
-                        btn
-                        btn-outline-secondary
-                        btn-sm
-                      "
-                      title="Gérer l'utilisateur"
-                      onClick={() =>
-                        openUserModal(user)
+                        setEditingRole(user.id);
                       }
-                    >
 
-                      <i className="bi bi-gear" />
+                    }}
+                  >
 
-                    </button>
+                    {roleConfig?.label ??
+                      user.role ??
+                      "-"}
 
-                  </td>
+                  </span>
 
-                </tr>
+                )}
 
-              ))}
+              </td>
 
-            </tbody>
 
-          </table>
+              {/* ==================================================
+                  STATUT
+                  ================================================== */}
 
-        </div>
+              <td>
 
-      </div>
+                {user.is_deleted ? (
+
+                  <span className="badge bg-dark">
+                    Archivé
+                  </span>
+
+                ) : !user.is_verified ? (
+
+                  <span className="badge bg-warning text-dark">
+                    En attente
+                  </span>
+
+                ) : user.is_active ? (
+
+                  <span className="badge bg-success">
+                    Actif
+                  </span>
+
+                ) : (
+
+                  <span className="badge bg-secondary">
+                    Désactivé
+                  </span>
+
+                )}
+
+              </td>
+
+
+              {/* ==================================================
+                  DATE DE CRÉATION
+                  ================================================== */}
+
+              <td className="text-muted">
+
+                {formatDate(
+                  user.created_at
+                )}
+
+              </td>
+
+
+              {/* ==================================================
+                  ACTIONS
+                  ================================================== */}
+
+              <td>
+
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  title="Gérer l'utilisateur"
+                  aria-label={`Gérer ${user.first_name} ${user.last_name}`}
+                  onClick={() =>
+                    openUserModal(user)
+                  }
+                >
+
+                  <i
+                    className="bi bi-gear"
+                    aria-hidden="true"
+                  />
+
+                </button>
+
+              </td>
+
+            </tr>
+
+          );
+
+        })}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
 
 <div className="d-flex justify-content-between align-items-center mt-4">
 

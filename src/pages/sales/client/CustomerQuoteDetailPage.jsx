@@ -16,6 +16,7 @@ import QuoteFinancingCard from "../../../components/quotes/QuoteFinancingCard";
 import QuoteStatusBadge from "../../../components/quotes/QuoteStatusBadge";
 import QuoteTradeInCard from "../../../components/quotes/QuoteTradeInCard";
 import QuoteVehicleCard from "../../../components/quotes/QuoteVehicleCard";
+import { formatDate } from "../../../utils/dateUtils";
 
 import apiFetch from "../../../services/apiFetch";
 
@@ -375,11 +376,7 @@ export default function CustomerQuoteDetailPage() {
       .join(" ") ||
       "Conseiller non renseigné";
 
-  const createdAt = quote.created_at
-    ? new Date(
-        quote.created_at
-      ).toLocaleDateString("fr-FR")
-    : "Date non renseignée";
+  const createdAt = formatDate(quote.created_at)
 
   // =====================================================
   // AFFICHAGE

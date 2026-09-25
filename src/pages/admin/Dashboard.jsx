@@ -1,43 +1,28 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { EVENT_ICONS, DEFAULT_STATUS } from "../../utils/status";
 import apiFetch from "../../services/apiFetch";
-import { STATUS } from "../../utils/status";
+import { APPLICATION_STATUSES, DEFAULT_STATUS } from "../../constants/applicationOptions";
+import { formatDate, formatDateTime } from "../../utils/dateUtils";
+import { getEventIcon } from "../../utils/eventUtils";
+import { ADMIN_DASHBOARD_STAT_CARDS, ADMIN_DASHBOARD_QUICK_ACTIONS } from "../../constants/dashboardOptions";
 
-// =========================
-// FORMATAGE
-// =========================
 
-const formatDate = (date) => {
-  if (!date) {
-    return "-";
-  }
-
-  return new Date(date).toLocaleDateString("fr-FR");
-};
-
-const formatDateTime = (date) => {
-  if (!date) {
-    return "-";
-  }
-
-  return new Date(date).toLocaleString("fr-FR");
-};
-
-const getEventIcon = (type) => {
-  return EVENT_ICONS[type] || "bi-bell";
-};
-
-// =========================
+// ==========================================================
 // CARTE DE STATISTIQUE
-// =========================
+// ==========================================================
 
-function StatCard({ title, value, icon, color }) {
+function StatCard({
+  title,
+  value,
+  icon,
+  color,
+}) {
   return (
-    <div className="col-md-4 col-xl-2">
+    <div className="col-6 col-md-4 col-xl-2">
       <div className="card border-0 shadow-sm rounded-4 h-100">
         <div className="card-body p-4 d-flex justify-content-between align-items-center">
+
           <div>
             <div className="text-muted small">
               {title}
@@ -49,17 +34,19 @@ function StatCard({ title, value, icon, color }) {
           </div>
 
           <div className={`text-${color} fs-2`}>
-            <i className={`bi ${icon}`} />
+            <i
+              className={`bi ${icon}`}
+              aria-hidden="true"
+            />
           </div>
+
         </div>
       </div>
     </div>
   );
 }
 
-// =========================
-// DASHBOARD ADMIN
-// =========================
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -189,51 +176,17 @@ export default function AdminDashboard() {
           STATISTIQUES
       ========================= */}
 
-      <div className="row g-3 mb-4">
-
-        <StatCard
-          title="Total dossiers"
-          value={stats.totalApplications}
-          icon="bi-folder"
-          color="primary"
-        />
-
-        <StatCard
-          title="En attente"
-          value={stats.pending}
-          icon="bi-clock"
-          color="warning"
-        />
-
-        <StatCard
-          title="Actifs"
-          value={stats.active}
-          icon="bi-check-circle"
-          color="success"
-        />
-
-        <StatCard
-          title="Refusés"
-          value={stats.rejected}
-          icon="bi-x-circle"
-          color="danger"
-        />
-
-        <StatCard
-          title="Archivés"
-          value={stats.archived}
-          icon="bi-archive"
-          color="secondary"
-        />
-
-        <StatCard
-          title="Cette semaine"
-          value={stats.thisWeek}
-          icon="bi-graph-up"
-          color="info"
-        />
-
-      </div>
+<div className="row g-3 mb-4">
+  {ADMIN_DASHBOARD_STAT_CARDS.map((stat) => (
+    <StatCard
+      key={stat.key}
+      title={stat.title}
+      value={stats[stat.key]}
+      icon={stat.icon}
+      color={stat.color}
+    />
+  ))}
+</div>
 
       {/* =========================
           CONTENU PRINCIPAL
@@ -306,7 +259,7 @@ export default function AdminDashboard() {
                       {recentApplications.map((app) => {
 
                         const status =
-                          STATUS[app.status] ||
+                          APPLICATION_STATUSES[app.status] ||
                           DEFAULT_STATUS;
 
                         return (
@@ -376,54 +329,39 @@ export default function AdminDashboard() {
             ACTIONS RAPIDES
         ========================= */}
 
-        <div className="col-lg-4">
+<div className="col-lg-4">
+  <div className="card border-0 shadow-sm rounded-4 h-100">
+    <div className="card-body p-4">
 
-          <div className="card border-0 shadow-sm rounded-4 h-100">
+      <h5 className="fw-semibold mb-3">
+        Actions rapides
+      </h5>
 
-            <div className="card-body p-4">
+      <div className="d-flex flex-column gap-2">
+        {ADMIN_DASHBOARD_QUICK_ACTIONS.map(
+          (action) => (
+            <button
+              key={action.path}
+              type="button"
+              className={`btn ${action.buttonClass} w-100`}
+              onClick={() =>
+                navigate(action.path)
+              }
+            >
+              <i
+                className={`bi ${action.icon} me-2`}
+                aria-hidden="true"
+              />
 
-              <h5 className="fw-semibold mb-3">
-                Actions rapides
-              </h5>
+              {action.label}
+            </button>
+          )
+        )}
+      </div>
 
-              <button
-                type="button"
-                className="btn btn-primary w-100 mb-2"
-                onClick={() =>
-                  navigate("/admin/applications")
-                }
-              >
-                <i className="bi bi-folder me-2" />
-                Gérer les dossiers
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline-primary w-100 mb-2"
-                onClick={() =>
-                  navigate("/admin/vehicles")
-                }
-              >
-                <i className="bi bi-car-front me-2" />
-                Gérer les véhicules
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline-secondary w-100"
-                onClick={() =>
-                  navigate("/admin/options")
-                }
-              >
-                <i className="bi bi-list-check me-2" />
-                Gérer les options
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
+    </div>
+  </div>
+</div>
 
         {/* =========================
             ACTIVITÉ RÉCENTE

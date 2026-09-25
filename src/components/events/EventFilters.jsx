@@ -6,33 +6,17 @@ import {
  * Filtres utilisés pour la recherche dans l'historique
  * des événements administratifs.
  *
- * La modification d'un filtre réinitialise automatiquement
- * la pagination à la première page.
+ * Le composant ne gère pas directement l'état des filtres.
+ * Les modifications sont remontées au composant parent
+ * via les callbacks.
  */
 export default function EventFilters({
   filters,
-  setFilters,
+  searchInput,
+  onSearchChange,
+  onFilterChange,
   onRefresh,
 }) {
-  // =====================================================
-  // GESTION DES FILTRES
-  // =====================================================
-
-  /**
-   * Met à jour un filtre et revient à la première page.
-   */
-  const updateFilter = (key, value) => {
-    setFilters((currentFilters) => ({
-      ...currentFilters,
-      [key]: value,
-      page: 1,
-    }));
-  };
-
-  // =====================================================
-  // RENDU
-  // =====================================================
-
   return (
     <section
       className="card p-3 mb-4 shadow-sm border-0 rounded-4"
@@ -57,13 +41,11 @@ export default function EventFilters({
             type="search"
             className="form-control"
             placeholder="Rechercher un événement..."
-            value={filters.search}
+            value={searchInput}
             onChange={(event) =>
-              updateFilter(
-                "search",
-                event.target.value
-              )
+              onSearchChange(event.target.value)
             }
+            aria-label="Rechercher un événement"
           />
         </div>
 
@@ -73,18 +55,18 @@ export default function EventFilters({
 
         <div className="col-12 col-lg-3">
           <label
-            htmlFor="event-type"
+            htmlFor="event-category"
             className="form-label fw-semibold"
           >
             Catégorie
           </label>
 
           <select
-            id="event-type"
+            id="event-category"
             className="form-select"
-            value={filters.type}
+            value={filters.category}
             onChange={(event) =>
-              updateFilter(
+              onFilterChange(
                 "category",
                 event.target.value
               )
@@ -125,7 +107,7 @@ export default function EventFilters({
             className="form-control"
             value={filters.date}
             onChange={(event) =>
-              updateFilter(
+              onFilterChange(
                 "date",
                 event.target.value
               )
