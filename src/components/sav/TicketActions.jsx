@@ -17,9 +17,7 @@ export default function TicketActions({
   onArchive,
   onTakeOwnership,
 }) {
-
   const navigate = useNavigate();
-
 
   // =====================================================
   // ACTIONS DISPONIBLES
@@ -28,9 +26,7 @@ export default function TicketActions({
   /**
    * Un ticket ouvert peut être pris en charge par un agent.
    */
-  const canTakeOwnership =
-    ticket.status === "OPEN";
-
+  const canTakeOwnership = ticket.status === "OPEN";
 
   /**
    * Seuls les tickets résolus ou fermés peuvent être
@@ -43,7 +39,6 @@ export default function TicketActions({
     ["RESOLVED", "CLOSED"].includes(ticket.status) &&
     ticket.archived_at == null;
 
-
   // =====================================================
   // NAVIGATION
   // =====================================================
@@ -55,13 +50,8 @@ export default function TicketActions({
    * pouvoir revenir à la liste dans le même contexte.
    */
   const handleView = () => {
-
-    navigate(
-      `${basePath}/${ticket.id}?filter=${filter}`
-    );
-
+    navigate(`${basePath}/${ticket.id}?filter=${filter}`);
   };
-
 
   // =====================================================
   // ACTIONS
@@ -75,13 +65,10 @@ export default function TicketActions({
    * et le rafraîchissement de la liste.
    */
   const handleTakeOwnership = () => {
-
     if (onTakeOwnership) {
       onTakeOwnership(ticket.id);
     }
-
   };
-
 
   /**
    * Archive le ticket.
@@ -90,13 +77,10 @@ export default function TicketActions({
    * conserver la gestion de l'état au niveau supérieur.
    */
   const handleArchive = () => {
-
     if (onArchive) {
       onArchive(ticket.id);
     }
-
   };
-
 
   // =====================================================
   // AFFICHAGE
@@ -104,7 +88,6 @@ export default function TicketActions({
 
   return (
     <div className="dropdown">
-
       {/* =================================================
           BOUTON DU MENU
       ================================================= */}
@@ -115,46 +98,31 @@ export default function TicketActions({
         data-bs-toggle="dropdown"
         aria-expanded="false"
       >
-        <i
-          className="bi bi-three-dots-vertical me-1"
-          aria-hidden="true"
-        />
-
+        <i className="bi bi-three-dots-vertical me-1" aria-hidden="true" />
         Actions
       </button>
-
 
       {/* =================================================
           MENU DES ACTIONS
       ================================================= */}
 
       <ul className="dropdown-menu dropdown-menu-end">
-
         {/* =================================================
             VOIR LE TICKET
         ================================================= */}
 
         <li>
-
-          <button
-            type="button"
-            className="dropdown-item"
-            onClick={handleView}
-          >
+          <button type="button" className="dropdown-item" onClick={handleView}>
             Voir le ticket
           </button>
-
         </li>
-
 
         {/* =================================================
             PRENDRE EN CHARGE
         ================================================= */}
 
         {canTakeOwnership && onTakeOwnership && (
-
           <li>
-
             <button
               type="button"
               className="dropdown-item text-primary"
@@ -162,26 +130,20 @@ export default function TicketActions({
             >
               Prendre en charge
             </button>
-
           </li>
-
         )}
-
 
         {/* =================================================
             ARCHIVER
         ================================================= */}
 
         {canArchive && onArchive && (
-
           <>
-
             <li>
               <hr className="dropdown-divider" />
             </li>
 
             <li>
-
               <button
                 type="button"
                 className="dropdown-item text-warning"
@@ -189,15 +151,10 @@ export default function TicketActions({
               >
                 Archiver
               </button>
-
             </li>
-
           </>
-
         )}
-
       </ul>
-
     </div>
   );
 }

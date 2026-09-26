@@ -1,12 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import apiFetch from "../../../services/apiFetch";
 import { LEAD_STATUSES } from "../../../constants/leadOptions";
@@ -55,13 +48,9 @@ export default function LeadDetailPage() {
    * - marquage comme contacté ;
    * - suppression.
    */
-  const [actionLoading, setActionLoading] =
-    useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const [
-    showDeleteModal,
-    setShowDeleteModal,
-  ] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // =====================================================
   // CHARGEMENT DU PROSPECT
@@ -75,19 +64,13 @@ export default function LeadDetailPage() {
     try {
       setLoading(true);
 
-      const data = await apiFetch(
-        `/agent/leads/${id}`,
-        {
-          method: "GET",
-        }
-      );
+      const data = await apiFetch(`/agent/leads/${id}`, {
+        method: "GET",
+      });
 
       setLead(data);
     } catch (error) {
-      toast.error(
-        error?.message ||
-          "Erreur lors du chargement du prospect."
-      );
+      toast.error(error?.message || "Erreur lors du chargement du prospect.");
 
       setLead(null);
     } finally {
@@ -104,34 +87,22 @@ export default function LeadDetailPage() {
   // =====================================================
 
   const markAsContacted = async () => {
-    if (
-      !lead ||
-      actionLoading
-    ) {
+    if (!lead || actionLoading) {
       return;
     }
 
     try {
       setActionLoading(true);
 
-      await apiFetch(
-        `/agent/leads/${lead.id}/contacted`,
-        {
-          method: "PATCH",
-        }
-      );
-
+      await apiFetch(`/agent/leads/${lead.id}/contacted`, {
+        method: "PATCH",
+      });
 
       await fetchLead();
 
-      toast.success(
-        "Le prospect a été marqué comme contacté."
-      );
+      toast.success("Le prospect a été marqué comme contacté.");
     } catch (error) {
-      toast.error(
-        error?.message ||
-          "Impossible de mettre à jour le prospect."
-      );
+      toast.error(error?.message || "Impossible de mettre à jour le prospect.");
     } finally {
       setActionLoading(false);
     }
@@ -142,33 +113,22 @@ export default function LeadDetailPage() {
   // =====================================================
 
   const deleteLead = async () => {
-    if (
-      !lead ||
-      actionLoading
-    ) {
+    if (!lead || actionLoading) {
       return;
     }
 
     try {
       setActionLoading(true);
 
-      await apiFetch(
-        `/agent/leads/${lead.id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      await apiFetch(`/agent/leads/${lead.id}`, {
+        method: "DELETE",
+      });
 
-      toast.success(
-        "Prospect supprimé."
-      );
+      toast.success("Prospect supprimé.");
 
       navigate("/sales/leads");
     } catch (error) {
-      toast.error(
-        error?.message ||
-          "Impossible de supprimer le prospect."
-      );
+      toast.error(error?.message || "Impossible de supprimer le prospect.");
     } finally {
       setActionLoading(false);
       setShowDeleteModal(false);
@@ -190,7 +150,6 @@ export default function LeadDetailPage() {
           className="spinner-border spinner-border-sm me-2"
           aria-hidden="true"
         />
-
         Chargement du prospect...
       </div>
     );
@@ -205,35 +164,22 @@ export default function LeadDetailPage() {
       <div className="container py-5">
         <div className="card border-0 shadow-sm rounded-4">
           <div className="card-body text-center p-5">
+            <i className="bi bi-person-x fs-1 text-muted" aria-hidden="true" />
 
-            <i
-              className="bi bi-person-x fs-1 text-muted"
-              aria-hidden="true"
-            />
-
-            <h1 className="h4 fw-semibold mt-3">
-              Prospect introuvable
-            </h1>
+            <h1 className="h4 fw-semibold mt-3">Prospect introuvable</h1>
 
             <p className="text-muted mb-4">
-              Ce prospect n'existe plus ou n'est
-              plus accessible.
+              Ce prospect n'existe plus ou n'est plus accessible.
             </p>
 
             <button
               type="button"
               className="btn btn-outline-secondary"
-              onClick={() =>
-                navigate("/sales/leads")
-              }
+              onClick={() => navigate("/sales/leads")}
             >
-              <i
-                className="bi bi-arrow-left me-2"
-                aria-hidden="true"
-              />
+              <i className="bi bi-arrow-left me-2" aria-hidden="true" />
               Retour aux prospects
             </button>
-
           </div>
         </div>
       </div>
@@ -244,14 +190,9 @@ export default function LeadDetailPage() {
   // DONNÉES D'AFFICHAGE
   // =====================================================
 
-  const statusConfig =
-    LEAD_STATUSES[lead.status];
+  const statusConfig = LEAD_STATUSES[lead.status];
 
-  const quotes = Array.isArray(
-    lead.quotes
-  )
-    ? lead.quotes
-    : [];
+  const quotes = Array.isArray(lead.quotes) ? lead.quotes : [];
 
   const vehicle = lead.vehicle;
 
@@ -261,54 +202,36 @@ export default function LeadDetailPage() {
 
   return (
     <div className="container py-4">
-
       {/* =================================================
           EN-TÊTE
           ================================================= */}
 
       <header className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-
         <div>
           <div className="d-flex align-items-center gap-2 flex-wrap">
-
             <h1 className="h2 fw-bold mb-0">
-              {lead.first_name}{" "}
-              {lead.last_name}
+              {lead.first_name} {lead.last_name}
             </h1>
 
             <span
-              className={`badge ${
-                statusConfig?.className ??
-                "bg-secondary"
-              }`}
+              className={`badge ${statusConfig?.className ?? "bg-secondary"}`}
             >
-              {statusConfig?.label ??
-                lead.status ??
-                "Statut inconnu"}
+              {statusConfig?.label ?? lead.status ?? "Statut inconnu"}
             </span>
-
           </div>
 
-          <p className="text-muted mb-0 mt-1">
-            Détail du prospect commercial
-          </p>
+          <p className="text-muted mb-0 mt-1">Détail du prospect commercial</p>
         </div>
 
         <div className="d-flex gap-2 flex-wrap">
-
           {lead.can_delete && (
             <button
               type="button"
               className="btn btn-outline-danger"
-              onClick={() =>
-                setShowDeleteModal(true)
-              }
+              onClick={() => setShowDeleteModal(true)}
               disabled={actionLoading}
             >
-              <i
-                className="bi bi-trash me-2"
-                aria-hidden="true"
-              />
+              <i className="bi bi-trash me-2" aria-hidden="true" />
               Supprimer
             </button>
           )}
@@ -319,13 +242,9 @@ export default function LeadDetailPage() {
             onClick={() => navigate(-1)}
             disabled={actionLoading}
           >
-            <i
-              className="bi bi-arrow-left me-2"
-              aria-hidden="true"
-            />
+            <i className="bi bi-arrow-left me-2" aria-hidden="true" />
             Retour
           </button>
-
         </div>
       </header>
 
@@ -334,58 +253,38 @@ export default function LeadDetailPage() {
           ================================================= */}
 
       <div className="row g-4">
-
         {/* =================================================
             INFORMATIONS CLIENT
             ================================================= */}
 
         <div className="col-lg-6">
           <section className="card border-0 shadow-sm rounded-4 h-100">
-
             <div className="card-body p-4">
-
               <div className="d-flex align-items-center gap-2 mb-4">
-
                 <i
                   className="bi bi-file-earmark-text text-muted"
                   aria-hidden="true"
                 />
 
-                <h2 className="h5 fw-semibold mb-0">
-                  Informations client
-                </h2>
-
+                <h2 className="h5 fw-semibold mb-0">Informations client</h2>
               </div>
 
               <div className="mb-3">
-
-                <div className="small text-muted mb-1">
-                  Email
-                </div>
+                <div className="small text-muted mb-1">Email</div>
 
                 <div className="fw-medium text-break">
                   {lead.email || "Non renseigné"}
                 </div>
-
               </div>
 
               <div className="mb-3">
+                <div className="small text-muted mb-1">Téléphone</div>
 
-                <div className="small text-muted mb-1">
-                  Téléphone
-                </div>
-
-                <div className="fw-medium">
-                  {lead.phone || "Non renseigné"}
-                </div>
-
+                <div className="fw-medium">{lead.phone || "Non renseigné"}</div>
               </div>
 
               <div>
-
-                <div className="small text-muted mb-1">
-                  Message
-                </div>
+                <div className="small text-muted mb-1">Message</div>
 
                 <div
                   className="text-break"
@@ -393,12 +292,9 @@ export default function LeadDetailPage() {
                     whiteSpace: "pre-wrap",
                   }}
                 >
-                  {lead.message ||
-                    "Aucun message"}
+                  {lead.message || "Aucun message"}
                 </div>
-
               </div>
-
             </div>
           </section>
         </div>
@@ -409,52 +305,31 @@ export default function LeadDetailPage() {
 
         <div className="col-lg-6">
           <section className="card border-0 shadow-sm rounded-4 h-100">
-
             <div className="card-body p-4">
-
               <div className="d-flex align-items-center gap-2 mb-4">
+                <i className="bi bi-car-front text-muted" aria-hidden="true" />
 
-                <i
-                  className="bi bi-car-front text-muted"
-                  aria-hidden="true"
-                />
-
-                <h2 className="h5 fw-semibold mb-0">
-                  Véhicule recherché
-                </h2>
-
+                <h2 className="h5 fw-semibold mb-0">Véhicule recherché</h2>
               </div>
 
               {vehicle ? (
                 <>
                   <h3 className="h6 fw-bold mb-2">
-                    {vehicle.brand}{" "}
-                    {vehicle.model}
+                    {vehicle.brand} {vehicle.model}
                   </h3>
 
                   <div className="d-flex align-items-center gap-2">
+                    <i className="bi bi-tag text-muted" aria-hidden="true" />
 
-                    <i
-                      className="bi bi-tag text-muted"
-                      aria-hidden="true"
-                    />
-
-                    <span>
-                      {formatAmount(vehicle.price)}
-                    </span>
-
+                    <span>{formatAmount(vehicle.price)}</span>
                   </div>
                 </>
               ) : (
-                <p className="text-muted mb-0">
-                  Aucun véhicule sélectionné.
-                </p>
+                <p className="text-muted mb-0">Aucun véhicule sélectionné.</p>
               )}
-
             </div>
           </section>
         </div>
-
       </div>
 
       {/* =================================================
@@ -462,24 +337,14 @@ export default function LeadDetailPage() {
           ================================================= */}
 
       <section className="card border-0 shadow-sm rounded-4 mt-4">
-
         <div className="card-body p-4">
-
           <div className="d-flex align-items-center gap-2 mb-4">
+            <i className="bi bi-kanban text-muted" aria-hidden="true" />
 
-            <i
-              className="bi bi-kanban text-muted"
-              aria-hidden="true"
-            />
-
-            <h2 className="h5 fw-semibold mb-0">
-              Actions commerciales
-            </h2>
-
+            <h2 className="h5 fw-semibold mb-0">Actions commerciales</h2>
           </div>
 
           <div className="d-flex gap-2 flex-wrap">
-
             {/* -----------------------------------------
                 MARQUER COMME CONTACTÉ
                 ----------------------------------------- */}
@@ -497,7 +362,6 @@ export default function LeadDetailPage() {
                       className="spinner-border spinner-border-sm me-2"
                       aria-hidden="true"
                     />
-
                     Mise à jour...
                   </>
                 ) : (
@@ -506,7 +370,6 @@ export default function LeadDetailPage() {
                       className="bi bi-telephone-check me-2"
                       aria-hidden="true"
                     />
-
                     Marquer comme contacté
                   </>
                 )}
@@ -521,22 +384,16 @@ export default function LeadDetailPage() {
               <button
                 type="button"
                 className="btn btn-dark"
-                onClick={() =>
-                  navigate(
-                    `/sales/quotes/new`
-                  )
-                }
+                onClick={() => navigate(`/sales/quotes/new/${lead.id}`)}
                 disabled={actionLoading}
               >
                 <i
                   className="bi bi-file-earmark-plus me-2"
                   aria-hidden="true"
                 />
-
                 Créer une offre
               </button>
             )}
-
           </div>
 
           {/* =================================================
@@ -545,45 +402,29 @@ export default function LeadDetailPage() {
 
           {quotes.length > 0 && (
             <div className="border-top mt-4 pt-4">
-
               <div className="d-flex align-items-center gap-2 mb-3">
-
                 <i
                   className="bi bi-file-earmark-text text-muted"
                   aria-hidden="true"
                 />
 
-                <h2 className="h5 fw-semibold mb-0">
-                  Offres
-                </h2>
+                <h2 className="h5 fw-semibold mb-0">Offres</h2>
 
                 <span className="badge bg-light text-dark">
                   {quotes.length}
                 </span>
-
               </div>
 
               <div className="row g-2">
-
                 {quotes.map((quote) => {
-                  const quoteConfig =
-                    QUOTE_STATUSES[
-                      quote.status
-                    ];
+                  const quoteConfig = QUOTE_STATUSES[quote.status];
 
                   return (
-                    <div
-                      key={quote.id}
-                      className="col-12 col-md-6"
-                    >
+                    <div key={quote.id} className="col-12 col-md-6">
                       <button
                         type="button"
                         className="btn btn-outline-dark w-100 d-flex justify-content-between align-items-center text-start"
-                        onClick={() =>
-                          navigate(
-                            `/sales/quotes/${quote.id}`
-                          )
-                        }
+                        onClick={() => navigate(`/sales/quotes/${quote.id}`)}
                         disabled={actionLoading}
                       >
                         <span>
@@ -591,29 +432,23 @@ export default function LeadDetailPage() {
                             className="bi bi-file-earmark-text me-2"
                             aria-hidden="true"
                           />
-
                           Offre #{quote.id}
                         </span>
 
                         <span
                           className={`badge ${
-                            quoteConfig?.className ??
-                            "bg-secondary"
+                            quoteConfig?.className ?? "bg-secondary"
                           }`}
                         >
-                          {quoteConfig?.label ??
-                            quote.status}
+                          {quoteConfig?.label ?? quote.status}
                         </span>
                       </button>
                     </div>
                   );
                 })}
-
               </div>
-
             </div>
           )}
-
         </div>
       </section>
 
@@ -627,19 +462,15 @@ export default function LeadDetailPage() {
         title="Supprimer le prospect"
         description={
           <>
-            Êtes-vous sûr de vouloir supprimer
-            ce prospect ?
+            Êtes-vous sûr de vouloir supprimer ce prospect ?
             <br />
             Cette action est irréversible.
           </>
         }
         loading={actionLoading}
-        onCancel={() =>
-          setShowDeleteModal(false)
-        }
+        onCancel={() => setShowDeleteModal(false)}
         onConfirm={deleteLead}
       />
-
     </div>
   );
 }

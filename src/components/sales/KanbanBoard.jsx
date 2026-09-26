@@ -16,14 +16,14 @@ import KanbanColumn from "./KanbanColumn";
  * Les actions restent gérées par les composants parents.
  */
 
-  // =====================================================
-  // STATUTS DU PIPELINE
-  // =====================================================
+// =====================================================
+// STATUTS DU PIPELINE
+// =====================================================
 
-  /**
-   * Récupère les statuts dans l'ordre défini
-   * par la configuration centralisée.
-   */
+/**
+ * Récupère les statuts dans l'ordre défini
+ * par la configuration centralisée.
+ */
 const LEAD_STATUS_KEYS = Object.keys(LEAD_STATUSES);
 
 export default function KanbanBoard({
@@ -31,7 +31,6 @@ export default function KanbanBoard({
   mode = "my-leads",
   onTakeLead,
 }) {
-
   // =====================================================
   // ORGANISATION DES LEADS
   // =====================================================
@@ -42,19 +41,19 @@ export default function KanbanBoard({
    * Cette approche évite d'exécuter un `filter()` pour
    * chaque colonne du Kanban.
    */
-const leadsByStatus = useMemo(() => {
-  const groupedLeads = Object.fromEntries(
-    LEAD_STATUS_KEYS.map((status) => [status, []])
-  );
+  const leadsByStatus = useMemo(() => {
+    const groupedLeads = Object.fromEntries(
+      LEAD_STATUS_KEYS.map((status) => [status, []])
+    );
 
-  leads.forEach((lead) => {
-    if (groupedLeads[lead.status]) {
-      groupedLeads[lead.status].push(lead);
-    }
-  });
+    leads.forEach((lead) => {
+      if (groupedLeads[lead.status]) {
+        groupedLeads[lead.status].push(lead);
+      }
+    });
 
-  return groupedLeads;
-}, [leads]);
+    return groupedLeads;
+  }, [leads]);
 
   // =====================================================
   // AFFICHAGE : AUCUN LEAD
@@ -82,13 +81,10 @@ const leadsByStatus = useMemo(() => {
           aria-hidden="true"
         />
 
-        <h2 className="h5 fw-semibold mb-2">
-          Aucun prospect
-        </h2>
+        <h2 className="h5 fw-semibold mb-2">Aucun prospect</h2>
 
         <p className="mb-0">
-          Aucun lead ne se trouve actuellement
-          dans votre pipeline.
+          Aucun lead ne se trouve actuellement dans votre pipeline.
         </p>
       </div>
     );
@@ -99,10 +95,7 @@ const leadsByStatus = useMemo(() => {
   // =====================================================
 
   return (
-    <div
-      className="row g-3"
-      aria-label="Pipeline commercial"
-    >
+    <div className="row g-3" aria-label="Pipeline commercial">
       {LEAD_STATUS_KEYS.map((status) => (
         <div
           key={status}

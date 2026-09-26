@@ -5,16 +5,14 @@ import apiFetch from "./apiFetch";
 export function findSupportTickets(query) {
   const params = new URLSearchParams(query).toString();
 
-  return apiFetch(`/support-tickets?${params}`, {
-  });
+  return apiFetch(`/support-tickets?${params}`, {});
 }
 
 /**
  * Récupère un ticket
  */
 export function getSupportTicket(ticketId) {
-  return apiFetch(`/support-tickets/${ticketId}`, {
-  });
+  return apiFetch(`/support-tickets/${ticketId}`, {});
 }
 
 /**
@@ -30,17 +28,11 @@ export function createSupportTicket(payload) {
 /**
  * Envoie un message
  */
-export function sendSupportTicketMessage(
-  ticketId,
-  message,
-) {
-  return apiFetch(
-    `/support-tickets/${ticketId}/messages`,
-    {
-      method: "POST",
-      body: { message },
-    }
-  );
+export function sendSupportTicketMessage(ticketId, message) {
+  return apiFetch(`/support-tickets/${ticketId}/messages`, {
+    method: "POST",
+    body: { message },
+  });
 }
 
 /**
@@ -53,14 +45,10 @@ export function sendSupportTicketMessage(
  * @returns {Promise<Object>}
  */
 export function archiveSupportTicket(ticketId) {
-  return apiFetch(
-    `/agent/support-tickets/${ticketId}/archive`,
-    {
-      method: "PATCH",
-    }
-  );
+  return apiFetch(`/agent/support-tickets/${ticketId}/archive`, {
+    method: "PATCH",
+  });
 }
-
 
 /**
  * Met à jour le statut d'un ticket SAV.
@@ -69,17 +57,11 @@ export function archiveSupportTicket(ticketId) {
  * @param {string} status
  * @returns {Promise<Object>}
  */
-export function updateSupportTicketStatus(
-  ticketId,
-  status
-) {
-  return apiFetch(
-    `/agent/support-tickets/${ticketId}/status`,
-    {
-      method: "PATCH",
-      body: {
-        status,
-      },
-    }
-  );
+export function updateSupportTicketStatus(ticketId, status) {
+  return apiFetch(`/agent/support-tickets/${ticketId}/status`, {
+    method: "PATCH",
+    body: {
+      status,
+    },
+  });
 }

@@ -7,10 +7,7 @@
  */
 import TicketTable from "./TicketTable";
 
-export default function ClientTicketsTable({
-  tickets = [],
-}) {
-
+export default function ClientTicketsTable({ tickets = [] }) {
   // =====================================================
   // ADAPTATION DES DONNÉES CLIENT
   // =====================================================
@@ -33,7 +30,6 @@ export default function ClientTicketsTable({
     user_name: "Moi",
   }));
 
-
   // =====================================================
   // AFFICHAGE
   // =====================================================
@@ -44,10 +40,5 @@ export default function ClientTicketsTable({
    * `basePath` permet à `TicketActions` de construire
    * les liens correspondant à l'espace client.
    */
-  return (
-    <TicketTable
-      tickets={adaptedTickets}
-      basePath="/support-tickets"
-    />
-  );
+  return <TicketTable tickets={adaptedTickets} basePath="/support-tickets" />;
 }

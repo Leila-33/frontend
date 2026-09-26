@@ -1,18 +1,11 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
-
+import { formatAmount } from "../../utils/priceUtils";
 import apiFetch from "../../services/apiFetch";
+import { validateTradeIn } from "../../utils/tradeInValidation";
 
 /**
  * Formulaire de création / modification d'une offre commerciale.
@@ -32,9 +25,9 @@ import apiFetch from "../../services/apiFetch";
 export default function QuoteFormPage({
   initialValues = null,
   mode = "create",
+  leadId = null,
   onSubmit = null,
 }) {
-  const { leadId } = useParams();
   const navigate = useNavigate();
 
   // =====================================================
@@ -43,47 +36,36 @@ export default function QuoteFormPage({
 
   const [loading, setLoading] = useState(false);
 
-  const [tradeInLoading, setTradeInLoading] =
-    useState(false);
+  const [tradeInLoading, setTradeInLoading] = useState(false);
 
   const [lead, setLead] = useState(null);
 
-  const [discount, setDiscount] = useState(
-    initialValues?.discount ?? 0
-  );
+  const [discount, setDiscount] = useState(initialValues?.discount ?? 0);
 
-  const [downPayment, setDownPayment] =
-    useState(
-      initialValues?.down_payment ?? 0
-    );
+  const [downPayment, setDownPayment] = useState(
+    initialValues?.down_payment ?? 0
+  );
 
   const [duration, setDuration] = useState(
     initialValues?.duration_months ?? 36
   );
 
-  const [tradeInValue, setTradeInValue] =
-    useState(
-      initialValues?.trade_in_value ?? 0
-    );
+  const [tradeInValue, setTradeInValue] = useState(
+    initialValues?.trade_in_value ?? 0
+  );
 
   const [form, setForm] = useState({
-    trade_in_enabled:
-      Boolean(initialValues?.trade_in),
+    trade_in_enabled: Boolean(initialValues?.trade_in),
 
-    trade_brand:
-      initialValues?.trade_in?.brand ?? "",
+    trade_brand: initialValues?.trade_in?.brand ?? "",
 
-    trade_model:
-      initialValues?.trade_in?.model ?? "",
+    trade_model: initialValues?.trade_in?.model ?? "",
 
-    trade_year:
-      initialValues?.trade_in?.year ?? "",
+    trade_year: initialValues?.trade_in?.year ?? "",
 
-    trade_mileage:
-      initialValues?.trade_in?.mileage ?? "",
+    trade_mileage: initialValues?.trade_in?.mileage ?? "",
 
-    trade_condition:
-      initialValues?.trade_in?.condition ?? "",
+    trade_condition: initialValues?.trade_in?.condition ?? "",
   });
 
   // =====================================================
@@ -92,12 +74,7 @@ export default function QuoteFormPage({
 
   const vehicle = lead?.vehicle;
 
-  const basePrice =
-    Number(
-      initialValues?.base_price ??
-        vehicle?.price ??
-        0
-    );
+  const basePrice = Number(initialValues?.base_price ?? vehicle?.price ?? 0);
 
   // =====================================================
   // CHARGEMENT DU PROSPECT
@@ -109,18 +86,13 @@ export default function QuoteFormPage({
     }
 
     try {
-      const data = await apiFetch(
-        `/agent/leads/${leadId}`,
-        {
-          method: "GET",
-        }
-      );
+      const data = await apiFetch(`/agent/leads/${leadId}`, {
+        method: "GET",
+      });
 
       setLead(data);
     } catch (error) {
-      toast.error(
-        "Impossible de charger le prospect."
-      );
+      toast.error("Impossible de charger le prospect.");
     }
   }, [leadId]);
 
@@ -133,118 +105,7 @@ export default function QuoteFormPage({
     if (initialValues?.lead) {
       setLead(initialValues.lead);
     }
-  }, [
-    fetchLead,
-    mode,
-    initialValues,
-  ]);
-
-  // =====================================================
-  // VALIDATION DE LA REPRISE
-  // =====================================================
-
-  /**
-   * Valide uniquement les champs de la reprise.
-   *
-   * La reprise n'est considérée comme obligatoire
-   * que lorsque `trade_in_enabled` est activé.
-   */
-  const validateTradeIn = useCallback(
-    (data) => {
-      const errors = {};
-
-      // -------------------------------------------------
-      // Si la reprise n'est pas activée,
-      // aucun champ de reprise n'est obligatoire.
-      // -------------------------------------------------
-
-      if (!data.trade_in_enabled) {
-        return errors;
-      }
-
-      const currentYear =
-        new Date().getFullYear();
-
-      // -------------------------------------------------
-      // MARQUE
-      // -------------------------------------------------
-
-      if (!data.trade_brand?.trim()) {
-        errors.trade_brand =
-          "Marque obligatoire.";
-      }
-
-      // -------------------------------------------------
-      // MODÈLE
-      // -------------------------------------------------
-
-      if (!data.trade_model?.trim()) {
-        errors.trade_model =
-          "Modèle obligatoire.";
-      }
-
-      // -------------------------------------------------
-      // ANNÉE
-      // -------------------------------------------------
-
-      if (
-        data.trade_year === "" ||
-        data.trade_year == null
-      ) {
-        errors.trade_year =
-          "Année requise.";
-      } else {
-        const year = Number(
-          data.trade_year
-        );
-
-        if (
-          !Number.isInteger(year) ||
-          year < 1900 ||
-          year > currentYear
-        ) {
-          errors.trade_year =
-            "Année invalide.";
-        }
-      }
-
-      // -------------------------------------------------
-      // KILOMÉTRAGE
-      // -------------------------------------------------
-
-      if (
-        data.trade_mileage === "" ||
-        data.trade_mileage == null
-      ) {
-        errors.trade_mileage =
-          "Kilométrage requis.";
-      } else {
-        const mileage = Number(
-          data.trade_mileage
-        );
-
-        if (
-          !Number.isFinite(mileage) ||
-          mileage < 0
-        ) {
-          errors.trade_mileage =
-            "Kilométrage invalide.";
-        }
-      }
-
-      // -------------------------------------------------
-      // ÉTAT
-      // -------------------------------------------------
-
-      if (!data.trade_condition) {
-        errors.trade_condition =
-          "État obligatoire.";
-      }
-
-      return errors;
-    },
-    []
-  );
+  }, [fetchLead, mode, initialValues]);
 
   // =====================================================
   // VALIDATION GLOBALE
@@ -266,94 +127,60 @@ export default function QuoteFormPage({
     // PRIX DU VÉHICULE
     // -------------------------------------------------
 
-    if (
-      !Number.isFinite(basePrice) ||
-      basePrice < 0
-    ) {
-      validationErrors.base_price =
-        "Prix du véhicule invalide.";
+    if (!Number.isFinite(basePrice) || basePrice < 0) {
+      validationErrors.base_price = "Prix du véhicule invalide.";
     }
 
     // -------------------------------------------------
     // REMISE
     // -------------------------------------------------
 
-    const numericDiscount =
-      Number(discount);
+    const numericDiscount = Number(discount);
 
-    if (
-      !Number.isFinite(numericDiscount) ||
-      numericDiscount < 0
-    ) {
-      validationErrors.discount =
-        "Remise invalide.";
+    if (!Number.isFinite(numericDiscount) || numericDiscount < 0) {
+      validationErrors.discount = "Remise invalide.";
     }
 
     // -------------------------------------------------
     // APPORT
     // -------------------------------------------------
 
-    const numericDownPayment =
-      Number(downPayment);
+    const numericDownPayment = Number(downPayment);
 
-    if (
-      !Number.isFinite(numericDownPayment) ||
-      numericDownPayment < 0
-    ) {
-      validationErrors.down_payment =
-        "Apport invalide.";
+    if (!Number.isFinite(numericDownPayment) || numericDownPayment < 0) {
+      validationErrors.down_payment = "Apport invalide.";
     }
 
     // -------------------------------------------------
     // DURÉE
     // -------------------------------------------------
 
-    const allowedDurations = [
-      24,
-      36,
-      48,
-      60,
-    ];
+    const allowedDurations = [24, 36, 48, 60];
 
-    if (
-      !allowedDurations.includes(
-        Number(duration)
-      )
-    ) {
-      validationErrors.duration =
-        "Durée de financement invalide.";
+    if (!allowedDurations.includes(Number(duration))) {
+      validationErrors.duration = "Durée de financement invalide.";
     }
 
     // -------------------------------------------------
     // REPRISE
     // -------------------------------------------------
+    if (form.trade_in_enabled) {
+      const tradeInErrors = validateTradeIn(form);
 
-    const tradeInErrors =
-      validateTradeIn(form);
-
-    Object.assign(
-      validationErrors,
-      tradeInErrors
-    );
+      Object.assign(validationErrors, tradeInErrors);
+    }
 
     // -------------------------------------------------
     // VALEUR DE REPRISE
     // -------------------------------------------------
 
-    const numericTradeInValue =
-      Number(tradeInValue);
+    const numericTradeInValue = Number(tradeInValue);
 
     if (
       form.trade_in_enabled &&
-      (
-        !Number.isFinite(
-          numericTradeInValue
-        ) ||
-        numericTradeInValue < 0
-      )
+      (!Number.isFinite(numericTradeInValue) || numericTradeInValue < 0)
     ) {
-      validationErrors.trade_in_value =
-        "Valeur de reprise invalide.";
+      validationErrors.trade_in_value = "Valeur de reprise invalide.";
     }
 
     // -------------------------------------------------
@@ -361,9 +188,7 @@ export default function QuoteFormPage({
     // -------------------------------------------------
 
     const totalDiscount =
-      numericDiscount +
-      numericDownPayment +
-      numericTradeInValue;
+      numericDiscount + numericDownPayment + numericTradeInValue;
 
     if (
       Number.isFinite(basePrice) &&
@@ -375,15 +200,7 @@ export default function QuoteFormPage({
     }
 
     return validationErrors;
-  }, [
-    basePrice,
-    discount,
-    downPayment,
-    duration,
-    form,
-    tradeInValue,
-    validateTradeIn,
-  ]);
+  }, [basePrice, discount, downPayment, duration, form, tradeInValue]);
 
   // =====================================================
   // VALIDITÉ DU FORMULAIRE
@@ -393,18 +210,14 @@ export default function QuoteFormPage({
    * Une seule règle détermine si l'offre peut être
    * enregistrée : aucune erreur ne doit être présente.
    */
-  const isFormValid =
-    Object.keys(errors).length === 0;
+  const isFormValid = Object.keys(errors).length === 0;
 
   // =====================================================
   // MODIFICATION DES CHAMPS DE REPRISE
   // =====================================================
 
   const handleTradeInChange = (event) => {
-    const {
-      name,
-      value,
-    } = event.target;
+    const { name, value } = event.target;
 
     setForm((previousForm) => ({
       ...previousForm,
@@ -417,8 +230,7 @@ export default function QuoteFormPage({
   // =====================================================
 
   const handleTradeInToggle = (event) => {
-    const enabled =
-      event.target.checked;
+    const enabled = event.target.checked;
 
     setForm((previousForm) => ({
       ...previousForm,
@@ -439,9 +251,7 @@ export default function QuoteFormPage({
   const handleTradeIn = async () => {
     if (
       !form.trade_in_enabled ||
-      Object.keys(
-        validateTradeIn(form)
-      ).length > 0
+      Object.keys(validateTradeIn(form)).length > 0
     ) {
       return;
     }
@@ -457,31 +267,19 @@ export default function QuoteFormPage({
         condition: form.trade_condition,
       };
 
-      const response = await apiFetch(
-        "/trade-in/estimate",
-        {
-          method: "POST",
-          body: payload,
-        }
-      );
+      const response = await apiFetch("/trade-in/estimate", {
+        method: "POST",
+        body: payload,
+      });
 
-      const estimatedValue = Number(
-        response?.estimated_value ?? 0
-      );
+      const estimatedValue = Number(response?.estimated_value ?? 0);
 
-      setTradeInValue(
-        Number.isFinite(estimatedValue)
-          ? estimatedValue
-          : 0
-      );
+      setTradeInValue(Number.isFinite(estimatedValue) ? estimatedValue : 0);
 
-      toast.success(
-        "Estimation reprise mise à jour."
-      );
+      toast.success("Estimation reprise mise à jour.");
     } catch (error) {
       toast.error(
-        error?.message ||
-          "Erreur lors de l'estimation de la reprise."
+        error?.message || "Erreur lors de l'estimation de la reprise."
       );
     } finally {
       setTradeInLoading(false);
@@ -500,31 +298,17 @@ export default function QuoteFormPage({
         Number(tradeInValue || 0),
       0
     );
-  }, [
-    basePrice,
-    discount,
-    downPayment,
-    tradeInValue,
-  ]);
+  }, [basePrice, discount, downPayment, tradeInValue]);
 
   const monthly = useMemo(() => {
-    const numericDuration =
-      Number(duration);
+    const numericDuration = Number(duration);
 
-    if (
-      !Number.isFinite(numericDuration) ||
-      numericDuration <= 0
-    ) {
+    if (!Number.isFinite(numericDuration) || numericDuration <= 0) {
       return "0.00";
     }
 
-    return (
-      total / numericDuration
-    ).toFixed(2);
-  }, [
-    total,
-    duration,
-  ]);
+    return (total / numericDuration).toFixed(2);
+  }, [total, duration]);
 
   // =====================================================
   // CRÉATION / MODIFICATION DE L'OFFRE
@@ -537,12 +321,7 @@ export default function QuoteFormPage({
     // même si le bouton est désactivé côté interface,
     // on empêche également la soumission si une erreur
     // existe.
-    if (
-      loading ||
-      !isFormValid ||
-      !lead ||
-      !onSubmit
-    ) {
+    if (loading || !isFormValid || !lead || !onSubmit) {
       return;
     }
 
@@ -551,36 +330,25 @@ export default function QuoteFormPage({
 
       discount: Number(discount),
 
-      down_payment:
-        Number(downPayment),
+      down_payment: Number(downPayment),
 
-      trade_in_value:
-        Number(tradeInValue),
+      trade_in_value: Number(tradeInValue),
 
-      duration_months:
-        Number(duration),
+      duration_months: Number(duration),
 
-      trade_in:
-        form.trade_in_enabled
-          ? {
-              brand:
-                form.trade_brand.trim(),
+      trade_in: form.trade_in_enabled
+        ? {
+            brand: form.trade_brand.trim(),
 
-              model:
-                form.trade_model.trim(),
+            model: form.trade_model.trim(),
 
-              year:
-                Number(form.trade_year),
+            year: Number(form.trade_year),
 
-              mileage:
-                Number(
-                  form.trade_mileage
-                ),
+            mileage: Number(form.trade_mileage),
 
-              condition:
-                form.trade_condition,
-            }
-          : null,
+            condition: form.trade_condition,
+          }
+        : null,
     };
 
     try {
@@ -588,10 +356,7 @@ export default function QuoteFormPage({
 
       await onSubmit(payload);
     } catch (error) {
-      toast.error(
-        error?.message ||
-          "Erreur lors de l'enregistrement."
-      );
+      toast.error(error?.message || "Erreur lors de l'enregistrement.");
     } finally {
       setLoading(false);
     }
@@ -604,10 +369,7 @@ export default function QuoteFormPage({
   if (!lead) {
     return (
       <div className="container py-5">
-        <div
-          className="alert alert-light border"
-          role="status"
-        >
+        <div className="alert alert-light border" role="status">
           Prospect introuvable.
         </div>
       </div>
@@ -616,91 +378,64 @@ export default function QuoteFormPage({
 
   return (
     <div className="container py-4">
-
       {/* =================================================
           EN-TÊTE
           ================================================= */}
 
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-
         <div>
           <h1 className="h2 fw-bold mb-1">
-            {mode === "create"
-              ? "Créer une offre"
-              : "Modifier l'offre"}
+            {mode === "create" ? "Créer une offre" : "Modifier l'offre"}
           </h1>
 
           <div className="text-muted">
-            {lead.first_name}{" "}
-            {lead.last_name}
+            {lead.first_name} {lead.last_name}
           </div>
         </div>
 
         <button
           type="button"
           className="btn btn-outline-secondary"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(`/sales/lead/${lead.id}`)}
           disabled={loading}
         >
-          <i
-            className="bi bi-arrow-left me-2"
-            aria-hidden="true"
-          />
+          <i className="bi bi-arrow-left me-2" aria-hidden="true" />
           Retour
         </button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-      >
-
+      <form onSubmit={handleSubmit} noValidate>
         {/* =================================================
             REPRISE
             ================================================= */}
 
         <div className="card border-0 shadow-sm mb-4">
           <div className="card-body p-4">
-
-            <h2 className="h5 fw-semibold mb-3">
-              Reprise véhicule
-            </h2>
+            <h2 className="h5 fw-semibold mb-3">Reprise véhicule</h2>
 
             <div className="form-check mb-3">
               <input
                 id="trade-in-enabled"
                 className="form-check-input"
                 type="checkbox"
-                checked={
-                  form.trade_in_enabled
-                }
-                onChange={
-                  handleTradeInToggle
-                }
+                checked={form.trade_in_enabled}
+                onChange={handleTradeInToggle}
                 disabled={loading}
               />
 
-              <label
-                htmlFor="trade-in-enabled"
-                className="form-check-label"
-              >
-                Le client possède un véhicule
-                à reprendre
+              <label htmlFor="trade-in-enabled" className="form-check-label">
+                Le client possède un véhicule à reprendre
               </label>
             </div>
 
             {form.trade_in_enabled && (
               <div className="row g-3">
-
                 {/* -----------------------------------------
                     MARQUE
                     ----------------------------------------- */}
 
                 <div className="col-md-6">
-                  <label
-                    htmlFor="trade-brand"
-                    className="form-label"
-                  >
+                  <label htmlFor="trade-brand" className="form-label">
                     Marque
                   </label>
 
@@ -709,34 +444,19 @@ export default function QuoteFormPage({
                     name="trade_brand"
                     type="text"
                     className={`form-control ${
-                      errors.trade_brand
-                        ? "is-invalid"
-                        : ""
+                      errors.trade_brand ? "is-invalid" : ""
                     }`}
-                    value={
-                      form.trade_brand
-                    }
-                    onChange={
-                      handleTradeInChange
-                    }
+                    value={form.trade_brand}
+                    onChange={handleTradeInChange}
                     disabled={loading}
-                    aria-invalid={
-                      Boolean(
-                        errors.trade_brand
-                      )
-                    }
+                    aria-invalid={Boolean(errors.trade_brand)}
                     aria-describedby={
-                      errors.trade_brand
-                        ? "trade-brand-error"
-                        : undefined
+                      errors.trade_brand ? "trade-brand-error" : undefined
                     }
                   />
 
                   {errors.trade_brand && (
-                    <div
-                      id="trade-brand-error"
-                      className="invalid-feedback"
-                    >
+                    <div id="trade-brand-error" className="invalid-feedback">
                       {errors.trade_brand}
                     </div>
                   )}
@@ -747,10 +467,7 @@ export default function QuoteFormPage({
                     ----------------------------------------- */}
 
                 <div className="col-md-6">
-                  <label
-                    htmlFor="trade-model"
-                    className="form-label"
-                  >
+                  <label htmlFor="trade-model" className="form-label">
                     Modèle
                   </label>
 
@@ -759,28 +476,16 @@ export default function QuoteFormPage({
                     name="trade_model"
                     type="text"
                     className={`form-control ${
-                      errors.trade_model
-                        ? "is-invalid"
-                        : ""
+                      errors.trade_model ? "is-invalid" : ""
                     }`}
-                    value={
-                      form.trade_model
-                    }
-                    onChange={
-                      handleTradeInChange
-                    }
+                    value={form.trade_model}
+                    onChange={handleTradeInChange}
                     disabled={loading}
-                    aria-invalid={
-                      Boolean(
-                        errors.trade_model
-                      )
-                    }
+                    aria-invalid={Boolean(errors.trade_model)}
                   />
 
                   {errors.trade_model && (
-                    <div className="invalid-feedback">
-                      {errors.trade_model}
-                    </div>
+                    <div className="invalid-feedback">{errors.trade_model}</div>
                   )}
                 </div>
 
@@ -789,10 +494,7 @@ export default function QuoteFormPage({
                     ----------------------------------------- */}
 
                 <div className="col-md-4">
-                  <label
-                    htmlFor="trade-year"
-                    className="form-label"
-                  >
+                  <label htmlFor="trade-year" className="form-label">
                     Année
                   </label>
 
@@ -801,32 +503,18 @@ export default function QuoteFormPage({
                     name="trade_year"
                     type="number"
                     min="1900"
-                    max={
-                      new Date().getFullYear()
-                    }
+                    max={new Date().getFullYear()}
                     className={`form-control ${
-                      errors.trade_year
-                        ? "is-invalid"
-                        : ""
+                      errors.trade_year ? "is-invalid" : ""
                     }`}
-                    value={
-                      form.trade_year
-                    }
-                    onChange={
-                      handleTradeInChange
-                    }
+                    value={form.trade_year}
+                    onChange={handleTradeInChange}
                     disabled={loading}
-                    aria-invalid={
-                      Boolean(
-                        errors.trade_year
-                      )
-                    }
+                    aria-invalid={Boolean(errors.trade_year)}
                   />
 
                   {errors.trade_year && (
-                    <div className="invalid-feedback">
-                      {errors.trade_year}
-                    </div>
+                    <div className="invalid-feedback">{errors.trade_year}</div>
                   )}
                 </div>
 
@@ -835,10 +523,7 @@ export default function QuoteFormPage({
                     ----------------------------------------- */}
 
                 <div className="col-md-4">
-                  <label
-                    htmlFor="trade-mileage"
-                    className="form-label"
-                  >
+                  <label htmlFor="trade-mileage" className="form-label">
                     Kilométrage
                   </label>
 
@@ -848,22 +533,12 @@ export default function QuoteFormPage({
                     type="number"
                     min="0"
                     className={`form-control ${
-                      errors.trade_mileage
-                        ? "is-invalid"
-                        : ""
+                      errors.trade_mileage ? "is-invalid" : ""
                     }`}
-                    value={
-                      form.trade_mileage
-                    }
-                    onChange={
-                      handleTradeInChange
-                    }
+                    value={form.trade_mileage}
+                    onChange={handleTradeInChange}
                     disabled={loading}
-                    aria-invalid={
-                      Boolean(
-                        errors.trade_mileage
-                      )
-                    }
+                    aria-invalid={Boolean(errors.trade_mileage)}
                   />
 
                   {errors.trade_mileage && (
@@ -878,10 +553,7 @@ export default function QuoteFormPage({
                     ----------------------------------------- */}
 
                 <div className="col-md-4">
-                  <label
-                    htmlFor="trade-condition"
-                    className="form-label"
-                  >
+                  <label htmlFor="trade-condition" className="form-label">
                     État
                   </label>
 
@@ -889,42 +561,22 @@ export default function QuoteFormPage({
                     id="trade-condition"
                     name="trade_condition"
                     className={`form-select ${
-                      errors.trade_condition
-                        ? "is-invalid"
-                        : ""
+                      errors.trade_condition ? "is-invalid" : ""
                     }`}
-                    value={
-                      form.trade_condition
-                    }
-                    onChange={
-                      handleTradeInChange
-                    }
+                    value={form.trade_condition}
+                    onChange={handleTradeInChange}
                     disabled={loading}
-                    aria-invalid={
-                      Boolean(
-                        errors.trade_condition
-                      )
-                    }
+                    aria-invalid={Boolean(errors.trade_condition)}
                   >
-                    <option value="">
-                      Choisir
-                    </option>
+                    <option value="">Choisir</option>
 
-                    <option value="excellent">
-                      Excellent
-                    </option>
+                    <option value="excellent">Excellent</option>
 
-                    <option value="good">
-                      Bon
-                    </option>
+                    <option value="good">Bon</option>
 
-                    <option value="average">
-                      Moyen
-                    </option>
+                    <option value="average">Moyen</option>
 
-                    <option value="poor">
-                      Mauvais
-                    </option>
+                    <option value="poor">Mauvais</option>
                   </select>
 
                   {errors.trade_condition && (
@@ -942,15 +594,11 @@ export default function QuoteFormPage({
                   <button
                     type="button"
                     className="btn btn-dark"
-                    onClick={
-                      handleTradeIn
-                    }
+                    onClick={handleTradeIn}
                     disabled={
                       loading ||
                       tradeInLoading ||
-                      Object.keys(
-                        validateTradeIn(form)
-                      ).length > 0
+                      Object.keys(validateTradeIn(form)).length > 0
                     }
                   >
                     {tradeInLoading ? (
@@ -974,11 +622,7 @@ export default function QuoteFormPage({
 
                   {tradeInValue > 0 && (
                     <div className="alert alert-light border mt-3 mb-0">
-                      Valeur estimée :
-                      {" "}
-                      <strong>
-                        {tradeInValue} €
-                      </strong>
+                      Valeur estimée : <strong>{tradeInValue} €</strong>
                     </div>
                   )}
 
@@ -988,7 +632,6 @@ export default function QuoteFormPage({
                     </div>
                   )}
                 </div>
-
               </div>
             )}
           </div>
@@ -999,7 +642,6 @@ export default function QuoteFormPage({
             ================================================= */}
 
         <div className="row g-4">
-
           {/* =================================================
               INFORMATIONS FINANCIÈRES
               ================================================= */}
@@ -1007,22 +649,17 @@ export default function QuoteFormPage({
           <div className="col-lg-7">
             <div className="card border-0 shadow-sm">
               <div className="card-body p-4">
-
                 <h2 className="h5 fw-semibold mb-3">
                   Informations financières
                 </h2>
 
                 <div className="row g-3">
-
                   {/* -----------------------------------------
                       REMISE
                       ----------------------------------------- */}
 
                   <div className="col-md-6">
-                    <label
-                      htmlFor="discount"
-                      className="form-label"
-                    >
+                    <label htmlFor="discount" className="form-label">
                       Remise (€)
                     </label>
 
@@ -1030,31 +667,19 @@ export default function QuoteFormPage({
                       id="discount"
                       type="number"
                       className={`form-control ${
-                        errors.discount
-                          ? "is-invalid"
-                          : ""
+                        errors.discount ? "is-invalid" : ""
                       }`}
                       min="0"
                       value={discount}
                       onChange={(event) =>
-                        setDiscount(
-                          Number(
-                            event.target.value
-                          )
-                        )
+                        setDiscount(Number(event.target.value))
                       }
                       disabled={loading}
-                      aria-invalid={
-                        Boolean(
-                          errors.discount
-                        )
-                      }
+                      aria-invalid={Boolean(errors.discount)}
                     />
 
                     {errors.discount && (
-                      <div className="invalid-feedback">
-                        {errors.discount}
-                      </div>
+                      <div className="invalid-feedback">{errors.discount}</div>
                     )}
                   </div>
 
@@ -1063,10 +688,7 @@ export default function QuoteFormPage({
                       ----------------------------------------- */}
 
                   <div className="col-md-6">
-                    <label
-                      htmlFor="down-payment"
-                      className="form-label"
-                    >
+                    <label htmlFor="down-payment" className="form-label">
                       Apport client (€)
                     </label>
 
@@ -1074,25 +696,15 @@ export default function QuoteFormPage({
                       id="down-payment"
                       type="number"
                       className={`form-control ${
-                        errors.down_payment
-                          ? "is-invalid"
-                          : ""
+                        errors.down_payment ? "is-invalid" : ""
                       }`}
                       min="0"
                       value={downPayment}
                       onChange={(event) =>
-                        setDownPayment(
-                          Number(
-                            event.target.value
-                          )
-                        )
+                        setDownPayment(Number(event.target.value))
                       }
                       disabled={loading}
-                      aria-invalid={
-                        Boolean(
-                          errors.down_payment
-                        )
-                      }
+                      aria-invalid={Boolean(errors.down_payment)}
                     />
 
                     {errors.down_payment && (
@@ -1107,59 +719,35 @@ export default function QuoteFormPage({
                       ----------------------------------------- */}
 
                   <div className="col-md-6">
-                    <label
-                      htmlFor="duration"
-                      className="form-label"
-                    >
+                    <label htmlFor="duration" className="form-label">
                       Durée
                     </label>
 
                     <select
                       id="duration"
                       className={`form-select ${
-                        errors.duration
-                          ? "is-invalid"
-                          : ""
+                        errors.duration ? "is-invalid" : ""
                       }`}
                       value={duration}
                       onChange={(event) =>
-                        setDuration(
-                          Number(
-                            event.target.value
-                          )
-                        )
+                        setDuration(Number(event.target.value))
                       }
                       disabled={loading}
-                      aria-invalid={
-                        Boolean(
-                          errors.duration
-                        )
-                      }
+                      aria-invalid={Boolean(errors.duration)}
                     >
-                      <option value={24}>
-                        24 mois
-                      </option>
+                      <option value={24}>24 mois</option>
 
-                      <option value={36}>
-                        36 mois
-                      </option>
+                      <option value={36}>36 mois</option>
 
-                      <option value={48}>
-                        48 mois
-                      </option>
+                      <option value={48}>48 mois</option>
 
-                      <option value={60}>
-                        60 mois
-                      </option>
+                      <option value={60}>60 mois</option>
                     </select>
 
                     {errors.duration && (
-                      <div className="invalid-feedback">
-                        {errors.duration}
-                      </div>
+                      <div className="invalid-feedback">{errors.duration}</div>
                     )}
                   </div>
-
                 </div>
               </div>
             </div>
@@ -1172,85 +760,56 @@ export default function QuoteFormPage({
           <div className="col-lg-5">
             <div className="card border-0 shadow-sm">
               <div className="card-body p-4">
-
-                <h2 className="h5 fw-semibold mb-3">
-                  Récapitulatif
-                </h2>
+                <h2 className="h5 fw-semibold mb-3">Récapitulatif</h2>
 
                 <div className="mb-3">
                   <div className="fw-semibold">
-                    {vehicle?.brand}{" "}
-                    {vehicle?.model}
+                    {vehicle?.brand} {vehicle?.model}
                   </div>
 
                   <small className="text-muted">
-                    {lead.first_name}{" "}
-                    {lead.last_name}
+                    {lead.first_name} {lead.last_name}
                   </small>
                 </div>
 
                 <hr />
 
                 <div className="d-flex justify-content-between mb-2">
-                  <span>
-                    Prix véhicule
-                  </span>
+                  <span>Prix véhicule</span>
 
-                  <strong>
-                    {basePrice} €
-                  </strong>
+                  <strong>{basePrice} €</strong>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2">
-                  <span>
-                    Remise
-                  </span>
+                  <span>Remise</span>
 
-                  <strong>
-                    - {discount} €
-                  </strong>
+                  <strong>- {formatAmount(discount)} €</strong>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2">
-                  <span>
-                    Apport
-                  </span>
+                  <span>Apport</span>
 
-                  <strong>
-                    - {downPayment} €
-                  </strong>
+                  <strong>- {formatAmount(downPayment)} €</strong>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2">
-                  <span>
-                    Reprise
-                  </span>
+                  <span>Reprise</span>
 
-                  <strong>
-                    - {tradeInValue} €
-                  </strong>
+                  <strong>- {formatAmount(tradeInValue)} €</strong>
                 </div>
 
                 <hr />
 
                 <div className="d-flex justify-content-between mb-2">
-                  <span>
-                    Montant financé
-                  </span>
+                  <span>Montant financé</span>
 
-                  <strong>
-                    {total} €
-                  </strong>
+                  <strong>{formatAmount(total)} €</strong>
                 </div>
 
                 <div className="d-flex justify-content-between mb-4">
-                  <span>
-                    Mensualité estimée
-                  </span>
+                  <span>Mensualité estimée</span>
 
-                  <strong>
-                    {monthly} €/mois
-                  </strong>
+                  <strong>{formatAmount(monthly)} €/mois</strong>
                 </div>
 
                 {/* -----------------------------------------
@@ -1258,12 +817,8 @@ export default function QuoteFormPage({
                     ----------------------------------------- */}
 
                 {!isFormValid && (
-                  <div
-                    className="alert alert-danger"
-                    role="alert"
-                  >
-                    Veuillez corriger les erreurs
-                    du formulaire avant de générer
+                  <div className="alert alert-danger" role="alert">
+                    Veuillez corriger les erreurs du formulaire avant de générer
                     l'offre.
                   </div>
                 )}
@@ -1273,10 +828,7 @@ export default function QuoteFormPage({
                     ----------------------------------------- */}
 
                 {errors.total && (
-                  <div
-                    className="alert alert-danger"
-                    role="alert"
-                  >
+                  <div className="alert alert-danger" role="alert">
                     {errors.total}
                   </div>
                 )}
@@ -1288,10 +840,7 @@ export default function QuoteFormPage({
                 <button
                   type="submit"
                   className="btn btn-dark w-100"
-                  disabled={
-                    loading ||
-                    !isFormValid
-                  }
+                  disabled={loading || !isFormValid}
                 >
                   {loading ? (
                     <>
@@ -1314,11 +863,9 @@ export default function QuoteFormPage({
                     </>
                   )}
                 </button>
-
               </div>
             </div>
           </div>
-
         </div>
       </form>
     </div>

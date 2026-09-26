@@ -14,7 +14,6 @@ export default function TicketTable({
   onArchive,
   onTakeOwnership,
 }) {
-
   // =====================================================
   // LISTE VIDE
   // =====================================================
@@ -26,13 +25,8 @@ export default function TicketTable({
    * qu'un tableau vide.
    */
   if (!tickets.length) {
-    return (
-      <div className="text-center text-muted py-4">
-        Aucun ticket
-      </div>
-    );
+    return <div className="text-center text-muted py-4">Aucun ticket</div>;
   }
-
 
   // =====================================================
   // AFFICHAGE DU TABLEAU
@@ -40,66 +34,45 @@ export default function TicketTable({
 
   return (
     <div className="table-responsive">
-
       <table className="table table-hover align-middle">
-
         {/* =================================================
             EN-TÊTE DU TABLEAU
         ================================================= */}
 
         <thead>
-
           <tr>
-
             {/* Indicateur "Nouveau" */}
             <th scope="col"></th>
 
             {/* Sujet du ticket */}
-            <th scope="col">
-              Sujet
-            </th>
+            <th scope="col">Sujet</th>
 
             {/* Client associé */}
-            <th scope="col">
-              Client
-            </th>
+            <th scope="col">Client</th>
 
             {/* Catégorie */}
-            <th scope="col">
-              Catégorie
-            </th>
+            <th scope="col">Catégorie</th>
 
             {/* Priorité */}
-            <th scope="col">
-              Priorité
-            </th>
+            <th scope="col">Priorité</th>
 
             {/* Statut */}
-            <th scope="col">
-              Statut
-            </th>
+            <th scope="col">Statut</th>
 
             {/* Dernière activité */}
-            <th scope="col">
-              Dernière activité
-            </th>
+            <th scope="col">Dernière activité</th>
 
             {/* Actions */}
             <th scope="col"></th>
-
           </tr>
-
         </thead>
-
 
         {/* =================================================
             CORPS DU TABLEAU
         ================================================= */}
 
         <tbody>
-
           {tickets.map((ticket) => (
-
             <TicketRow
               key={ticket.id}
               ticket={ticket}
@@ -108,13 +81,9 @@ export default function TicketTable({
               onArchive={onArchive}
               onTakeOwnership={onTakeOwnership}
             />
-
           ))}
-
         </tbody>
-
       </table>
-
     </div>
   );
 }

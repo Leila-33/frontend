@@ -1,18 +1,10 @@
 import { useState } from "react";
-import {
-  BsCalendarCheck,
-  BsCheckCircle,
-  BsXCircle,
-} from "react-icons/bs";
+import { BsCalendarCheck, BsCheckCircle, BsXCircle } from "react-icons/bs";
 import { toast } from "react-toastify";
 
 import apiFetch from "../../services/apiFetch";
 
-export default function AvailabilityModal({
-  vehicle,
-  onClose,
-}) {
-
+export default function AvailabilityModal({ vehicle, onClose }) {
   /* =======================================================
      ÉTAT - VÉRIFICATION DES DATES
   ======================================================= */
@@ -44,9 +36,7 @@ export default function AvailabilityModal({
    * true  = véhicule disponible
    * false = véhicule indisponible
    */
-  const [reservationAvailability, setReservationAvailability] =
-    useState(null);
-
+  const [reservationAvailability, setReservationAvailability] = useState(null);
 
   /* =======================================================
      VALIDATION DES DATES
@@ -79,13 +69,11 @@ export default function AvailabilityModal({
       errors.end = "Date de retour requise";
     }
 
-
     /* -------------------------------------------------------
        VALIDATION DES DATES
     ------------------------------------------------------- */
 
     if (start && end) {
-
       /*
        * Date actuelle au format YYYY-MM-DD.
        *
@@ -95,40 +83,32 @@ export default function AvailabilityModal({
       const currentDate = new Date();
 
       const todayString = new Date(
-        currentDate.getTime() -
-        currentDate.getTimezoneOffset() * 60000
+        currentDate.getTime() - currentDate.getTimezoneOffset() * 60000
       )
         .toISOString()
         .split("T")[0];
 
-
       // La date de départ doit être aujourd'hui ou ultérieure.
       if (start < todayString) {
-        errors.start =
-          "La date de départ doit être aujourd'hui ou ultérieure";
+        errors.start = "La date de départ doit être aujourd'hui ou ultérieure";
       }
-
 
       // La date de retour doit être après la date de départ.
       if (end <= start) {
-        errors.end =
-          "La date de retour doit être après le départ";
+        errors.end = "La date de retour doit être après le départ";
       }
     }
-
 
     setDateErrors(errors);
 
     return Object.keys(errors).length === 0;
   };
 
-
   /* =======================================================
      MODIFICATION DE LA DATE DE DÉPART
   ======================================================= */
 
   const handleStartChange = (value) => {
-
     const newState = {
       ...dateCheck,
       start: value,
@@ -142,19 +122,14 @@ export default function AvailabilityModal({
      */
     setReservationAvailability(null);
 
-    validateDates(
-      newState.start,
-      newState.end
-    );
+    validateDates(newState.start, newState.end);
   };
-
 
   /* =======================================================
      MODIFICATION DE LA DATE DE RETOUR
   ======================================================= */
 
   const handleEndChange = (value) => {
-
     const newState = {
       ...dateCheck,
       end: value,
@@ -168,12 +143,8 @@ export default function AvailabilityModal({
      */
     setReservationAvailability(null);
 
-    validateDates(
-      newState.start,
-      newState.end
-    );
+    validateDates(newState.start, newState.end);
   };
-
 
   /* =======================================================
      VÉRIFICATION DE DISPONIBILITÉ
@@ -184,12 +155,7 @@ export default function AvailabilityModal({
    * sur la période sélectionnée.
    */
   const handleCheck = async () => {
-
-    const {
-      start,
-      end,
-    } = dateCheck;
-
+    const { start, end } = dateCheck;
 
     /*
      * Sécurité supplémentaire :
@@ -199,7 +165,6 @@ export default function AvailabilityModal({
       return;
     }
 
-
     /*
      * On effectue une dernière validation avant
      * d'appeler l'API.
@@ -208,35 +173,23 @@ export default function AvailabilityModal({
       return;
     }
 
-
     try {
+      const response = await apiFetch("/reservations/check", {
+        method: "POST",
+        body: {
+          vehicle_id: vehicle.id,
+          start_date: start,
+          end_date: end,
+        },
+      });
 
-      const response = await apiFetch(
-        "/reservations/check",
-        {
-          method: "POST",
-          body: {
-            vehicle_id: vehicle.id,
-            start_date: start,
-            end_date: end,
-          },
-        }
-      );
-
-
-      setReservationAvailability(
-        response.available
-      );
-
+      setReservationAvailability(response.available);
     } catch (err) {
-
       toast.error(
-        err.message ||
-        "Erreur lors de la vérification de la disponibilité"
+        err.message || "Erreur lors de la vérification de la disponibilité"
       );
     }
   };
-
 
   /* =======================================================
      DATE MINIMALE
@@ -249,12 +202,10 @@ export default function AvailabilityModal({
   const currentDate = new Date();
 
   const today = new Date(
-    currentDate.getTime() -
-    currentDate.getTimezoneOffset() * 60000
+    currentDate.getTime() - currentDate.getTimezoneOffset() * 60000
   )
     .toISOString()
     .split("T")[0];
-
 
   /* =======================================================
      SÉCURITÉ
@@ -263,7 +214,6 @@ export default function AvailabilityModal({
   if (!vehicle) {
     return null;
   }
-
 
   /* =======================================================
      AFFICHAGE
@@ -279,15 +229,9 @@ export default function AvailabilityModal({
       aria-modal="true"
       aria-labelledby={`availability-modal-title-${vehicle.id}`}
     >
-
       <div className="modal-dialog modal-dialog-centered">
-
         <div className="modal-content p-4 rounded-4">
-
-          <h5
-            id={`availability-modal-title-${vehicle.id}`}
-            className="mb-1"
-          >
+          <h5 id={`availability-modal-title-${vehicle.id}`} className="mb-1">
             Vérifier la disponibilité
           </h5>
 
@@ -295,15 +239,11 @@ export default function AvailabilityModal({
             {vehicle.brand} {vehicle.model}
           </p>
 
-
           {/* ------------------------------------------------
               DATE DE DÉPART
           ------------------------------------------------ */}
 
-          <label
-            htmlFor={`start-date-${vehicle.id}`}
-            className="form-label"
-          >
+          <label htmlFor={`start-date-${vehicle.id}`} className="form-label">
             Date de départ
           </label>
 
@@ -311,34 +251,22 @@ export default function AvailabilityModal({
             id={`start-date-${vehicle.id}`}
             type="date"
             className={`form-control mb-2 ${
-              dateErrors.start
-                ? "is-invalid"
-                : ""
+              dateErrors.start ? "is-invalid" : ""
             }`}
             value={dateCheck.start}
             min={today}
-            onChange={(event) =>
-              handleStartChange(
-                event.target.value
-              )
-            }
+            onChange={(event) => handleStartChange(event.target.value)}
           />
 
           {dateErrors.start && (
-            <div className="invalid-feedback d-block">
-              {dateErrors.start}
-            </div>
+            <div className="invalid-feedback d-block">{dateErrors.start}</div>
           )}
-
 
           {/* ------------------------------------------------
               DATE DE RETOUR
           ------------------------------------------------ */}
 
-          <label
-            htmlFor={`end-date-${vehicle.id}`}
-            className="form-label mt-2"
-          >
+          <label htmlFor={`end-date-${vehicle.id}`} className="form-label mt-2">
             Date de retour
           </label>
 
@@ -346,25 +274,16 @@ export default function AvailabilityModal({
             id={`end-date-${vehicle.id}`}
             type="date"
             className={`form-control mb-2 ${
-              dateErrors.end
-                ? "is-invalid"
-                : ""
+              dateErrors.end ? "is-invalid" : ""
             }`}
             value={dateCheck.end}
             min={dateCheck.start || today}
-            onChange={(event) =>
-              handleEndChange(
-                event.target.value
-              )
-            }
+            onChange={(event) => handleEndChange(event.target.value)}
           />
 
           {dateErrors.end && (
-            <div className="invalid-feedback d-block">
-              {dateErrors.end}
-            </div>
+            <div className="invalid-feedback d-block">{dateErrors.end}</div>
           )}
-
 
           {/* ------------------------------------------------
               BOUTON DE VÉRIFICATION
@@ -384,14 +303,12 @@ export default function AvailabilityModal({
             Vérifier la disponibilité
           </button>
 
-
           {/* ------------------------------------------------
               RÉSULTAT
           ------------------------------------------------ */}
 
           {reservationAvailability !== null && (
             <div className="mt-3 text-center">
-
               {reservationAvailability ? (
                 <span className="text-success fw-bold">
                   <BsCheckCircle className="me-1" />
@@ -403,10 +320,8 @@ export default function AvailabilityModal({
                   Véhicule indisponible
                 </span>
               )}
-
             </div>
           )}
-
 
           {/* ------------------------------------------------
               FERMETURE
@@ -419,7 +334,6 @@ export default function AvailabilityModal({
           >
             Fermer
           </button>
-
         </div>
       </div>
     </div>

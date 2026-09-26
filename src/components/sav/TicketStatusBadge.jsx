@@ -1,6 +1,4 @@
-import {
-  TICKET_STATUSES,
-} from "../../constants/supportTicketOptions";
+import { TICKET_STATUSES } from "../../constants/supportTicketOptions";
 
 /**
  * Badge permettant d'afficher le statut d'un ticket.
@@ -9,9 +7,7 @@ import {
  * `supportTicketOptions.js` afin d'éviter de dupliquer
  * les libellés et les couleurs dans les composants.
  */
-export default function TicketStatusBadge({
-  status,
-}) {
+export default function TicketStatusBadge({ status }) {
   // =====================================================
   // STATUT COURANT
   // =====================================================
@@ -23,21 +19,14 @@ export default function TicketStatusBadge({
    * Une configuration générique est utilisée si le statut
    * est absent ou inconnu.
    */
-  const current =
-    TICKET_STATUSES[status] || {
-      label: status || "Inconnu",
-      color: "secondary",
-    };
+  const current = TICKET_STATUSES[status] || {
+    label: status || "Inconnu",
+    color: "secondary",
+  };
 
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
-  return (
-    <span
-      className={`badge bg-${current.color}`}
-    >
-      {current.label}
-    </span>
-  );
+  return <span className={`badge bg-${current.color}`}>{current.label}</span>;
 }

@@ -64,37 +64,31 @@ export const DEFAULT_STATUS = {
 export const APPLICATION_ACTION_MODAL_CONFIG = {
   process: {
     title: "Prendre en charge le dossier",
-    description:
-      "Le dossier sera marqué comme pris en charge.",
+    description: "Le dossier sera marqué comme pris en charge.",
   },
 
   delete: {
     title: "Supprimer le dossier",
-    description:
-      "Cette action est irréversible.",
+    description: "Cette action est irréversible.",
   },
 
   archive: {
     title: "Archiver le dossier",
-    description:
-      "Le dossier sera masqué mais conservé.",
+    description: "Le dossier sera masqué mais conservé.",
   },
 
   restore_cancelled: {
     title: "Restaurer le dossier annulé",
-    description:
-      "Le dossier annulé sera réactivé dans le workflow.",
+    description: "Le dossier annulé sera réactivé dans le workflow.",
   },
 
   restore: {
     title: "Restaurer le dossier",
-    description:
-      "Le dossier sera restauré.",
+    description: "Le dossier sera restauré.",
   },
 
   cancel: {
     title: "Annuler le dossier",
-    description:
-      "Le dossier sera marqué comme annulé.",
+    description: "Le dossier sera marqué comme annulé.",
   },
 };

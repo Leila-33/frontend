@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { toast } from "react-toastify";
 
@@ -47,8 +43,7 @@ export default function AvailableLeadsPage() {
    * Permet de n'afficher l'état de chargement que sur
    * le bouton du lead concerné.
    */
-  const [takingLeadId, setTakingLeadId] =
-    useState(null);
+  const [takingLeadId, setTakingLeadId] = useState(null);
 
   // =====================================================
   // RÉCUPÉRATION DES LEADS
@@ -65,12 +60,9 @@ export default function AvailableLeadsPage() {
     try {
       setLoading(true);
 
-      const data = await apiFetch(
-        "/agent/leads?scope=unassigned",
-        {
-          method: "GET",
-        }
-      );
+      const data = await apiFetch("/agent/leads?scope=unassigned", {
+        method: "GET",
+      });
 
       /**
        * Sécurise la récupération des données.
@@ -78,15 +70,10 @@ export default function AvailableLeadsPage() {
        * Si l'API ne renvoie pas de tableau `items`,
        * on affiche simplement une liste vide.
        */
-      setLeads(
-        Array.isArray(data?.items)
-          ? data.items
-          : []
-      );
+      setLeads(Array.isArray(data?.items) ? data.items : []);
     } catch (error) {
       toast.error(
-        error?.message ||
-        "Erreur lors du chargement des leads disponibles."
+        error?.message || "Erreur lors du chargement des leads disponibles."
       );
 
       setLeads([]);
@@ -119,16 +106,11 @@ export default function AvailableLeadsPage() {
     try {
       setTakingLeadId(leadId);
 
-      await apiFetch(
-        `/agent/leads/${leadId}/assign-to-me`,
-        {
-          method: "PATCH",
-        }
-      );
+      await apiFetch(`/agent/leads/${leadId}/assign-to-me`, {
+        method: "PATCH",
+      });
 
-      toast.success(
-        "Lead ajouté à vos prospects."
-      );
+      toast.success("Lead ajouté à vos prospects.");
 
       // =================================================
       // MISE À JOUR LOCALE
@@ -140,15 +122,10 @@ export default function AvailableLeadsPage() {
        * disponibles.
        */
       setLeads((previousLeads) =>
-        previousLeads.filter(
-          (lead) => lead.id !== leadId
-        )
+        previousLeads.filter((lead) => lead.id !== leadId)
       );
     } catch (error) {
-      toast.error(
-        error?.message ||
-        "Impossible de prendre en charge ce lead."
-      );
+      toast.error(error?.message || "Impossible de prendre en charge ce lead.");
     } finally {
       setTakingLeadId(null);
     }
@@ -160,7 +137,6 @@ export default function AvailableLeadsPage() {
 
   return (
     <div className="container py-4">
-
       {/* =================================================
           EN-TÊTE
       ================================================= */}
@@ -177,9 +153,7 @@ export default function AvailableLeadsPage() {
         "
       >
         <div>
-          <h1 className="h3 fw-bold mb-1">
-            Leads disponibles
-          </h1>
+          <h1 className="h3 fw-bold mb-1">Leads disponibles</h1>
 
           <p className="text-muted mb-0">
             Prospects actuellement non assignés.
@@ -202,16 +176,11 @@ export default function AvailableLeadsPage() {
                 "
                 aria-hidden="true"
               />
-
               Actualisation...
             </>
           ) : (
             <>
-              <i
-                className="bi bi-arrow-clockwise me-2"
-                aria-hidden="true"
-              />
-
+              <i className="bi bi-arrow-clockwise me-2" aria-hidden="true" />
               Actualiser
             </>
           )}
@@ -244,9 +213,7 @@ export default function AvailableLeadsPage() {
             aria-hidden="true"
           />
 
-          <p className="mb-0">
-            Chargement des leads...
-          </p>
+          <p className="mb-0">Chargement des leads...</p>
         </div>
       ) : leads.length === 0 ? (
         // -------------------------------------------------
@@ -273,13 +240,10 @@ export default function AvailableLeadsPage() {
             aria-hidden="true"
           />
 
-          <h2 className="h5 fw-semibold mb-2">
-            Aucun lead disponible
-          </h2>
+          <h2 className="h5 fw-semibold mb-2">Aucun lead disponible</h2>
 
           <p className="mb-0">
-            Tous les leads disponibles sont
-            actuellement pris en charge.
+            Tous les leads disponibles sont actuellement pris en charge.
           </p>
         </div>
       ) : (
@@ -301,9 +265,7 @@ export default function AvailableLeadsPage() {
                 lead={lead}
                 mode="available"
                 onTakeLead={handleTakeLead}
-                loading={
-                  takingLeadId === lead.id
-                }
+                loading={takingLeadId === lead.id}
               />
             </div>
           ))}

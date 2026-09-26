@@ -11,40 +11,35 @@ import apiFetch from "../../services/apiFetch";
 const TEST_DRIVE_STATUS_CONFIG = {
   pending: {
     title: "Demande en attente",
-    message:
-      "Vous avez déjà un essai routier en attente de confirmation.",
+    message: "Vous avez déjà un essai routier en attente de confirmation.",
     icon: "bi-hourglass-split",
     color: "warning",
   },
 
   confirmed: {
     title: "Essai routier confirmé",
-    message:
-      "Votre essai routier est confirmé.",
+    message: "Votre essai routier est confirmé.",
     icon: "bi-check-circle",
     color: "success",
   },
 
   rejected: {
     title: "Demande refusée",
-    message:
-      "Votre demande d'essai routier a été refusée.",
+    message: "Votre demande d'essai routier a été refusée.",
     icon: "bi-x-circle",
     color: "danger",
   },
 
   cancelled: {
     title: "Essai routier annulé",
-    message:
-      "Votre essai routier a été annulé.",
+    message: "Votre essai routier a été annulé.",
     icon: "bi-calendar-x",
     color: "secondary",
   },
 
   completed: {
     title: "Essai routier terminé",
-    message:
-      "Vous avez déjà effectué cet essai routier.",
+    message: "Vous avez déjà effectué cet essai routier.",
     icon: "bi-flag",
     color: "success",
   },
@@ -73,9 +68,8 @@ export default function TestDriveModal({
   onClose,
   vehicleId,
   existingTestDrive,
-  onCreated
+  onCreated,
 }) {
-
   const navigate = useNavigate();
 
   // =====================================================
@@ -95,16 +89,14 @@ export default function TestDriveModal({
   const [selectedDate, setSelectedDate] = useState("");
 
   // Indique si les créneaux sont en cours de chargement.
-  const [loadingAvailability, setLoadingAvailability] =
-    useState(false);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
 
   // Indique si la demande est en cours d'envoi.
   const [submitting, setSubmitting] = useState(false);
 
   // Indique que l'utilisateur souhaite créer
   // un nouvel essai malgré l'existence d'un ancien essai.
-  const [creatingNewTestDrive, setCreatingNewTestDrive] =
-    useState(false);
+  const [creatingNewTestDrive, setCreatingNewTestDrive] = useState(false);
 
   // =====================================================
   // CONFIGURATION DE L'ESSAI EXISTANT
@@ -112,29 +104,24 @@ export default function TestDriveModal({
 
   // Récupère la configuration correspondant au statut.
   const existingTestDriveInfo = existingTestDrive
-    ? TEST_DRIVE_STATUS_CONFIG[
-        existingTestDrive.status
-      ]
+    ? TEST_DRIVE_STATUS_CONFIG[existingTestDrive.status]
     : null;
 
   // Les statuts suivants autorisent une nouvelle demande.
-  const canCreateNewTestDrive = [
-    "rejected",
-    "cancelled",
-  ].includes(existingTestDrive?.status);
+  const canCreateNewTestDrive = ["rejected", "cancelled"].includes(
+    existingTestDrive?.status
+  );
 
   // Détermine si les informations de l'ancien essai
   // doivent être affichées.
   const shouldShowExistingTestDrive =
-    Boolean(existingTestDrive) &&
-    !creatingNewTestDrive;
+    Boolean(existingTestDrive) && !creatingNewTestDrive;
 
   // =====================================================
   // RÉINITIALISATION DU FORMULAIRE
   // =====================================================
 
   const resetForm = () => {
-
     setComment("");
     setAvailability([]);
     setSelectedHour("");
@@ -150,11 +137,9 @@ export default function TestDriveModal({
   // Lorsque la modale est ouverte pour un nouvel essai,
   // on affiche par défaut les informations de l'essai existant.
   useEffect(() => {
-
     if (show) {
       setCreatingNewTestDrive(false);
     }
-
   }, [show, existingTestDrive?.id]);
 
   // =====================================================
@@ -162,7 +147,6 @@ export default function TestDriveModal({
   // =====================================================
 
   const handleClose = () => {
-
     // Réinitialise le formulaire.
     resetForm();
 
@@ -178,11 +162,8 @@ export default function TestDriveModal({
   // =====================================================
 
   const handleViewExistingTestDrive = () => {
-
     if (!existingTestDrive?.id) {
-      toast.error(
-        "Impossible d'accéder à cet essai routier."
-      );
+      toast.error("Impossible d'accéder à cet essai routier.");
 
       return;
     }
@@ -191,9 +172,7 @@ export default function TestDriveModal({
     onClose();
 
     // Redirige vers la page de détail de l'essai.
-    navigate(
-      `/test-drives/${existingTestDrive.id}`
-    );
+    navigate(`/test-drives/${existingTestDrive.id}`);
   };
 
   // =====================================================
@@ -201,7 +180,6 @@ export default function TestDriveModal({
   // =====================================================
 
   const fetchAvailability = async (date) => {
-
     if (!date || !vehicleId) {
       return;
     }
@@ -215,7 +193,6 @@ export default function TestDriveModal({
     setAvailability([]);
 
     try {
-
       const params = new URLSearchParams({
         vehicle_id: String(vehicleId),
         date,
@@ -225,22 +202,16 @@ export default function TestDriveModal({
         `/test-drives/availability?${params.toString()}`
       );
 
-      setAvailability(
-        response?.available_slots || []
-      );
-
+      setAvailability(response?.available_slots || []);
     } catch (err) {
-
       toast.error(
         err?.data?.detail ||
-        err?.message ||
-        "Impossible de charger les créneaux disponibles."
+          err?.message ||
+          "Impossible de charger les créneaux disponibles."
       );
 
       setAvailability([]);
-
     } finally {
-
       setLoadingAvailability(false);
     }
   };
@@ -250,7 +221,6 @@ export default function TestDriveModal({
   // =====================================================
 
   const handleDateChange = (event) => {
-
     const date = event.target.value;
 
     setSelectedDate(date);
@@ -264,23 +234,18 @@ export default function TestDriveModal({
   // =====================================================
 
   const submitTestDrive = async () => {
-
     // -----------------------------------------------------
     // VALIDATION DES DONNÉES
     // -----------------------------------------------------
 
     if (!vehicleId) {
-
       toast.error("Véhicule invalide.");
 
       return;
     }
 
     if (!selectedDate || !selectedHour) {
-
-      toast.error(
-        "Choisissez une date et un créneau."
-      );
+      toast.error("Choisissez une date et un créneau.");
 
       return;
     }
@@ -292,19 +257,13 @@ export default function TestDriveModal({
     const appointmentDate = new Date(selectedHour);
 
     if (Number.isNaN(appointmentDate.getTime())) {
-
-      toast.error(
-        "Le créneau sélectionné est invalide."
-      );
+      toast.error("Le créneau sélectionné est invalide.");
 
       return;
     }
 
     if (appointmentDate.getTime() < Date.now()) {
-
-      toast.error(
-        "La date du rendez-vous ne peut pas être dans le passé."
-      );
+      toast.error("La date du rendez-vous ne peut pas être dans le passé.");
 
       return;
     }
@@ -316,58 +275,47 @@ export default function TestDriveModal({
     setSubmitting(true);
 
     try {
+      await apiFetch("/test-drives", {
+        method: "POST",
 
-      await apiFetch(
-        "/test-drives",
-        {
-          method: "POST",
+        body: {
+          vehicle_id: vehicleId,
 
-          body: {
-            vehicle_id: vehicleId,
+          // Conversion en UTC avant transmission.
+          appointment_date: appointmentDate.toISOString(),
 
-            // Conversion en UTC avant transmission.
-            appointment_date:
-              appointmentDate.toISOString(),
-
-            // Un commentaire vide devient null.
-            comment: comment.trim() || null,
-          },
-        }
-      );
+          // Un commentaire vide devient null.
+          comment: comment.trim() || null,
+        },
+      });
 
       // ---------------------------------------------------
       // SUCCÈS
       // ---------------------------------------------------
 
-      toast.success(
-        "Demande d'essai routier envoyée ✔"
-      );
+      toast.success("Demande d'essai routier envoyée ✔");
 
       resetForm();
 
       setCreatingNewTestDrive(false);
 
-            // Recharge l'essai dans VehicleDetail
+      // Recharge l'essai dans VehicleDetail
       if (onCreated) {
         await onCreated();
       }
 
       onClose();
-
     } catch (err) {
-
       // ---------------------------------------------------
       // ERREUR
       // ---------------------------------------------------
 
       toast.error(
         err?.data?.detail ||
-        err?.message ||
-        "Impossible d'envoyer la demande d'essai routier."
+          err?.message ||
+          "Impossible d'envoyer la demande d'essai routier."
       );
-
     } finally {
-
       setSubmitting(false);
     }
   };
@@ -376,9 +324,7 @@ export default function TestDriveModal({
   // DATE MINIMALE
   // =====================================================
 
-  const today = new Date()
-    .toISOString()
-    .split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
   // =====================================================
   // RENDU CONDITIONNEL
@@ -395,21 +341,14 @@ export default function TestDriveModal({
       aria-modal="true"
       aria-labelledby="test-drive-modal-title"
     >
-
       <div className="modal-dialog modal-dialog-centered">
-
         <div className="modal-content rounded-4 shadow">
-
           {/* =================================================
               HEADER
               ================================================= */}
 
           <div className="modal-header border-0">
-
-            <h5
-              id="test-drive-modal-title"
-              className="modal-title fw-bold"
-            >
+            <h5 id="test-drive-modal-title" className="modal-title fw-bold">
               {shouldShowExistingTestDrive
                 ? "Mon essai routier"
                 : "Réserver un essai routier"}
@@ -422,7 +361,6 @@ export default function TestDriveModal({
               onClick={handleClose}
               disabled={submitting}
             />
-
           </div>
 
           {/* =================================================
@@ -430,17 +368,13 @@ export default function TestDriveModal({
               ================================================= */}
 
           {shouldShowExistingTestDrive ? (
-
             <div className="modal-body p-4">
-
               <div className="bg-light rounded-4 p-4">
-
                 {/* =========================================
                     ICÔNE DU STATUT
                     ========================================= */}
 
                 <div className="text-center mb-4">
-
                   <div
                     className={`
                       d-inline-flex
@@ -456,7 +390,6 @@ export default function TestDriveModal({
                       height: "64px",
                     }}
                   >
-
                     <i
                       className={`
                         bi
@@ -465,9 +398,7 @@ export default function TestDriveModal({
                       `}
                       aria-hidden="true"
                     />
-
                   </div>
-
                 </div>
 
                 {/* =========================================
@@ -475,17 +406,12 @@ export default function TestDriveModal({
                     ========================================= */}
 
                 <h5 className="text-center fw-semibold mb-3">
-
-                  {existingTestDriveInfo?.title ||
-                    "Essai routier existant"}
-
+                  {existingTestDriveInfo?.title || "Essai routier existant"}
                 </h5>
 
                 <p className="text-center text-muted mb-4">
-
                   {existingTestDriveInfo?.message ||
                     "Vous avez déjà une demande d'essai routier pour ce véhicule."}
-
                 </p>
 
                 {/* =========================================
@@ -493,47 +419,31 @@ export default function TestDriveModal({
                     ========================================= */}
 
                 {existingTestDrive.appointment_date && (
-
                   <div className="border rounded-3 bg-white p-3 mb-4">
-
                     <div className="mb-2">
-
                       <small className="text-muted d-block mb-1">
                         Date du rendez-vous
                       </small>
 
                       <span className="fw-semibold">
-
                         {new Date(
                           existingTestDrive.appointment_date
                         ).toLocaleDateString("fr-FR")}
-
                       </span>
-
                     </div>
 
                     <div>
-
-                      <small className="text-muted d-block mb-1">
-                        Heure
-                      </small>
+                      <small className="text-muted d-block mb-1">Heure</small>
 
                       <span className="fw-semibold">
-
                         {new Date(
                           existingTestDrive.appointment_date
-                        ).toLocaleTimeString(
-                          "fr-FR",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-
+                        ).toLocaleTimeString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
-
                     </div>
-
                   </div>
                 )}
 
@@ -542,7 +452,6 @@ export default function TestDriveModal({
                     ========================================= */}
 
                 {canCreateNewTestDrive ? (
-
                   <button
                     type="button"
                     className="btn btn-primary w-100"
@@ -550,50 +459,35 @@ export default function TestDriveModal({
                       setCreatingNewTestDrive(true);
                     }}
                   >
-
                     <i
                       className="bi bi-calendar-plus me-2"
                       aria-hidden="true"
                     />
-
                     Demander un nouvel essai routier
-
                   </button>
-
                 ) : (
-
                   <button
                     type="button"
                     className="btn btn-primary w-100"
                     onClick={handleViewExistingTestDrive}
                   >
-
                     Voir mon essai routier
-
                   </button>
-
                 )}
-
               </div>
-
             </div>
-
           ) : (
-
             /* =================================================
                BODY : FORMULAIRE
                ================================================= */
 
             <>
-
               <div className="modal-body">
-
                 {/* =========================================
                     DATE
                     ========================================= */}
 
                 <div className="mb-3">
-
                   <label
                     htmlFor="test-drive-date"
                     className="form-label fw-medium"
@@ -610,7 +504,6 @@ export default function TestDriveModal({
                     onChange={handleDateChange}
                     disabled={submitting}
                   />
-
                 </div>
 
                 {/* =========================================
@@ -618,9 +511,7 @@ export default function TestDriveModal({
                     ========================================= */}
 
                 {selectedDate && (
-
                   <div className="mb-4">
-
                     <label className="form-label fw-medium d-block">
                       Créneau
                     </label>
@@ -630,19 +521,14 @@ export default function TestDriveModal({
                         --------------------------------------- */}
 
                     {loadingAvailability && (
-
                       <div className="d-flex align-items-center gap-2 text-muted">
-
                         <div
                           className="spinner-border spinner-border-sm"
                           role="status"
                           aria-hidden="true"
                         />
 
-                        <span>
-                          Chargement des créneaux...
-                        </span>
-
+                        <span>Chargement des créneaux...</span>
                       </div>
                     )}
 
@@ -650,47 +536,36 @@ export default function TestDriveModal({
                         AUCUN CRÉNEAU
                         --------------------------------------- */}
 
-                    {!loadingAvailability &&
-                      availability.length === 0 && (
-
-                        <div className="text-muted small">
-
-                          Aucun créneau disponible pour cette date.
-
-                        </div>
+                    {!loadingAvailability && availability.length === 0 && (
+                      <div className="text-muted small">
+                        Aucun créneau disponible pour cette date.
+                      </div>
                     )}
 
                     {/* ---------------------------------------
                         LISTE DES CRÉNEAUX
                         --------------------------------------- */}
 
-                    {!loadingAvailability &&
-                      availability.length > 0 && (
+                    {!loadingAvailability && availability.length > 0 && (
+                      <div className="d-flex flex-wrap gap-2">
+                        {availability.map((slot) => {
+                          const slotDate = new Date(slot);
 
-                        <div className="d-flex flex-wrap gap-2">
+                          const formattedTime = slotDate.toLocaleTimeString(
+                            "fr-FR",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          );
 
-                          {availability.map((slot) => {
+                          const isSelected = selectedHour === slot;
 
-                            const slotDate = new Date(slot);
-
-                            const formattedTime =
-                              slotDate.toLocaleTimeString(
-                                "fr-FR",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              );
-
-                            const isSelected =
-                              selectedHour === slot;
-
-                            return (
-
-                              <button
-                                key={slot}
-                                type="button"
-                                className={`
+                          return (
+                            <button
+                              key={slot}
+                              type="button"
+                              className={`
                                   btn
                                   btn-sm
                                   ${
@@ -699,22 +574,18 @@ export default function TestDriveModal({
                                       : "btn-outline-primary"
                                   }
                                 `}
-                                onClick={() => {
-                                  setSelectedHour(slot);
-                                }}
-                                disabled={submitting}
-                                aria-pressed={isSelected}
-                              >
-
-                                {formattedTime}
-
-                              </button>
-                            );
-                          })}
-
-                        </div>
+                              onClick={() => {
+                                setSelectedHour(slot);
+                              }}
+                              disabled={submitting}
+                              aria-pressed={isSelected}
+                            >
+                              {formattedTime}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-
                   </div>
                 )}
 
@@ -723,18 +594,12 @@ export default function TestDriveModal({
                     ========================================= */}
 
                 <div>
-
                   <label
                     htmlFor="test-drive-comment"
                     className="form-label fw-medium"
                   >
-
                     Commentaire
-
-                    <span className="text-muted fw-normal">
-                      {" "}(optionnel)
-                    </span>
-
+                    <span className="text-muted fw-normal"> (optionnel)</span>
                   </label>
 
                   <textarea
@@ -751,15 +616,9 @@ export default function TestDriveModal({
                   />
 
                   <div className="text-end mt-1">
-
-                    <small className="text-muted">
-                      {comment.length}/500
-                    </small>
-
+                    <small className="text-muted">{comment.length}/500</small>
                   </div>
-
                 </div>
-
               </div>
 
               {/* =================================================
@@ -767,7 +626,6 @@ export default function TestDriveModal({
                   ================================================= */}
 
               <div className="modal-footer border-0">
-
                 {/* ---------------------------------------------
                     ANNULATION
                     --------------------------------------------- */}
@@ -796,39 +654,24 @@ export default function TestDriveModal({
                     !selectedHour
                   }
                 >
-
                   {submitting ? (
-
                     <>
-
                       <span
                         className="spinner-border spinner-border-sm me-2"
                         role="status"
                         aria-hidden="true"
                       />
-
                       Envoi...
-
                     </>
-
                   ) : (
-
                     "Confirmer"
-
                   )}
-
                 </button>
-
               </div>
-
             </>
-
           )}
-
         </div>
-
       </div>
-
     </div>
   );
 }

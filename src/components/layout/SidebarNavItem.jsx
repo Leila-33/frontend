@@ -7,14 +7,11 @@ export default function SidebarNavItem({
   children,
   onClick,
   active,
-  end = false
+  end = false,
 }) {
-
   const navItemClass = (isActive) =>
     `nav-link d-flex align-items-center gap-3 px-3 py-3 rounded-4 transition ${
-      isActive
-        ? "bg-dark text-white shadow-sm"
-        : "text-dark hover-bg-light"
+      isActive ? "bg-dark text-white shadow-sm" : "text-dark hover-bg-light"
     }`;
 
   return (
@@ -22,21 +19,13 @@ export default function SidebarNavItem({
       to={to}
       end={end}
       className={({ isActive }) =>
-        navItemClass(
-          active !== undefined
-            ? active
-            : isActive
-        )
+        navItemClass(active !== undefined ? active : isActive)
       }
       onClick={onClick}
     >
-
       <i className={`${icon} fs-5`} />
 
-      <span>
-        {children}
-      </span>
-
+      <span>{children}</span>
     </NavLink>
   );
 }

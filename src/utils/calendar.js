@@ -3,15 +3,11 @@ export const createGoogleCalendarUrl = ({
   startDate,
   durationMinutes = 60,
   details = "",
-  location = ""
+  location = "",
 }) => {
-
   const start = new Date(startDate);
 
-  const end = new Date(
-    start.getTime() +
-    durationMinutes * 60 * 1000
-  );
+  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
   const formatDate = (date) => {
     return date

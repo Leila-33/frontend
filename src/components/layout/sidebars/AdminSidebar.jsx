@@ -21,7 +21,7 @@ export default function AdminSidebar({
   mobile = false,
   onClickLink,
   unreadNotificationCount = 0,
-  pendingCount = 0
+  pendingCount = 0,
 }) {
   return (
     <Sidebar
@@ -78,13 +78,10 @@ export default function AdminSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Essais routiers
-
           {/* Affiche uniquement le badge lorsqu'il existe
               des essais routiers en attente. */}
           {pendingCount > 0 && (
-            <span className="badge bg-danger rounded-pill">
-              {pendingCount}
-            </span>
+            <span className="badge bg-danger rounded-pill">{pendingCount}</span>
           )}
         </span>
       </SidebarNavItem>
@@ -148,7 +145,6 @@ export default function AdminSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Notifications
-
           {unreadNotificationCount > 0 && (
             <span className="badge bg-danger rounded-pill">
               {unreadNotificationCount}

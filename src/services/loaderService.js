@@ -13,7 +13,6 @@
 // Le callback pourra alors être appelé avec true ou false.
 let loaderCallback = null;
 
-
 // ============================================================
 // ENREGISTREMENT DU CALLBACK
 // ============================================================
@@ -26,11 +25,8 @@ let loaderCallback = null;
 // - true  → afficher le loader
 // - false → masquer le loader
 export function registerLoader(callback) {
-
   loaderCallback = callback;
-
 }
-
 
 // ============================================================
 // NOMBRE DE REQUÊTES EN COURS
@@ -53,7 +49,6 @@ export function registerLoader(callback) {
 // Le loader doit rester visible tant que le compteur est > 0.
 let pendingRequests = 0;
 
-
 // ============================================================
 // START LOADING
 // ============================================================
@@ -65,10 +60,8 @@ let pendingRequests = 0;
 // startLoading();
 // apiFetch(...);
 export function startLoading() {
-
   // Une nouvelle requête est en cours.
   pendingRequests++;
-
 
   // Informe le composant qui gère le loader
   // qu'au moins une requête est active.
@@ -77,12 +70,8 @@ export function startLoading() {
   // s'il a été enregistré.
   //
   // pendingRequests > 0 renvoie toujours true ici.
-  loaderCallback?.(
-    pendingRequests > 0
-  );
-
+  loaderCallback?.(pendingRequests > 0);
 }
-
 
 // ============================================================
 // STOP LOADING
@@ -103,28 +92,21 @@ export function startLoading() {
 //   stopLoading();
 // }
 export function stopLoading() {
-
   // Une requête vient de se terminer.
   pendingRequests--;
-  
 
   // Sécurité :
   // le compteur ne doit jamais être négatif.
-//
-// Cela peut arriver si stopLoading() est appelé plus de fois
-// que startLoading().
+  //
+  // Cela peut arriver si stopLoading() est appelé plus de fois
+  // que startLoading().
   if (pendingRequests < 0) {
     pendingRequests = 0;
   }
 
-
   // Met à jour l'état du loader.
-//
-// - true  → au moins une requête est encore en cours
-// - false → toutes les requêtes sont terminées
-  loaderCallback?.(
-    pendingRequests > 0
-  );
-
+  //
+  // - true  → au moins une requête est encore en cours
+  // - false → toutes les requêtes sont terminées
+  loaderCallback?.(pendingRequests > 0);
 }
-

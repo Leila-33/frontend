@@ -25,7 +25,6 @@ export const TICKET_PRIORITIES = {
   },
 };
 
-
 /**
  * Options disponibles pour les catégories des tickets SAV.
  *
@@ -72,7 +71,6 @@ export const TICKET_CATEGORIES = {
     color: "secondary",
   },
 };
-
 
 /**
  * Options disponibles pour les statuts des tickets SAV.

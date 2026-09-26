@@ -8,10 +8,9 @@ import TicketReplyBox from "../../../components/sav/chat/TicketReplyBox";
 
 import { useAuth } from "../../../contexts/AuthContext";
 
-import { getTicketBreadcrumb } from "../../../utils/breadcrumb";
+import { getTicketBreadcrumb } from "../../../utils/breadcrumbUtils";
 
 import DetailLayout from "../../../layouts/DetailLayout";
-
 
 /**
  * Page de détail d'un ticket SAV pour un client.
@@ -28,7 +27,6 @@ import DetailLayout from "../../../layouts/DetailLayout";
  * sont centralisées dans `useSupportTicket`.
  */
 export default function ClientTicketDetailPage() {
-
   // =====================================================
   // PARAMÈTRES ET CONTEXTE
   // =====================================================
@@ -38,7 +36,6 @@ export default function ClientTicketDetailPage() {
    */
   const { id } = useParams();
 
-
   /**
    * Utilisateur actuellement connecté.
    *
@@ -47,19 +44,12 @@ export default function ClientTicketDetailPage() {
    */
   const { user } = useAuth();
 
-
   // =====================================================
   // DONNÉES DU TICKET
   // =====================================================
 
-  const {
-    ticket,
-    messages,
-    sendMessage,
-    messagesEndRef,
-    canReply,
-  } = useSupportTicket(id);
-
+  const { ticket, messages, sendMessage, messagesEndRef, canReply } =
+    useSupportTicket(id);
 
   // =====================================================
   // CHARGEMENT
@@ -80,12 +70,10 @@ export default function ClientTicketDetailPage() {
           className="spinner-border spinner-border-sm me-2"
           aria-hidden="true"
         />
-
         Chargement du ticket...
       </div>
     );
   }
-
 
   // =====================================================
   // BREADCRUMB
@@ -102,27 +90,18 @@ export default function ClientTicketDetailPage() {
     ticketId: ticket.id,
   });
 
-
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
   return (
-    <DetailLayout
-      breadcrumb={breadcrumb}
-    >
-
+    <DetailLayout breadcrumb={breadcrumb}>
       <div className="container-fluid py-4">
-
         {/* =================================================
             EN-TÊTE DU TICKET
         ================================================= */}
 
-        <TicketHeader
-          ticket={ticket}
-          showStatusSelector={false}
-        />
-
+        <TicketHeader ticket={ticket} showStatusSelector={false} />
 
         {/* =================================================
             CONVERSATION
@@ -136,54 +115,38 @@ export default function ClientTicketDetailPage() {
           }}
           aria-label="Conversation du ticket"
         >
-
           <div className="card-body p-4">
-
             <TicketMessages
               messages={messages}
               currentRole="client"
               messagesEndRef={messagesEndRef}
             />
-
           </div>
-
         </section>
-
 
         {/* =================================================
             RÉPONSE
         ================================================= */}
 
         {canReply ? (
-
           <TicketReplyBox
             onSend={sendMessage}
             placeholder="Écrire votre message..."
           />
-
         ) : (
-
           <div
             className="alert alert-secondary d-flex align-items-center gap-2"
             role="status"
           >
-
-            <i
-              className="bi bi-lock"
-              aria-hidden="true"
-            />
+            <i className="bi bi-lock" aria-hidden="true" />
 
             <span>
-              Ce ticket est clôturé.
-              Il n'est plus possible d'envoyer de message.
+              Ce ticket est clôturé. Il n'est plus possible d'envoyer de
+              message.
             </span>
-
           </div>
-
         )}
-
       </div>
-
     </DetailLayout>
   );
 }

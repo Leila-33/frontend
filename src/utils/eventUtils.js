@@ -2,21 +2,15 @@ import {
   EVENT_CATEGORIES,
   EVENT_TYPE_LABELS,
   EVENT_TYPE_CONFIG,
-  DEFAULT_EVENT_TYPE_CONFIG
-
+  DEFAULT_EVENT_TYPE_CONFIG,
 } from "../constants/eventOptions";
 
 /**
  * Retourne le label lisible d'un événement.
  */
 export const getEventTypeLabel = (type) => {
-  return (
-    EVENT_TYPE_LABELS[type] ??
-    type?.replaceAll("_", " ") ??
-    "Événement"
-  );
+  return EVENT_TYPE_LABELS[type] ?? type?.replaceAll("_", " ") ?? "Événement";
 };
-
 
 /**
  * Détermine la catégorie d'un événement
@@ -52,7 +46,6 @@ export const getEventCategory = (type) => {
   return type.split("_")[0];
 };
 
-
 /**
  * Retourne la configuration de la catégorie
  * associée à un événement.
@@ -68,14 +61,12 @@ export const getEventCategoryConfig = (type) => {
   );
 };
 
-
 /**
  * Retourne la couleur Bootstrap d'un événement.
  */
 export const getEventTypeColor = (type) => {
   return getEventCategoryConfig(type).color;
 };
-
 
 /**
  * Retourne le label de la catégorie d'un événement.
@@ -93,8 +84,5 @@ export const getEventCategoryLabel = (type) => {
  * d'événement.
  */
 export const getEventIcon = (type) => {
-  return (
-    EVENT_TYPE_CONFIG[type]?.icon ??
-    DEFAULT_EVENT_TYPE_CONFIG.icon
-  );
+  return EVENT_TYPE_CONFIG[type]?.icon ?? DEFAULT_EVENT_TYPE_CONFIG.icon;
 };

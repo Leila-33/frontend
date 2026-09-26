@@ -15,11 +15,7 @@ import {
  *
  * La récupération des données reste gérée par la page parente.
  */
-export default function TicketToolbar({
-  filters,
-  setFilters,
-  filter,
-}) {
+export default function TicketToolbar({ filters, setFilters, filter }) {
   // =====================================================
   // MISE À JOUR D'UN FILTRE
   // =====================================================
@@ -44,16 +40,12 @@ export default function TicketToolbar({
 
   return (
     <div className="card border-0 shadow-sm p-3 mb-3">
-
       {/* =================================================
           RECHERCHE
       ================================================= */}
 
       <div className="position-relative mb-3">
-        <label
-          htmlFor="ticket-search"
-          className="visually-hidden"
-        >
+        <label htmlFor="ticket-search" className="visually-hidden">
           Rechercher un ticket
         </label>
 
@@ -63,12 +55,7 @@ export default function TicketToolbar({
           className="form-control ps-5"
           placeholder="Rechercher un ticket..."
           value={filters.search ?? ""}
-          onChange={(event) =>
-            updateFilter(
-              "search",
-              event.target.value
-            )
-          }
+          onChange={(event) => updateFilter("search", event.target.value)}
           aria-label="Rechercher un ticket"
         />
 
@@ -107,16 +94,11 @@ export default function TicketToolbar({
               translate-middle-y
               me-2
             "
-            onClick={() =>
-              updateFilter("search", "")
-            }
+            onClick={() => updateFilter("search", "")}
             aria-label="Effacer la recherche"
             title="Effacer la recherche"
           >
-            <i
-              className="bi bi-x-lg"
-              aria-hidden="true"
-            />
+            <i className="bi bi-x-lg" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -126,17 +108,13 @@ export default function TicketToolbar({
       ================================================= */}
 
       <div className="row g-2">
-
         {/* =================================================
             STATUT
         ================================================= */}
 
         {filter !== "open" && (
           <div className="col-md">
-            <label
-              htmlFor="ticket-status-filter"
-              className="visually-hidden"
-            >
+            <label htmlFor="ticket-status-filter" className="visually-hidden">
               Statut
             </label>
 
@@ -144,24 +122,12 @@ export default function TicketToolbar({
               id="ticket-status-filter"
               className="form-select"
               value={filters.status ?? "ALL"}
-              onChange={(event) =>
-                updateFilter(
-                  "status",
-                  event.target.value
-                )
-              }
+              onChange={(event) => updateFilter("status", event.target.value)}
             >
-              <option value="ALL">
-                Tous les statuts
-              </option>
+              <option value="ALL">Tous les statuts</option>
 
-              {Object.entries(
-                TICKET_STATUSES
-              ).map(([value, option]) => (
-                <option
-                  key={value}
-                  value={value}
-                >
+              {Object.entries(TICKET_STATUSES).map(([value, option]) => (
+                <option key={value} value={value}>
                   {option.label}
                 </option>
               ))}
@@ -175,10 +141,7 @@ export default function TicketToolbar({
 
         {filter !== "urgent" && (
           <div className="col-md">
-            <label
-              htmlFor="ticket-priority-filter"
-              className="visually-hidden"
-            >
+            <label htmlFor="ticket-priority-filter" className="visually-hidden">
               Priorité
             </label>
 
@@ -186,24 +149,12 @@ export default function TicketToolbar({
               id="ticket-priority-filter"
               className="form-select"
               value={filters.priority ?? "ALL"}
-              onChange={(event) =>
-                updateFilter(
-                  "priority",
-                  event.target.value
-                )
-              }
+              onChange={(event) => updateFilter("priority", event.target.value)}
             >
-              <option value="ALL">
-                Toutes les priorités
-              </option>
+              <option value="ALL">Toutes les priorités</option>
 
-              {Object.entries(
-                TICKET_PRIORITIES
-              ).map(([value, option]) => (
-                <option
-                  key={value}
-                  value={value}
-                >
+              {Object.entries(TICKET_PRIORITIES).map(([value, option]) => (
+                <option key={value} value={value}>
                   {option.label}
                 </option>
               ))}
@@ -216,10 +167,7 @@ export default function TicketToolbar({
         ================================================= */}
 
         <div className="col-md">
-          <label
-            htmlFor="ticket-category-filter"
-            className="visually-hidden"
-          >
+          <label htmlFor="ticket-category-filter" className="visually-hidden">
             Catégorie
           </label>
 
@@ -227,24 +175,12 @@ export default function TicketToolbar({
             id="ticket-category-filter"
             className="form-select"
             value={filters.category ?? "ALL"}
-            onChange={(event) =>
-              updateFilter(
-                "category",
-                event.target.value
-              )
-            }
+            onChange={(event) => updateFilter("category", event.target.value)}
           >
-            <option value="ALL">
-              Toutes les catégories
-            </option>
+            <option value="ALL">Toutes les catégories</option>
 
-            {Object.entries(
-              TICKET_CATEGORIES
-            ).map(([value, option]) => (
-              <option
-                key={value}
-                value={value}
-              >
+            {Object.entries(TICKET_CATEGORIES).map(([value, option]) => (
+              <option key={value} value={value}>
                 {option.label}
               </option>
             ))}
@@ -256,41 +192,23 @@ export default function TicketToolbar({
         ================================================= */}
 
         <div className="col-md">
-          <label
-            htmlFor="ticket-sort-filter"
-            className="visually-hidden"
-          >
+          <label htmlFor="ticket-sort-filter" className="visually-hidden">
             Trier les tickets
           </label>
 
           <select
             id="ticket-sort-filter"
             className="form-select"
-            value={
-              filters.sort ??
-              "activity_desc"
-            }
-            onChange={(event) =>
-              updateFilter(
-                "sort",
-                event.target.value
-              )
-            }
+            value={filters.sort ?? "activity_desc"}
+            onChange={(event) => updateFilter("sort", event.target.value)}
           >
-            <option value="activity_desc">
-              Dernière activité
-            </option>
+            <option value="activity_desc">Dernière activité</option>
 
-            <option value="created_at_desc">
-              Plus récents
-            </option>
+            <option value="created_at_desc">Plus récents</option>
 
-            <option value="priority">
-              Priorité
-            </option>
+            <option value="priority">Priorité</option>
           </select>
         </div>
-
       </div>
     </div>
   );

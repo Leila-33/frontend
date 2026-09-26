@@ -73,9 +73,7 @@ export default function QuoteDetailPage() {
     } catch (error) {
       setQuote(null);
 
-      toast.error(
-        error?.message || "Impossible de charger l'offre."
-      );
+      toast.error(error?.message || "Impossible de charger l'offre.");
     } finally {
       setLoading(false);
     }
@@ -109,9 +107,7 @@ export default function QuoteDetailPage() {
        */
       navigate(`/sales/leads/${quote.lead?.id}`);
     } catch (error) {
-      toast.error(
-        error?.message || "Impossible de supprimer l'offre."
-      );
+      toast.error(error?.message || "Impossible de supprimer l'offre.");
     } finally {
       setActionLoading(false);
       setShowDeleteModal(false);
@@ -142,14 +138,11 @@ export default function QuoteDetailPage() {
        */
       await fetchQuote();
     } catch (error) {
-      toast.error(
-        error?.message || "Impossible d'envoyer l'offre."
-      );
+      toast.error(error?.message || "Impossible d'envoyer l'offre.");
     } finally {
       setActionLoading(false);
     }
   }, [fetchQuote, quote]);
-
 
   // =====================================================
   // ÉTATS DE CHARGEMENT / ERREUR
@@ -176,9 +169,7 @@ export default function QuoteDetailPage() {
   if (!quote) {
     return (
       <div className="container py-5">
-        <div className="alert alert-warning">
-          Offre introuvable.
-        </div>
+        <div className="alert alert-warning">Offre introuvable.</div>
       </div>
     );
   }
@@ -188,10 +179,8 @@ export default function QuoteDetailPage() {
   // =====================================================
 
   const clientName =
-    [quote.lead?.first_name, quote.lead?.last_name]
-      .filter(Boolean)
-      .join(" ") || "Client non renseigné";
-
+    [quote.lead?.first_name, quote.lead?.last_name].filter(Boolean).join(" ") ||
+    "Client non renseigné";
 
   // =====================================================
   // AFFICHAGE
@@ -199,30 +188,20 @@ export default function QuoteDetailPage() {
 
   return (
     <div className="container py-4">
-
       {/* =====================================================
           EN-TÊTE
       ===================================================== */}
 
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-
         <div>
-          <h1 className="h2 fw-bold mb-1">
-            Offre commerciale
-          </h1>
+          <h1 className="h2 fw-bold mb-1">Offre commerciale</h1>
 
-          <div className="text-muted">
-            #{quote.id}
-          </div>
+          <div className="text-muted">#{quote.id}</div>
         </div>
 
         <div className="d-flex flex-wrap align-items-center gap-2">
-
           {/* Statut de l'offre */}
-          <QuoteStatusBadge
-            status={quote.status}
-            role="agent"
-          />
+          <QuoteStatusBadge status={quote.status} role="agent" />
 
           {/* Actions disponibles uniquement pour un brouillon */}
           {quote.status === "DRAFT" && (
@@ -230,15 +209,10 @@ export default function QuoteDetailPage() {
               <button
                 type="button"
                 className="btn btn-outline-primary"
-                onClick={() =>
-                  navigate(`/sales/quotes/${quote.id}/edit`)
-                }
+                onClick={() => navigate(`/sales/quotes/${quote.id}/edit`)}
                 disabled={actionLoading}
               >
-                <i
-                  className="bi bi-pencil me-2"
-                  aria-hidden="true"
-                />
+                <i className="bi bi-pencil me-2" aria-hidden="true" />
                 Modifier
               </button>
 
@@ -248,10 +222,7 @@ export default function QuoteDetailPage() {
                 onClick={() => setShowDeleteModal(true)}
                 disabled={actionLoading}
               >
-                <i
-                  className="bi bi-trash me-2"
-                  aria-hidden="true"
-                />
+                <i className="bi bi-trash me-2" aria-hidden="true" />
                 Supprimer
               </button>
             </>
@@ -262,10 +233,7 @@ export default function QuoteDetailPage() {
             className="btn btn-outline-secondary"
             onClick={() => navigate(-1)}
           >
-            <i
-              className="bi bi-arrow-left me-2"
-              aria-hidden="true"
-            />
+            <i className="bi bi-arrow-left me-2" aria-hidden="true" />
             Retour
           </button>
         </div>
@@ -275,7 +243,6 @@ export default function QuoteDetailPage() {
           INFORMATIONS PRINCIPALES
       ===================================================== */}
       <div className="row g-4">
-
         {/* ===================================================
       CLIENT
   =================================================== */}
@@ -283,27 +250,17 @@ export default function QuoteDetailPage() {
         <div className="col-lg-6">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-body p-4">
+              <h2 className="h5 fw-semibold mb-3">Client</h2>
 
-              <h2 className="h5 fw-semibold mb-3">
-                Client
-              </h2>
-
-              <div className="fw-semibold">
-                {clientName}
-              </div>
+              <div className="fw-semibold">{clientName}</div>
 
               {quote.lead?.email && (
-                <div className="text-muted">
-                  {quote.lead.email}
-                </div>
+                <div className="text-muted">{quote.lead.email}</div>
               )}
 
               {quote.lead?.phone && (
-                <div className="text-muted">
-                  {quote.lead.phone}
-                </div>
+                <div className="text-muted">{quote.lead.phone}</div>
               )}
-
             </div>
           </div>
         </div>
@@ -331,7 +288,6 @@ export default function QuoteDetailPage() {
         <div className="col-lg-4">
           <QuoteTradeInCard quote={quote} />
         </div>
-
       </div>
 
       {/* =====================================================
@@ -339,7 +295,6 @@ export default function QuoteDetailPage() {
       ===================================================== */}
 
       <div className="mt-4">
-
         {quote.status === "DRAFT" && (
           <button
             type="button"
@@ -357,10 +312,7 @@ export default function QuoteDetailPage() {
               </>
             ) : (
               <>
-                <i
-                  className="bi bi-send me-2"
-                  aria-hidden="true"
-                />
+                <i className="bi bi-send me-2" aria-hidden="true" />
                 Envoyer l'offre au client
               </>
             )}
@@ -368,53 +320,29 @@ export default function QuoteDetailPage() {
         )}
 
         {quote.status === "SENT" && (
-          <div
-            className="alert alert-info mb-0"
-            role="status"
-          >
-            <i
-              className="bi bi-clock me-2"
-              aria-hidden="true"
-            />
+          <div className="alert alert-info mb-0" role="status">
+            <i className="bi bi-clock me-2" aria-hidden="true" />
             Offre envoyée au client. En attente de sa réponse.
           </div>
         )}
 
         {quote.status === "ACCEPTED" && (
-          <div
-            className="alert alert-success mb-0"
-            role="status"
-          >
-            <i
-              className="bi bi-check-circle me-2"
-              aria-hidden="true"
-            />
+          <div className="alert alert-success mb-0" role="status">
+            <i className="bi bi-check-circle me-2" aria-hidden="true" />
             Offre acceptée par le client.
           </div>
         )}
 
         {quote.status === "REJECTED" && (
-          <div
-            className="alert alert-danger mb-0"
-            role="status"
-          >
-            <i
-              className="bi bi-x-circle me-2"
-              aria-hidden="true"
-            />
+          <div className="alert alert-danger mb-0" role="status">
+            <i className="bi bi-x-circle me-2" aria-hidden="true" />
             Offre refusée par le client.
           </div>
         )}
 
         {quote.status === "EXPIRED" && (
-          <div
-            className="alert alert-secondary mb-0"
-            role="status"
-          >
-            <i
-              className="bi bi-clock-history me-2"
-              aria-hidden="true"
-            />
+          <div className="alert alert-secondary mb-0" role="status">
+            <i className="bi bi-clock-history me-2" aria-hidden="true" />
             Cette offre a expiré.
           </div>
         )}

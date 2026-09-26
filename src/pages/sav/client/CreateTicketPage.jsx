@@ -42,8 +42,7 @@ export default function CreateTicketPage() {
 
   const [errors, setErrors] = useState({});
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // =========================
   // VALIDATION
@@ -59,13 +58,11 @@ export default function CreateTicketPage() {
     const newErrors = {};
 
     if (!values.subject.trim()) {
-      newErrors.subject =
-        "Le sujet est obligatoire.";
+      newErrors.subject = "Le sujet est obligatoire.";
     }
 
     if (!values.message.trim()) {
-      newErrors.message =
-        "Le message est obligatoire.";
+      newErrors.message = "Le message est obligatoire.";
     }
 
     return newErrors;
@@ -139,44 +136,32 @@ export default function CreateTicketPage() {
 
         // Un dossier non renseigné est transmis
         // comme null plutôt qu'une chaîne vide.
-        application_id:
-          form.application_id.trim() || null,
+        application_id: form.application_id.trim() || null,
       };
 
       // =========================
       // APPEL API
       // =========================
 
-      const data = await apiFetch(
-        "/support-tickets",
-        {
-          method: "POST",
-          body: payload,
-        }
-      );
+      const data = await apiFetch("/support-tickets", {
+        method: "POST",
+        body: payload,
+      });
 
       // =========================
       // SUCCÈS
       // =========================
 
-      toast.success(
-        "Votre demande SAV a été créée."
-      );
+      toast.success("Votre demande SAV a été créée.");
 
       // Redirection immédiate vers le ticket créé.
       //
       // Le setTimeout n'est pas nécessaire :
       // le toast reste visible indépendamment
       // de la navigation.
-      navigate(
-        `/support-tickets/${data.id}`
-      );
-
+      navigate(`/support-tickets/${data.id}`);
     } catch (error) {
-      toast.error(
-        error?.message ||
-        "Impossible de créer le ticket."
-      );
+      toast.error(error?.message || "Impossible de créer le ticket.");
     } finally {
       setIsSubmitting(false);
     }
@@ -186,9 +171,7 @@ export default function CreateTicketPage() {
   // ÉTAT DU FORMULAIRE
   // =========================
 
-  const isFormValid =
-    form.subject.trim() !== "" &&
-    form.message.trim() !== "";
+  const isFormValid = form.subject.trim() !== "" && form.message.trim() !== "";
 
   // =========================
   // RENDER
@@ -196,19 +179,16 @@ export default function CreateTicketPage() {
 
   return (
     <div className="container py-4">
-
       {/* =========================
           HEADER
           ========================= */}
 
       <div className="mb-4">
-        <h1 className="h3 fw-bold mb-1">
-          Nouvelle demande SAV
-        </h1>
+        <h1 className="h3 fw-bold mb-1">Nouvelle demande SAV</h1>
 
         <p className="text-muted mb-0">
-          Décrivez votre demande afin que notre
-          service après-vente puisse vous répondre.
+          Décrivez votre demande afin que notre service après-vente puisse vous
+          répondre.
         </p>
       </div>
 
@@ -222,49 +202,33 @@ export default function CreateTicketPage() {
         noValidate
       >
         <div className="card-body p-4">
-
           {/* =========================
               SUJET
               ========================= */}
 
           <div className="mb-4">
-            <label
-              htmlFor="ticket-subject"
-              className="form-label fw-semibold"
-            >
+            <label htmlFor="ticket-subject" className="form-label fw-semibold">
               Sujet
             </label>
 
             <input
               id="ticket-subject"
               type="text"
-              className={`form-control ${errors.subject
-                  ? "is-invalid"
-                  : ""
-                }`}
+              className={`form-control ${errors.subject ? "is-invalid" : ""}`}
               name="subject"
               value={form.subject}
               onChange={handleChange}
               placeholder="Ex. Problème avec mon véhicule"
               maxLength={255}
               autoComplete="off"
-              aria-invalid={
-                errors.subject
-                  ? "true"
-                  : "false"
-              }
+              aria-invalid={errors.subject ? "true" : "false"}
               aria-describedby={
-                errors.subject
-                  ? "ticket-subject-error"
-                  : undefined
+                errors.subject ? "ticket-subject-error" : undefined
               }
             />
 
             {errors.subject && (
-              <div
-                id="ticket-subject-error"
-                className="invalid-feedback"
-              >
+              <div id="ticket-subject-error" className="invalid-feedback">
                 {errors.subject}
               </div>
             )}
@@ -275,10 +239,7 @@ export default function CreateTicketPage() {
               ========================= */}
 
           <div className="mb-4">
-            <label
-              htmlFor="ticket-category"
-              className="form-label fw-semibold"
-            >
+            <label htmlFor="ticket-category" className="form-label fw-semibold">
               Catégorie
             </label>
             <select
@@ -288,16 +249,11 @@ export default function CreateTicketPage() {
               value={form.category}
               onChange={handleChange}
             >
-              {Object.entries(TICKET_CATEGORIES).map(
-                ([value, option]) => (
-                  <option
-                    key={value}
-                    value={value}
-                  >
-                    {option.label}
-                  </option>
-                )
-              )}
+              {Object.entries(TICKET_CATEGORIES).map(([value, option]) => (
+                <option key={value} value={value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -306,41 +262,26 @@ export default function CreateTicketPage() {
               ========================= */}
 
           <div className="mb-4">
-            <label
-              htmlFor="ticket-message"
-              className="form-label fw-semibold"
-            >
+            <label htmlFor="ticket-message" className="form-label fw-semibold">
               Message
             </label>
 
             <textarea
               id="ticket-message"
-              className={`form-control ${errors.message
-                  ? "is-invalid"
-                  : ""
-                }`}
+              className={`form-control ${errors.message ? "is-invalid" : ""}`}
               rows={6}
               name="message"
               value={form.message}
               onChange={handleChange}
               placeholder="Décrivez votre demande..."
-              aria-invalid={
-                errors.message
-                  ? "true"
-                  : "false"
-              }
+              aria-invalid={errors.message ? "true" : "false"}
               aria-describedby={
-                errors.message
-                  ? "ticket-message-error"
-                  : undefined
+                errors.message ? "ticket-message-error" : undefined
               }
             />
 
             {errors.message && (
-              <div
-                id="ticket-message-error"
-                className="invalid-feedback"
-              >
+              <div id="ticket-message-error" className="invalid-feedback">
                 {errors.message}
               </div>
             )}
@@ -356,10 +297,7 @@ export default function CreateTicketPage() {
               className="form-label fw-semibold"
             >
               ID dossier
-              <span className="text-muted fw-normal">
-                {" "}
-                (optionnel)
-              </span>
+              <span className="text-muted fw-normal"> (optionnel)</span>
             </label>
 
             <input
@@ -374,8 +312,7 @@ export default function CreateTicketPage() {
             />
 
             <div className="form-text">
-              Vous pouvez associer cette demande à
-              un dossier existant.
+              Vous pouvez associer cette demande à un dossier existant.
             </div>
           </div>
 
@@ -384,10 +321,7 @@ export default function CreateTicketPage() {
               ========================= */}
 
           <div className="mb-4">
-            <label
-              htmlFor="ticket-priority"
-              className="form-label fw-semibold"
-            >
+            <label htmlFor="ticket-priority" className="form-label fw-semibold">
               Priorité
             </label>
 
@@ -398,16 +332,11 @@ export default function CreateTicketPage() {
               value={form.priority}
               onChange={handleChange}
             >
-              {Object.entries(TICKET_PRIORITIES).map(
-                ([value, option]) => (
-                  <option
-                    key={value}
-                    value={value}
-                  >
-                    {option.label}
-                  </option>
-                )
-              )}
+              {Object.entries(TICKET_PRIORITIES).map(([value, option]) => (
+                <option key={value} value={value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -419,10 +348,7 @@ export default function CreateTicketPage() {
             <button
               type="submit"
               className="btn btn-primary px-4"
-              disabled={
-                !isFormValid ||
-                isSubmitting
-              }
+              disabled={!isFormValid || isSubmitting}
             >
               {isSubmitting ? (
                 <>
@@ -430,22 +356,16 @@ export default function CreateTicketPage() {
                     className="spinner-border spinner-border-sm me-2"
                     aria-hidden="true"
                   />
-
                   Envoi en cours...
                 </>
               ) : (
                 <>
-                  <i
-                    className="bi bi-send me-2"
-                    aria-hidden="true"
-                  />
-
+                  <i className="bi bi-send me-2" aria-hidden="true" />
                   Envoyer la demande
                 </>
               )}
             </button>
           </div>
-
         </div>
       </form>
     </div>

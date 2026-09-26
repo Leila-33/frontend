@@ -9,15 +9,11 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
 // =========================
 // APP CONTENT
 // =========================
 function AppContent() {
-
   const { loading } = useAuth();
-
-
 
   // WAIT AUTH INIT
   if (loading) {
@@ -34,7 +30,6 @@ function AppContent() {
     </>
   );
 }
-
 
 // =========================
 // ROOT APP

@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Link } from "react-router-dom";
 
@@ -10,9 +6,7 @@ import { toast } from "react-toastify";
 
 import apiFetch from "../../../services/apiFetch";
 import { formatAmount } from "../../../utils/priceUtils";
-import {
-  QUOTE_STATUSES,
-} from "../../../constants/quoteOptions";
+import { QUOTE_STATUSES } from "../../../constants/quoteOptions";
 
 import QuoteStatusBadge from "../../../components/quotes/QuoteStatusBadge";
 
@@ -48,28 +42,18 @@ export default function CustomerQuotesPage() {
       try {
         setLoading(true);
 
-        const data = await apiFetch(
-          "/quotes",
-          {
-            method: "GET",
-          }
-        );
+        const data = await apiFetch("/quotes", {
+          method: "GET",
+        });
 
         // Évite une mise à jour d'état si le composant
         // a été démonté pendant la requête.
         if (isMounted) {
-          setQuotes(
-            Array.isArray(data)
-              ? data
-              : []
-          );
+          setQuotes(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         if (isMounted) {
-          toast.error(
-            error?.message ||
-            "Impossible de charger vos offres."
-          );
+          toast.error(error?.message || "Impossible de charger vos offres.");
         }
       } finally {
         if (isMounted) {
@@ -104,12 +88,7 @@ export default function CustomerQuotesPage() {
     };
 
     quotes.forEach((quote) => {
-      if (
-        Object.prototype.hasOwnProperty.call(
-          groupedQuotes,
-          quote.status
-        )
-      ) {
+      if (Object.prototype.hasOwnProperty.call(groupedQuotes, quote.status)) {
         groupedQuotes[quote.status].push(quote);
       }
     });
@@ -117,23 +96,19 @@ export default function CustomerQuotesPage() {
     return groupedQuotes;
   }, [quotes]);
 
-
-
   // =====================================================
   // RENDU D'UNE SECTION
   // =====================================================
 
   const renderQuotes = (status) => {
-    const statusQuotes =
-      quotesByStatus[status];
+    const statusQuotes = quotesByStatus[status];
 
     // Ne crée pas de section vide.
     if (!statusQuotes?.length) {
       return null;
     }
 
-    const statusConfig =
-      QUOTE_STATUSES[status];
+    const statusConfig = QUOTE_STATUSES[status];
 
     if (!statusConfig) {
       return null;
@@ -145,23 +120,16 @@ export default function CustomerQuotesPage() {
         className="mb-5"
         aria-labelledby={`quotes-${status}`}
       >
-        <h2
-          id={`quotes-${status}`}
-          className="h4 fw-bold mb-3"
-        >
+        <h2 id={`quotes-${status}`} className="h4 fw-bold mb-3">
           {statusConfig.title}
         </h2>
 
         <div className="d-flex flex-column gap-3">
           {statusQuotes.map((quote) => {
             const vehicleName =
-              [
-                quote?.vehicle?.brand,
-                quote?.vehicle?.model,
-              ]
+              [quote?.vehicle?.brand, quote?.vehicle?.model]
                 .filter(Boolean)
-                .join(" ") ||
-              "Véhicule non renseigné";
+                .join(" ") || "Véhicule non renseigné";
 
             return (
               <article
@@ -169,35 +137,29 @@ export default function CustomerQuotesPage() {
                 className="card border-0 shadow-sm rounded-4"
               >
                 <div className="card-body p-4">
-
                   {/* =====================================
                       EN-TÊTE
                   ===================================== */}
 
                   <div className="d-flex flex-column flex-md-row justify-content-between gap-3">
-
                     <div>
-                      <h3 className="h5 fw-semibold mb-2">
-                        {vehicleName}
-                      </h3>
+                      <h3 className="h5 fw-semibold mb-2">{vehicleName}</h3>
 
                       <p className="text-muted mb-1">
                         Prix :{" "}
                         <strong className="text-body">
-                          {formatAmount(
-                            quote?.base_price
-                          )}
+                          {formatAmount(quote?.base_price)}
                         </strong>
                       </p>
 
-<p className="mb-0">
-  Mensualité :{" "}
-  <strong>
-    {quote?.monthly_payment != null
-      ? `${formatAmount(quote.monthly_payment)}/mois`
-      : "Non renseignée"}
-  </strong>
-</p>
+                      <p className="mb-0">
+                        Mensualité :{" "}
+                        <strong>
+                          {quote?.monthly_payment != null
+                            ? `${formatAmount(quote.monthly_payment)}/mois`
+                            : "Non renseignée"}
+                        </strong>
+                      </p>
                     </div>
 
                     {/* =================================
@@ -205,11 +167,7 @@ export default function CustomerQuotesPage() {
                     ================================= */}
 
                     <div className="d-flex flex-column align-items-md-end gap-2">
-
-                      <QuoteStatusBadge
-                        status={quote.status}
-                        role="client"
-                      />
+                      <QuoteStatusBadge status={quote.status} role="client" />
 
                       {quote.requires_action && (
                         <span className="badge bg-warning text-dark">
@@ -232,9 +190,7 @@ export default function CustomerQuotesPage() {
                         className="bi bi-exclamation-circle me-2"
                         aria-hidden="true"
                       />
-
-                      Votre réponse est attendue
-                      pour cette offre.
+                      Votre réponse est attendue pour cette offre.
                     </div>
                   )}
 
@@ -251,7 +207,6 @@ export default function CustomerQuotesPage() {
                         className="bi bi-file-earmark-text me-2"
                         aria-hidden="true"
                       />
-
                       Voir l'offre
                     </Link>
                   </div>
@@ -281,9 +236,7 @@ export default function CustomerQuotesPage() {
             aria-hidden="true"
           />
 
-          <span>
-            Chargement de vos offres...
-          </span>
+          <span>Chargement de vos offres...</span>
         </div>
       </main>
     );
@@ -295,10 +248,7 @@ export default function CustomerQuotesPage() {
 
   return (
     <main className="container mt-4 mb-5">
-
-      <h1 className="fw-bold mb-4">
-        Mes offres commerciales
-      </h1>
+      <h1 className="fw-bold mb-4">Mes offres commerciales</h1>
 
       {/* ===============================================
           AUCUNE OFFRE

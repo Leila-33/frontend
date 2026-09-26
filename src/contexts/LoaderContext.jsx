@@ -1,13 +1,6 @@
-import {
-  createContext,
-  useState,
-  useEffect
-} from "react";
+import { createContext, useState, useEffect } from "react";
 
-import {
-  registerLoader
-} from "../services/loaderService";
-
+import { registerLoader } from "../services/loaderService";
 
 // ============================================================
 // CONTEXTE DU LOADER
@@ -22,7 +15,6 @@ import {
 // et afficher un loader lorsque loading === true.
 export const LoaderContext = createContext();
 
-
 // ============================================================
 // LOADER PROVIDER
 // ============================================================
@@ -34,24 +26,16 @@ export const LoaderContext = createContext();
 // <LoaderProvider>
 //     <App />
 // </LoaderProvider>
-export const LoaderProvider = ({
-  children
-}) => {
-
-
+export const LoaderProvider = ({ children }) => {
   // ==========================================================
   // ÉTAT DU LOADER
   // ==========================================================
   // "loading" indique si au moins une requête est actuellement
   // en cours.
-//
-// false → aucune requête en cours
-// true  → au moins une requête en cours
-  const [
-    loading,
-    setLoading
-  ] = useState(false);
-
+  //
+  // false → aucune requête en cours
+  // true  → au moins une requête en cours
+  const [loading, setLoading] = useState(false);
 
   // ==========================================================
   // ENREGISTREMENT DU CALLBACK
@@ -65,8 +49,6 @@ export const LoaderProvider = ({
   // l'état React "loading" lorsqu'une requête démarre
   // ou lorsqu'elle se termine.
   useEffect(() => {
-
-
     // Enregistre setLoading comme callback global.
     //
     // Dans loaderService :
@@ -80,13 +62,8 @@ export const LoaderProvider = ({
     // et lorsque toutes les requêtes sont terminées :
     //
     // loaderCallback(false).
-    registerLoader(
-      setLoading
-    );
-
-
+    registerLoader(setLoading);
   }, []);
-
 
   // ==========================================================
   // CONTEXT PROVIDER
@@ -97,19 +74,12 @@ export const LoaderProvider = ({
   // Les composants n'ont donc pas besoin de connaître
   // l'existence de loaderService.
   return (
-
     <LoaderContext.Provider
-
       value={{
-        loading
+        loading,
       }}
-
     >
-
       {children}
-
     </LoaderContext.Provider>
-
   );
-
 };

@@ -14,9 +14,7 @@ import { BsChevronRight } from "react-icons/bs";
  * Le dernier élément représente la page actuelle
  * et n'est donc pas cliquable.
  */
-export default function Breadcrumb({
-  items = [],
-}) {
+export default function Breadcrumb({ items = [] }) {
   // =====================================================
   // SÉCURITÉ
   // =====================================================
@@ -26,41 +24,30 @@ export default function Breadcrumb({
   }
 
   return (
-    <nav
-      aria-label="Fil d'Ariane"
-      className="mb-4"
-    >
+    <nav aria-label="Fil d'Ariane" className="mb-4">
       <div className="d-flex align-items-center flex-wrap gap-2 small">
-
         {items.map((item, index) => {
           // =================================================
           // VÉRIFICATION DE L'ÉLÉMENT
           // =================================================
 
-          if (
-            !item ||
-            typeof item !== "object"
-          ) {
+          if (!item || typeof item !== "object") {
             return null;
           }
 
-          const isLast =
-            index === items.length - 1;
+          const isLast = index === items.length - 1;
 
           return (
             <div
               key={`${item.label}-${index}`}
               className="d-flex align-items-center gap-2"
             >
-
               {/* =============================================
                   ÉLÉMENT DU BREADCRUMB
                   ============================================= */}
 
               {isLast || !item.path ? (
-                <span className="fw-semibold text-dark">
-                  {item.label}
-                </span>
+                <span className="fw-semibold text-dark">{item.label}</span>
               ) : (
                 <Link
                   to={item.path}
@@ -84,11 +71,9 @@ export default function Breadcrumb({
                   aria-hidden="true"
                 />
               )}
-
             </div>
           );
         })}
-
       </div>
     </nav>
   );

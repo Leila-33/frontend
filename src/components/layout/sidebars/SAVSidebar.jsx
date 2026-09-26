@@ -35,8 +35,7 @@ export default function SavSidebar({
 
   // Permet de vérifier que l'utilisateur se trouve
   // bien sur une page de tickets SAV.
-  const isTicketsPage =
-    location.pathname.startsWith("/sav/tickets");
+  const isTicketsPage = location.pathname.startsWith("/sav/tickets");
 
   return (
     <Sidebar
@@ -67,15 +66,11 @@ export default function SavSidebar({
       <SidebarNavItem
         to="/sav/tickets"
         icon="bi bi-headset"
-        active={
-          isTicketsPage &&
-          currentFilter === "all"
-        }
+        active={isTicketsPage && currentFilter === "all"}
         onClick={onClickLink}
       >
         <span className="d-flex align-items-center gap-2">
           Tickets SAV
-
           {unreadTicketCount > 0 && (
             <span className="badge bg-danger rounded-pill">
               {unreadTicketCount}
@@ -91,15 +86,10 @@ export default function SavSidebar({
       <SidebarNavItem
         to="/sav/tickets?filter=open"
         icon="bi bi-folder2-open"
-        active={
-          isTicketsPage &&
-          currentFilter === "open"
-        }
+        active={isTicketsPage && currentFilter === "open"}
         onClick={onClickLink}
       >
-        <span className="d-flex align-items-center gap-2">
-          Ouverts
-        </span>
+        <span className="d-flex align-items-center gap-2">Ouverts</span>
       </SidebarNavItem>
 
       {/* ======================================================
@@ -109,15 +99,10 @@ export default function SavSidebar({
       <SidebarNavItem
         to="/sav/tickets?filter=urgent"
         icon="bi bi-exclamation-triangle"
-        active={
-          isTicketsPage &&
-          currentFilter === "urgent"
-        }
+        active={isTicketsPage && currentFilter === "urgent"}
         onClick={onClickLink}
       >
-        <span className="d-flex align-items-center gap-2">
-          Urgents
-        </span>
+        <span className="d-flex align-items-center gap-2">Urgents</span>
       </SidebarNavItem>
 
       {/* ======================================================

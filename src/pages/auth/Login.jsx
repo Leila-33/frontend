@@ -5,17 +5,14 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function Login() {
-
   // Permet de naviguer vers une autre page
   const navigate = useNavigate();
-  
-const location = useLocation();
 
-const registrationSuccess =
-  location.state?.registrationSuccess;
+  const location = useLocation();
 
-const registrationEmail =
-  location.state?.email;
+  const registrationSuccess = location.state?.registrationSuccess;
+
+  const registrationEmail = location.state?.email;
 
   // Récupère la fonction login depuis AuthContext
   const { login } = useAuth();
@@ -27,7 +24,7 @@ const registrationEmail =
   // Contient les valeurs saisies par l'utilisateur
   const [form, setForm] = useState({
     email: "",
-    password: ""
+    password: "",
   });
 
   // Contient les erreurs de validation du formulaire
@@ -44,13 +41,11 @@ const registrationEmail =
   // sur le bouton pendant l'envoi.
   const [submitting, setSubmitting] = useState(false);
 
-
   // =========================
   // VALIDATION DU FORMULAIRE
   // =========================
 
   const validate = (data) => {
-
     // Objet qui contiendra les erreurs trouvées
     const err = {};
 
@@ -59,43 +54,35 @@ const registrationEmail =
     // -------------------------
 
     if (!data.email) {
-
       err.email = "Email requis";
-
     } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-
       err.email = "Email invalide";
     }
-
 
     // -------------------------
     // VALIDATION MOT DE PASSE
     // -------------------------
 
     if (!data.password) {
-
       err.password = "Mot de passe requis";
     }
-
 
     // Retourne toutes les erreurs
     return err;
   };
-
 
   // =========================
   // HANDLE CHANGE
   // =========================
 
   const handleChange = (e) => {
-
     // Construit le nouveau formulaire
     //
     // On conserve les anciennes valeurs
     // et on remplace uniquement le champ modifié.
     const updated = {
       ...form,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     };
 
     // Met à jour le formulaire
@@ -109,17 +96,14 @@ const registrationEmail =
     setError("");
   };
 
-
   // =========================
   // SUBMIT LOGIN
   // =========================
 
   const handleSubmit = async (e) => {
-
     // Empêche le comportement classique du formulaire
     // qui provoquerait un rechargement de la page.
     e.preventDefault();
-
 
     // -------------------------
     // VALIDATION
@@ -138,7 +122,6 @@ const registrationEmail =
       return;
     }
 
-
     // -------------------------
     // DÉBUT DE LA REQUÊTE
     // -------------------------
@@ -149,19 +132,16 @@ const registrationEmail =
     // Désactive le bouton pendant la requête
     setSubmitting(true);
 
-
     try {
-
       // Appel de l'API FastAPI
       const data = await apiFetch("/auth/login", {
         method: "POST",
 
         body: {
           email: form.email,
-          password: form.password
-        }
+          password: form.password,
+        },
       });
-
 
       // -------------------------
       // CONNEXION RÉUSSIE
@@ -174,10 +154,7 @@ const registrationEmail =
 
       // Affiche un message de succès
       toast.success("Connexion réussie 🎉");
-
-
     } catch (err) {
-
       // -------------------------
       // ERREUR API
       // -------------------------
@@ -191,16 +168,12 @@ const registrationEmail =
       // Stocke également l'erreur dans le state
       // afin de pouvoir l'afficher sous le formulaire.
       setError(message);
-
-
     } finally {
-
       // La requête est terminée :
       // on réactive le bouton.
       setSubmitting(false);
     }
   };
-
 
   // =========================
   // ÉTAT DU BOUTON
@@ -216,51 +189,35 @@ const registrationEmail =
   // signifie que la requête est actuellement en cours.
   //
   // Le bouton est donc désactivé dans les deux cas.
-  const isSubmitDisabled =
-    Object.keys(errors).length > 0 || submitting;
-
+  const isSubmitDisabled = Object.keys(errors).length > 0 || submitting;
 
   // =========================
   // RENDER
   // =========================
 
   return (
+    <div className="container mt-5" style={{ maxWidth: "400px" }}>
+      <h2 className="mb-4 text-center">Connexion</h2>
 
-    <div
-      className="container mt-5"
-      style={{ maxWidth: "400px" }}
-    >
-
-      <h2 className="mb-4 text-center">
-        Connexion
-      </h2>
-
-{/* ==========================================================
+      {/* ==========================================================
     CONFIRMATION INSCRIPTION
 ========================================================== */}
 
-{registrationSuccess && (
-  <div
-    className="alert alert-success"
-    role="alert"
-  >
-    <div className="fw-semibold mb-1">
-      Compte créé avec succès !
-    </div>
+      {registrationSuccess && (
+        <div className="alert alert-success" role="alert">
+          <div className="fw-semibold mb-1">Compte créé avec succès !</div>
 
-    <div>
-      Un email de confirmation a été envoyé à{" "}
-      <strong>{registrationEmail}</strong>.
-    </div>
+          <div>
+            Un email de confirmation a été envoyé à{" "}
+            <strong>{registrationEmail}</strong>.
+          </div>
 
-    <div className="mt-1">
-      Veuillez vérifier votre boîte mail afin
-      d'activer votre compte.
-    </div>
-  </div>
-)}
+          <div className="mt-1">
+            Veuillez vérifier votre boîte mail afin d'activer votre compte.
+          </div>
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
-
         {/* =========================
             EMAIL
         ========================= */}
@@ -268,9 +225,7 @@ const registrationEmail =
         <input
           type="email"
           name="email"
-          className={`form-control mb-2 ${
-            errors.email ? "is-invalid" : ""
-          }`}
+          className={`form-control mb-2 ${errors.email ? "is-invalid" : ""}`}
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
@@ -278,12 +233,7 @@ const registrationEmail =
 
         {/* Affiche l'erreur email uniquement
             lorsqu'elle existe */}
-        {errors.email && (
-          <p className="text-danger">
-            {errors.email}
-          </p>
-        )}
-
+        {errors.email && <p className="text-danger">{errors.email}</p>}
 
         {/* =========================
             PASSWORD
@@ -292,9 +242,7 @@ const registrationEmail =
         <input
           type="password"
           name="password"
-          className={`form-control mb-2 ${
-            errors.password ? "is-invalid" : ""
-          }`}
+          className={`form-control mb-2 ${errors.password ? "is-invalid" : ""}`}
           placeholder="Mot de passe"
           value={form.password}
           onChange={handleChange}
@@ -302,23 +250,13 @@ const registrationEmail =
 
         {/* Affiche l'erreur password uniquement
             lorsqu'elle existe */}
-        {errors.password && (
-          <p className="text-danger">
-            {errors.password}
-          </p>
-        )}
-
+        {errors.password && <p className="text-danger">{errors.password}</p>}
 
         {/* =========================
             ERREUR API
         ========================= */}
 
-        {error && (
-          <p className="text-danger">
-            {error}
-          </p>
-        )}
-
+        {error && <p className="text-danger">{error}</p>}
 
         {/* =========================
             BOUTON CONNEXION
@@ -329,35 +267,27 @@ const registrationEmail =
           className="btn btn-primary w-100 mt-2"
           disabled={isSubmitDisabled}
         >
-          {submitting
-            ? "Connexion..."
-            : "Se connecter"}
+          {submitting ? "Connexion..." : "Se connecter"}
         </button>
-
 
         {/* =========================
             INSCRIPTION
         ========================= */}
 
         <p className="mt-3 text-center">
-
           Pas encore inscrit ?{" "}
-
           <span
             style={{
               color: "blue",
               cursor: "pointer",
-              textDecoration: "underline"
+              textDecoration: "underline",
             }}
             onClick={() => navigate("/register")}
           >
             S’inscrire
           </span>
-
         </p>
-
       </form>
-
     </div>
   );
 }

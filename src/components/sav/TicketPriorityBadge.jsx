@@ -1,6 +1,4 @@
-import {
-  TICKET_PRIORITIES,
-} from "../../constants/supportTicketOptions";
+import { TICKET_PRIORITIES } from "../../constants/supportTicketOptions";
 
 /**
  * Badge permettant d'afficher la priorité d'un ticket.
@@ -9,12 +7,7 @@ import {
  * - un libellé lisible pour l'utilisateur ;
  * - une couleur Bootstrap adaptée.
  */
-export default function TicketPriorityBadge({
-  priority,
-}) {
-
-
-
+export default function TicketPriorityBadge({ priority }) {
   // =====================================================
   // PRIORITÉ COURANTE
   // =====================================================
@@ -27,20 +20,14 @@ export default function TicketPriorityBadge({
    * configuration générique afin d'éviter d'afficher
    * "undefined".
    */
-  const current =
-    TICKET_PRIORITIES[priority] || {
-      label: priority || "Inconnue",
-      color: "secondary",
-    };
-
+  const current = TICKET_PRIORITIES[priority] || {
+    label: priority || "Inconnue",
+    color: "secondary",
+  };
 
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
-  return (
-    <span className={`badge bg-${current.color}`}>
-      {current.label}
-    </span>
-  );
+  return <span className={`badge bg-${current.color}`}>{current.label}</span>;
 }

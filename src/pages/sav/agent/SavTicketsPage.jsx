@@ -12,12 +12,7 @@
  * Les appels HTTP sont centralisés dans `supportTicketService`
  * lorsque ceux-ci correspondent à une action métier.
  */
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useLocation } from "react-router-dom";
 
@@ -38,9 +33,7 @@ import TicketTable from "../../../components/sav/TicketTable";
 
 import NumberedPagination from "../../../components/common/Pagination";
 
-
 export default function SavTicketsPage() {
-
   // =====================================================
   // NAVIGATION
   // =====================================================
@@ -59,13 +52,10 @@ export default function SavTicketsPage() {
   const location = useLocation();
 
   const filter = useMemo(() => {
-    const params = new URLSearchParams(
-      location.search
-    );
+    const params = new URLSearchParams(location.search);
 
     return params.get("filter") || "all";
   }, [location.search]);
-
 
   // =====================================================
   // ÉTAT DES ONGLETS
@@ -77,9 +67,7 @@ export default function SavTicketsPage() {
    * ACTIVE    → tickets non archivés
    * ARCHIVED  → tickets archivés
    */
-  const [activeTab, setActiveTab] =
-    useState("ACTIVE");
-
+  const [activeTab, setActiveTab] = useState("ACTIVE");
 
   // =====================================================
   // FILTRES
@@ -98,16 +86,11 @@ export default function SavTicketsPage() {
     sort: "created_at_desc",
   });
 
-
   /**
    * Temporise la recherche afin d'éviter d'effectuer
    * une requête API à chaque caractère saisi.
    */
-  const debouncedSearch = useDebounce(
-    filters.search,
-    400
-  );
-
+  const debouncedSearch = useDebounce(filters.search, 400);
 
   // =====================================================
   // DONNÉES
@@ -123,7 +106,6 @@ export default function SavTicketsPage() {
     total_pages: 1,
   });
 
-
   // =====================================================
   // CONSTRUCTION DES PARAMÈTRES
   // =====================================================
@@ -136,26 +118,16 @@ export default function SavTicketsPage() {
    * le nombre de requêtes.
    */
   const query = useMemo(() => {
-
     return new URLSearchParams({
       ...filters,
 
       search: debouncedSearch,
 
-      archive: String(
-        activeTab === "ARCHIVED"
-      ),
+      archive: String(activeTab === "ARCHIVED"),
 
       filter,
     }).toString();
-
-  }, [
-    filters,
-    debouncedSearch,
-    activeTab,
-    filter,
-  ]);
-
+  }, [filters, debouncedSearch, activeTab, filter]);
 
   // =====================================================
   // RÉCUPÉRATION DES TICKETS
@@ -166,26 +138,14 @@ export default function SavTicketsPage() {
    * aux filtres actuellement sélectionnés.
    */
   const fetchTickets = useCallback(async () => {
-
     try {
-
-      const response = await apiFetch(
-        `/support-tickets?${query}`
-      );
+      const response = await apiFetch(`/support-tickets?${query}`);
 
       setData(response);
-
     } catch (error) {
-
-      toast.error(
-        error.message ||
-        "Impossible de récupérer les tickets."
-      );
-
+      toast.error(error.message || "Impossible de récupérer les tickets.");
     }
-
   }, [query]);
-
 
   /**
    * Recharge automatiquement la liste lorsque :
@@ -199,7 +159,6 @@ export default function SavTicketsPage() {
     fetchTickets();
   }, [fetchTickets]);
 
-
   // =====================================================
   // ARCHIVAGE
   // =====================================================
@@ -209,30 +168,18 @@ export default function SavTicketsPage() {
    */
   const archiveTicket = useCallback(
     async (ticketId) => {
-
       try {
-
         await archiveSupportTicket(ticketId);
 
-        toast.success(
-          "Ticket archivé."
-        );
+        toast.success("Ticket archivé.");
 
         await fetchTickets();
-
       } catch (error) {
-
-        toast.error(
-          error.message ||
-          "Impossible d'archiver le ticket."
-        );
-
+        toast.error(error.message || "Impossible d'archiver le ticket.");
       }
-
     },
     [fetchTickets]
   );
-
 
   // =====================================================
   // MODIFICATION DU STATUT
@@ -245,33 +192,18 @@ export default function SavTicketsPage() {
    */
   const updateStatus = useCallback(
     async (ticketId, status) => {
-
       try {
+        await updateSupportTicketStatus(ticketId, status);
 
-        await updateSupportTicketStatus(
-          ticketId,
-          status
-        );
-
-        toast.success(
-          "Statut mis à jour."
-        );
+        toast.success("Statut mis à jour.");
 
         await fetchTickets();
-
       } catch (error) {
-
-        toast.error(
-          error.message ||
-          "Impossible de mettre à jour le statut."
-        );
-
+        toast.error(error.message || "Impossible de mettre à jour le statut.");
       }
-
     },
     [fetchTickets]
   );
-
 
   // =====================================================
   // PRISE EN CHARGE
@@ -285,14 +217,10 @@ export default function SavTicketsPage() {
    */
   const takeOwnership = useCallback(
     (ticketId) => {
-      return updateStatus(
-        ticketId,
-        "IN_PROGRESS"
-      );
+      return updateStatus(ticketId, "IN_PROGRESS");
     },
     [updateStatus]
   );
-
 
   // =====================================================
   // PAGINATION
@@ -304,18 +232,12 @@ export default function SavTicketsPage() {
    * Le changement de `filters.page` déclenche ensuite
    * automatiquement `fetchTickets` via le useEffect.
    */
-  const handlePageChange = useCallback(
-    (page) => {
-
-      setFilters((previousFilters) => ({
-        ...previousFilters,
-        page,
-      }));
-
-    },
-    []
-  );
-
+  const handlePageChange = useCallback((page) => {
+    setFilters((previousFilters) => ({
+      ...previousFilters,
+      page,
+    }));
+  }, []);
 
   // =====================================================
   // ONGLETS
@@ -324,20 +246,14 @@ export default function SavTicketsPage() {
   /**
    * Lorsqu'on change d'onglet, on revient à la première page.
    */
-  const handleTabChange = useCallback(
-    (tab) => {
+  const handleTabChange = useCallback((tab) => {
+    setActiveTab(tab);
 
-      setActiveTab(tab);
-
-      setFilters((previousFilters) => ({
-        ...previousFilters,
-        page: 1,
-      }));
-
-    },
-    []
-  );
-
+    setFilters((previousFilters) => ({
+      ...previousFilters,
+      page: 1,
+    }));
+  }, []);
 
   // =====================================================
   // FILTRE D'AFFICHAGE
@@ -347,9 +263,7 @@ export default function SavTicketsPage() {
    * Les onglets d'archivage ne sont affichés
    * que depuis la vue générale des tickets.
    */
-  const showArchiveTabs =
-    filter === "all";
-
+  const showArchiveTabs = filter === "all";
 
   // =====================================================
   // TITRE
@@ -361,9 +275,7 @@ export default function SavTicketsPage() {
     urgent: "Tickets urgents",
   };
 
-  const pageTitle =
-    titles[filter] || "Tickets SAV";
-
+  const pageTitle = titles[filter] || "Tickets SAV";
 
   // =====================================================
   // AFFICHAGE
@@ -371,23 +283,17 @@ export default function SavTicketsPage() {
 
   return (
     <div className="container py-4">
-
       {/* =================================================
           TITRE
       ================================================= */}
 
       <div className="d-flex align-items-center justify-content-between mb-4">
-
         <h2 className="fw-bold mb-0">
           {pageTitle}
 
-          <span className="ms-2 text-muted fs-6 fw-normal">
-            ({data.total})
-          </span>
+          <span className="ms-2 text-muted fs-6 fw-normal">({data.total})</span>
         </h2>
-
       </div>
-
 
       {/* =================================================
           ONGLETS
@@ -401,7 +307,6 @@ export default function SavTicketsPage() {
         />
       )}
 
-
       {/* =================================================
           FILTRES
       ================================================= */}
@@ -411,7 +316,6 @@ export default function SavTicketsPage() {
         setFilters={setFilters}
         filter={filter}
       />
-
 
       {/* =================================================
           TABLEAU
@@ -425,7 +329,6 @@ export default function SavTicketsPage() {
         onTakeOwnership={takeOwnership}
       />
 
-
       {/* =================================================
           PAGINATION
       ================================================= */}
@@ -435,7 +338,6 @@ export default function SavTicketsPage() {
         totalPages={data.total_pages}
         onPageChange={handlePageChange}
       />
-
     </div>
   );
 }

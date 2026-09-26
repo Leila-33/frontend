@@ -136,11 +136,7 @@ export const TEST_DRIVE_STEPS = [
 // STATUTS POUR L'AFFICHAGE DE LA DATE
 // ==========================================================
 
-export const DATE_DISPLAY_STATUSES = [
-  "completed",
-  "cancelled",
-  "rejected",
-];
+export const DATE_DISPLAY_STATUSES = ["completed", "cancelled", "rejected"];
 
 // ==========================================================
 // ONGLETS

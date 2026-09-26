@@ -1,7 +1,4 @@
-import {
-  startLoading,
-  stopLoading
-} from "./loaderService";
+import { startLoading, stopLoading } from "./loaderService";
 
 import { API_URL } from "../config/api";
 // ============================================================
@@ -17,8 +14,6 @@ import { API_URL } from "../config/api";
 // devient :
 //
 // http://localhost:8000/api/auth/me
-
-
 
 // ============================================================
 // API FETCH CENTRALISÉ
@@ -38,7 +33,6 @@ import { API_URL } from "../config/api";
 // Les autres requêtes attendront la même Promise.
 let refreshPromise = null;
 
-
 // ============================================================
 // ERREUR API PERSONNALISÉE
 // ============================================================
@@ -50,37 +44,30 @@ let refreshPromise = null;
 // - status  → code HTTP
 // - data    → réponse complète du backend
 export class ApiError extends Error {
-
   constructor(message, status, data) {
-
     // Error attend normalement une chaîne de caractères.
-//
-// Si message n'est pas une chaîne, on la transforme en JSON
-// afin d'éviter d'avoir un message invalide.
-    super(
-      typeof message === "string"
-        ? message
-        : JSON.stringify(message)
-    );
+    //
+    // Si message n'est pas une chaîne, on la transforme en JSON
+    // afin d'éviter d'avoir un message invalide.
+    super(typeof message === "string" ? message : JSON.stringify(message));
 
     // Permet d'identifier facilement le type d'erreur.
     this.name = "ApiError";
 
     // Code HTTP retourné par l'API.
-//
-// Exemple :
-// 400 → erreur client
-// 401 → non authentifié
-// 403 → interdit
-// 404 → ressource inexistante
-// 500 → erreur serveur
+    //
+    // Exemple :
+    // 400 → erreur client
+    // 401 → non authentifié
+    // 403 → interdit
+    // 404 → ressource inexistante
+    // 500 → erreur serveur
     this.status = status;
 
     // Réponse complète retournée par le backend.
     this.data = data;
   }
 }
-
 
 // ============================================================
 // API FETCH
@@ -95,8 +82,6 @@ export class ApiError extends Error {
 // - la gestion des erreurs
 // - le loader global
 async function apiFetch(url, options = {}) {
-
-
   // ==========================================================
   // OPTIONS DE LA REQUÊTE
   // ==========================================================
@@ -104,13 +89,7 @@ async function apiFetch(url, options = {}) {
   // par défaut à method.
   //
   // Les autres options sont conservées dans "rest".
-  const {
-    method = "GET",
-    body,
-    headers = {},
-    ...rest
-  } = options;
-
+  const { method = "GET", body, headers = {}, ...rest } = options;
 
   // ==========================================================
   // APPEL HTTP INTERNE
@@ -119,8 +98,6 @@ async function apiFetch(url, options = {}) {
   //
   // Elle reçoit le token à utiliser pour la requête.
   const callApi = async (token) => {
-
-
     // --------------------------------------------------------
     // CONSTRUCTION DES HEADERS
     // --------------------------------------------------------
@@ -132,18 +109,16 @@ async function apiFetch(url, options = {}) {
     //
     // Pour les autres objets, on utilise JSON.
     const finalHeaders = {
-
       ...(body instanceof FormData
         ? {}
         : {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           }),
 
       // Les headers fournis explicitement par l'appelant
       // peuvent remplacer les valeurs précédentes.
       ...headers,
     };
-
 
     // --------------------------------------------------------
     // TOKEN JWT
@@ -153,12 +128,8 @@ async function apiFetch(url, options = {}) {
     // Le backend FastAPI pourra alors récupérer le token
     // grâce au schéma Bearer.
     if (token) {
-
-      finalHeaders["Authorization"] =
-        `Bearer ${token}`;
-
+      finalHeaders["Authorization"] = `Bearer ${token}`;
     }
-
 
     // --------------------------------------------------------
     // CONVERSION DU BODY
@@ -178,43 +149,34 @@ async function apiFetch(url, options = {}) {
     //
     // En revanche, FormData doit rester tel quel.
     const finalBody =
-      body &&
-      typeof body === "object" &&
-      !(body instanceof FormData)
+      body && typeof body === "object" && !(body instanceof FormData)
         ? JSON.stringify(body)
         : body;
-
 
     // --------------------------------------------------------
     // FETCH
     // --------------------------------------------------------
     // Effectue la requête HTTP vers le backend.
-    return fetch(
-      API_URL + url,
-      {
-        method,
+    return fetch(API_URL + url, {
+      method,
 
-        headers: finalHeaders,
+      headers: finalHeaders,
 
-        // GET ne doit pas envoyer de body.
-        body: method === "GET"
-          ? undefined
-          : finalBody,
+      // GET ne doit pas envoyer de body.
+      body: method === "GET" ? undefined : finalBody,
 
-        // Permet notamment d'envoyer les cookies avec
-        // les requêtes cross-origin.
-        //
-        // C'est important ici pour le refresh token
-        // puisqu'il est stocké dans un cookie HttpOnly.
-        credentials: "include",
+      // Permet notamment d'envoyer les cookies avec
+      // les requêtes cross-origin.
+      //
+      // C'est important ici pour le refresh token
+      // puisqu'il est stocké dans un cookie HttpOnly.
+      credentials: "include",
 
-        // Toutes les autres options fournies à apiFetch
-        // sont transmises à fetch().
-        ...rest,
-      }
-    );
+      // Toutes les autres options fournies à apiFetch
+      // sont transmises à fetch().
+      ...rest,
+    });
   };
-
 
   // ==========================================================
   // DÉMARRAGE DU LOADER
@@ -230,24 +192,19 @@ async function apiFetch(url, options = {}) {
   // le loader devient visible.
   startLoading();
 
-
   try {
-
     // ========================================================
     // RÉCUPÉRATION DU TOKEN
     // ========================================================
     // Récupère le token actuellement enregistré dans
     // localStorage.
-    let token =
-      localStorage.getItem("access_token");
-
+    let token = localStorage.getItem("access_token");
 
     // ========================================================
     // PREMIER APPEL API
     // ========================================================
     // On effectue la requête avec le token actuel.
     let res = await callApi(token);
-
 
     // ========================================================
     // REFRESH TOKEN
@@ -259,8 +216,6 @@ async function apiFetch(url, options = {}) {
     //
     // On vérifie également que l'ancien token existait.
     if (res.status === 401 && token) {
-
-
       // ------------------------------------------------------
       // ÉVITER PLUSIEURS REFRESH SIMULTANÉS
       // ------------------------------------------------------
@@ -270,38 +225,24 @@ async function apiFetch(url, options = {}) {
       // Si un refresh est déjà en cours, les autres requêtes
       // utiliseront la même Promise.
       if (!refreshPromise) {
+        refreshPromise = fetch(API_URL + "/auth/refresh", {
+          method: "POST",
 
-        refreshPromise =
-          fetch(
-            API_URL + "/auth/refresh",
-            {
-              method: "POST",
-
-              // Permet d'envoyer le cookie de refresh token.
-              credentials: "include",
-            }
-          )
-
+          // Permet d'envoyer le cookie de refresh token.
+          credentials: "include",
+        })
           // --------------------------------------------------
           // TRAITEMENT DE LA RÉPONSE DU REFRESH
           // --------------------------------------------------
           .then(async (r) => {
-
             // Transforme la réponse JSON en objet JavaScript.
             const data = await r.json();
-
 
             // Si le refresh échoue, on considère que la
             // session n'est plus valide.
             if (!r.ok) {
-
-              throw new ApiError(
-                "Session expirée",
-                r.status,
-                data
-              );
+              throw new ApiError("Session expirée", r.status, data);
             }
-
 
             // Retourne les données du refresh.
             //
@@ -313,7 +254,6 @@ async function apiFetch(url, options = {}) {
             return data;
           })
 
-
           // --------------------------------------------------
           // FIN DU REFRESH
           // --------------------------------------------------
@@ -323,35 +263,23 @@ async function apiFetch(url, options = {}) {
           // Cela permettra de lancer un nouveau refresh
           // lorsqu'il sera nécessaire ultérieurement.
           .finally(() => {
-
             refreshPromise = null;
-
           });
       }
 
-
       try {
-
         // ----------------------------------------------------
         // ATTENTE DU REFRESH
         // ----------------------------------------------------
         // Si un refresh était déjà en cours, cette requête
         // attend simplement la même Promise.
-        const refreshData =
-          await refreshPromise;
-
+        const refreshData = await refreshPromise;
 
         // Récupération du nouveau access token.
-        token =
-          refreshData.access_token;
-
+        token = refreshData.access_token;
 
         // Sauvegarde du nouveau token.
-        localStorage.setItem(
-          "access_token",
-          token
-        );
-
+        localStorage.setItem("access_token", token);
 
         // ----------------------------------------------------
         // NOUVEL APPEL API
@@ -359,26 +287,15 @@ async function apiFetch(url, options = {}) {
         // La requête initiale ayant échoué avec 401,
         // on la rejoue avec le nouveau token.
         res = await callApi(token);
-
-
       } catch (err) {
-
         // Le refresh a échoué :
         // le token d'accès est supprimé.
-        localStorage.removeItem(
-          "access_token"
-        );
-
+        localStorage.removeItem("access_token");
 
         // On remonte une erreur d'authentification claire.
-        throw new ApiError(
-          "Session expirée",
-          401,
-          null
-        );
+        throw new ApiError("Session expirée", 401, null);
       }
     }
-
 
     // ========================================================
     // PARSE RESPONSE
@@ -386,21 +303,16 @@ async function apiFetch(url, options = {}) {
     // Variable qui contiendra la réponse JSON du backend.
     let data = null;
 
-
     try {
-
       // Tentative de lecture de la réponse sous forme JSON.
       data = await res.json();
-
     } catch {
-
       // Certaines réponses HTTP peuvent ne pas contenir
       // de JSON.
       //
       // Dans ce cas, data reste null.
       data = null;
     }
-
 
     // ========================================================
     // GESTION DES ERREURS
@@ -410,11 +322,8 @@ async function apiFetch(url, options = {}) {
     // Si ce n'est pas le cas, on transforme la réponse
     // backend en ApiError.
     if (!res.ok) {
-
-
       // Message d'erreur par défaut.
       let message = "API_ERROR";
-
 
       // ------------------------------------------------------
       // FORMAT FASTAPI / VALIDATION
@@ -433,12 +342,8 @@ async function apiFetch(url, options = {}) {
       //
       // On récupère ici le message de la première erreur.
       if (Array.isArray(data?.detail)) {
-
-        message =
-          data.detail[0]?.message ||
-          "VALIDATION_ERROR";
+        message = data.detail[0]?.message || "VALIDATION_ERROR";
       }
-
 
       // ------------------------------------------------------
       // DETAIL SOUS FORME DE CHAÎNE
@@ -448,13 +353,9 @@ async function apiFetch(url, options = {}) {
       // {
       //   "detail": "Utilisateur introuvable"
       // }
-      else if (
-        typeof data?.detail === "string"
-      ) {
-
+      else if (typeof data?.detail === "string") {
         message = data.detail;
       }
-
 
       // ------------------------------------------------------
       // FORMAT AVEC MESSAGE
@@ -465,19 +366,12 @@ async function apiFetch(url, options = {}) {
       //   "message": "Une erreur est survenue"
       // }
       else if (data?.message) {
-
         message = data.message;
       }
 
-
       // Transformation en erreur personnalisée.
-      throw new ApiError(
-        message,
-        res.status,
-        data
-      );
+      throw new ApiError(message, res.status, data);
     }
-
 
     // ========================================================
     // SUCCÈS
@@ -485,11 +379,7 @@ async function apiFetch(url, options = {}) {
     // Si la réponse HTTP est correcte, on retourne les
     // données au composant qui a appelé apiFetch().
     return data;
-
-
   } catch (err) {
-
-
     // ========================================================
     // ERREUR RÉSEAU
     // ========================================================
@@ -504,14 +394,8 @@ async function apiFetch(url, options = {}) {
     // On transforme donc l'erreur native en ApiError
     // avec un status à 0.
     if (!err.status) {
-
-      throw new ApiError(
-        "Erreur réseau (serveur inaccessible)",
-        0,
-        null
-      );
+      throw new ApiError("Erreur réseau (serveur inaccessible)", 0, null);
     }
-
 
     // ========================================================
     // AUTRES ERREURS
@@ -521,11 +405,7 @@ async function apiFetch(url, options = {}) {
     //
     // On la transmet telle quelle.
     throw err;
-
-
   } finally {
-
-
     // ========================================================
     // ARRÊT DU LOADER
     // ========================================================
@@ -541,7 +421,6 @@ async function apiFetch(url, options = {}) {
     stopLoading();
   }
 }
-
 
 // ============================================================
 // EXPORT

@@ -5,15 +5,11 @@ export default function Home() {
 
   return (
     <div className="d-flex flex-column min-vh-100">
-
       {/* CONTENU */}
       <div>
-
         {/* HERO */}
         <div className="bg-dark text-white text-center p-5">
-          <h1 className="display-5 fw-bold">
-            Trouvez votre véhicule idéal
-          </h1>
+          <h1 className="display-5 fw-bold">Trouvez votre véhicule idéal</h1>
 
           <p className="lead">
             Achat ou location de voitures en quelques clics
@@ -30,7 +26,6 @@ export default function Home() {
         {/* FEATURES */}
         <div className="container py-5">
           <div className="row g-4">
-
             <div className="col-md-4">
               <div className="card border-0 shadow-sm h-100 text-center p-4 hover-card">
                 <div className="fs-1 text-primary">🚘</div>
@@ -60,17 +55,13 @@ export default function Home() {
                 </p>
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
 
       <footer className="text-center py-3 bg-light border-top mt-auto">
         <small>© 2026 - Mmotors</small>
       </footer>
-
-
     </div>
   );
 }

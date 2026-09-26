@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -78,18 +74,14 @@ export default function SalesDashboard() {
     try {
       setLoading(true);
 
-      const data = await apiFetch(
-        "/agent/leads/stats",
-        {
-          method: "GET",
-        }
-      );
+      const data = await apiFetch("/agent/leads/stats", {
+        method: "GET",
+      });
 
       setStats(data);
     } catch (error) {
       toast.error(
-        error?.message ||
-        "Erreur lors du chargement du tableau de bord."
+        error?.message || "Erreur lors du chargement du tableau de bord."
       );
     } finally {
       setLoading(false);
@@ -110,7 +102,6 @@ export default function SalesDashboard() {
 
   return (
     <div className="container py-4">
-
       {/* =================================================
           HEADER
       ================================================= */}
@@ -127,9 +118,7 @@ export default function SalesDashboard() {
         "
       >
         <div>
-          <h1 className="h3 fw-bold mb-1">
-            Tableau de bord commercial
-          </h1>
+          <h1 className="h3 fw-bold mb-1">Tableau de bord commercial</h1>
 
           <p className="text-muted mb-0">
             Vue globale de votre activité commerciale.
@@ -152,16 +141,11 @@ export default function SalesDashboard() {
                 "
                 aria-hidden="true"
               />
-
               Actualisation...
             </>
           ) : (
             <>
-              <i
-                className="bi bi-arrow-clockwise me-2"
-                aria-hidden="true"
-              />
-
+              <i className="bi bi-arrow-clockwise me-2" aria-hidden="true" />
               Actualiser
             </>
           )}
@@ -172,23 +156,14 @@ export default function SalesDashboard() {
           KPI
       ================================================= */}
 
-      <section
-        aria-labelledby="sales-kpi-title"
-        className="mb-4"
-      >
-        <h2
-          id="sales-kpi-title"
-          className="visually-hidden"
-        >
+      <section aria-labelledby="sales-kpi-title" className="mb-4">
+        <h2 id="sales-kpi-title" className="visually-hidden">
           Indicateurs commerciaux
         </h2>
 
         <div className="row g-3">
           {kpis.map((kpi) => (
-            <div
-              key={kpi.key}
-              className="col-12 col-sm-6 col-xl-3"
-            >
+            <div key={kpi.key} className="col-12 col-sm-6 col-xl-3">
               <div
                 className="
                   bg-white
@@ -201,14 +176,10 @@ export default function SalesDashboard() {
               >
                 <div className="d-flex justify-content-between align-items-start">
                   <div>
-                    <div className="text-muted small mb-1">
-                      {kpi.label}
-                    </div>
+                    <div className="text-muted small mb-1">{kpi.label}</div>
 
                     <div className="fs-3 fw-bold">
-                      {loading
-                        ? "—"
-                        : stats?.[kpi.key] ?? 0}
+                      {loading ? "—" : (stats?.[kpi.key] ?? 0)}
                     </div>
                   </div>
 
@@ -228,7 +199,6 @@ export default function SalesDashboard() {
       ================================================= */}
 
       <div className="row g-3">
-
         {/* =================================================
             ACTIONS RAPIDES
         ================================================= */}
@@ -244,23 +214,16 @@ export default function SalesDashboard() {
             "
             aria-labelledby="quick-actions-title"
           >
-            <h2
-              id="quick-actions-title"
-              className="h5 fw-bold mb-3"
-            >
+            <h2 id="quick-actions-title" className="h5 fw-bold mb-3">
               Actions rapides
             </h2>
 
             <div className="d-grid gap-2">
-
               <Link
                 to="/sales/leads?filter=unassigned"
                 className="btn btn-dark"
               >
-                <i
-                  className="bi bi-inbox me-2"
-                  aria-hidden="true"
-                />
+                <i className="bi bi-inbox me-2" aria-hidden="true" />
                 Voir tous les leads non assignés
               </Link>
 
@@ -268,13 +231,9 @@ export default function SalesDashboard() {
                 to="/sales/leads?filter=my"
                 className="btn btn-outline-dark"
               >
-                <i
-                  className="bi bi-kanban me-2"
-                  aria-hidden="true"
-                />
+                <i className="bi bi-kanban me-2" aria-hidden="true" />
                 Mes leads
               </Link>
-
             </div>
           </section>
         </div>
@@ -294,19 +253,12 @@ export default function SalesDashboard() {
             "
             aria-labelledby="performance-title"
           >
-            <h2
-              id="performance-title"
-              className="h5 fw-bold mb-3"
-            >
+            <h2 id="performance-title" className="h5 fw-bold mb-3">
               Performance
             </h2>
 
             {loading ? (
-              <div
-                className="text-muted"
-                role="status"
-                aria-live="polite"
-              >
+              <div className="text-muted" role="status" aria-live="polite">
                 <span
                   className="
                     spinner-border
@@ -315,15 +267,11 @@ export default function SalesDashboard() {
                   "
                   aria-hidden="true"
                 />
-
                 Chargement des performances...
               </div>
             ) : stats ? (
               <dl className="row mb-0">
-
-                <dt className="col-8 fw-normal text-muted">
-                  Leads convertis
-                </dt>
+                <dt className="col-8 fw-normal text-muted">Leads convertis</dt>
 
                 <dd className="col-4 text-end fw-semibold mb-3">
                   {stats.conversion_rate ?? 0}%
@@ -337,22 +285,17 @@ export default function SalesDashboard() {
                   {stats.unassigned ?? 0}
                 </dd>
 
-                <dt className="col-8 fw-normal text-muted">
-                  Deals gagnés
-                </dt>
+                <dt className="col-8 fw-normal text-muted">Deals gagnés</dt>
 
                 <dd className="col-4 text-end fw-semibold mb-3">
                   {stats.won ?? 0}
                 </dd>
 
-                <dt className="col-8 fw-normal text-muted">
-                  Deals perdus
-                </dt>
+                <dt className="col-8 fw-normal text-muted">Deals perdus</dt>
 
                 <dd className="col-4 text-end fw-semibold mb-0">
                   {stats.lost ?? 0}
                 </dd>
-
               </dl>
             ) : (
               <p className="text-muted mb-0">
@@ -361,7 +304,6 @@ export default function SalesDashboard() {
             )}
           </section>
         </div>
-
       </div>
     </div>
   );

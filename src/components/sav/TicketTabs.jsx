@@ -1,9 +1,4 @@
-export default function TicketTabs({
-  activeTab,
-  setActiveTab,
-  total,
-}) {
-
+export default function TicketTabs({ activeTab, setActiveTab, total }) {
   // =====================================================
   // CHANGEMENT D'ONGLET
   // =====================================================
@@ -18,19 +13,16 @@ export default function TicketTabs({
     setActiveTab(tab);
   };
 
-
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
   return (
-
     <div
       className="d-flex gap-2 mb-3"
       role="tablist"
       aria-label="Filtre des tickets"
     >
-
       {/* =================================================
           TICKETS ACTIFS
       ================================================= */}
@@ -38,9 +30,7 @@ export default function TicketTabs({
       <button
         type="button"
         className={`btn ${
-          activeTab === "ACTIVE"
-            ? "btn-dark"
-            : "btn-outline-dark"
+          activeTab === "ACTIVE" ? "btn-dark" : "btn-outline-dark"
         }`}
         onClick={() => handleTabChange("ACTIVE")}
         role="tab"
@@ -49,7 +39,6 @@ export default function TicketTabs({
         Actifs ({total})
       </button>
 
-
       {/* =================================================
           TICKETS ARCHIVÉS
       ================================================= */}
@@ -57,9 +46,7 @@ export default function TicketTabs({
       <button
         type="button"
         className={`btn ${
-          activeTab === "ARCHIVED"
-            ? "btn-dark"
-            : "btn-outline-dark"
+          activeTab === "ARCHIVED" ? "btn-dark" : "btn-outline-dark"
         }`}
         onClick={() => handleTabChange("ARCHIVED")}
         role="tab"
@@ -67,7 +54,6 @@ export default function TicketTabs({
       >
         Archivés
       </button>
-
     </div>
   );
 }

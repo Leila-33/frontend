@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useState,
-} from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { QUOTE_REFUSAL_REASONS } from "../../constants/quoteOptions";
 
 /**
@@ -104,12 +99,7 @@ export default function QuoteDecisionModal({
         comment: comment.trim(),
       });
     },
-    [
-      comment,
-      mode,
-      onConfirm,
-      reason,
-    ]
+    [comment, mode, onConfirm, reason]
   );
 
   // =====================================================
@@ -123,17 +113,11 @@ export default function QuoteDecisionModal({
   const isAcceptMode = mode === "accept";
   const isRefuseMode = mode === "refuse";
 
-  const title = isAcceptMode
-    ? "Accepter cette offre"
-    : "Refuser cette offre";
+  const title = isAcceptMode ? "Accepter cette offre" : "Refuser cette offre";
 
-  const submitLabel = isAcceptMode
-    ? "Accepter"
-    : "Refuser";
+  const submitLabel = isAcceptMode ? "Accepter" : "Refuser";
 
-  const loadingLabel = isAcceptMode
-    ? "Acceptation..."
-    : "Refus...";
+  const loadingLabel = isAcceptMode ? "Acceptation..." : "Refus...";
 
   const description = isAcceptMode
     ? "Vous êtes sur le point d'accepter cette offre commerciale."
@@ -153,17 +137,12 @@ export default function QuoteDecisionModal({
     >
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
-
           {/* =================================================
               EN-TÊTE
           ================================================= */}
 
           <div className="modal-header">
-
-            <h2
-              id={titleId}
-              className="modal-title h5 mb-0"
-            >
+            <h2 id={titleId} className="modal-title h5 mb-0">
               {title}
             </h2>
 
@@ -174,7 +153,6 @@ export default function QuoteDecisionModal({
               onClick={handleClose}
               disabled={loading}
             />
-
           </div>
 
           {/* =================================================
@@ -182,13 +160,8 @@ export default function QuoteDecisionModal({
           ================================================= */}
 
           <form onSubmit={handleSubmit}>
-
             <div className="modal-body">
-
-              <p
-                id={descriptionId}
-                className="mb-3"
-              >
+              <p id={descriptionId} className="mb-3">
                 {description}
               </p>
 
@@ -213,16 +186,9 @@ export default function QuoteDecisionModal({
                   ================================================= */}
 
                   <div className="mb-3">
-
-                    <label
-                      htmlFor={reasonId}
-                      className="form-label"
-                    >
+                    <label htmlFor={reasonId} className="form-label">
                       Motif du refus
-                      <span
-                        className="text-danger ms-1"
-                        aria-hidden="true"
-                      >
+                      <span className="text-danger ms-1" aria-hidden="true">
                         *
                       </span>
                     </label>
@@ -231,25 +197,20 @@ export default function QuoteDecisionModal({
                       id={reasonId}
                       className="form-select"
                       value={reason}
-                      onChange={(event) =>
-                        setReason(event.target.value)
-                      }
+                      onChange={(event) => setReason(event.target.value)}
                       disabled={loading}
                       required
                       aria-required="true"
                     >
-                      <option value="">
-                        Sélectionner un motif...
-                      </option>
-{Object.entries(QUOTE_REFUSAL_REASONS).map(
-  ([value, label]) => (
-    <option key={value} value={value}>
-      {label}
-    </option>
-  )
-)}
+                      <option value="">Sélectionner un motif...</option>
+                      {Object.entries(QUOTE_REFUSAL_REASONS).map(
+                        ([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        )
+                      )}
                     </select>
-
                   </div>
 
                   {/* =================================================
@@ -257,15 +218,9 @@ export default function QuoteDecisionModal({
                   ================================================= */}
 
                   <div className="mb-0">
-
-                    <label
-                      htmlFor={commentId}
-                      className="form-label"
-                    >
+                    <label htmlFor={commentId} className="form-label">
                       Commentaire{" "}
-                      <span className="text-muted">
-                        (facultatif)
-                      </span>
+                      <span className="text-muted">(facultatif)</span>
                     </label>
 
                     <textarea
@@ -273,17 +228,13 @@ export default function QuoteDecisionModal({
                       className="form-control"
                       rows="3"
                       value={comment}
-                      onChange={(event) =>
-                        setComment(event.target.value)
-                      }
+                      onChange={(event) => setComment(event.target.value)}
                       disabled={loading}
                       placeholder="Ajoutez un commentaire si vous le souhaitez..."
                     />
-
                   </div>
                 </>
               )}
-
             </div>
 
             {/* =================================================
@@ -291,7 +242,6 @@ export default function QuoteDecisionModal({
             ================================================= */}
 
             <div className="modal-footer">
-
               <button
                 type="button"
                 className="btn btn-outline-secondary"
@@ -303,15 +253,8 @@ export default function QuoteDecisionModal({
 
               <button
                 type="submit"
-                className={
-                  isAcceptMode
-                    ? "btn btn-success"
-                    : "btn btn-danger"
-                }
-                disabled={
-                  loading ||
-                  (isRefuseMode && !reason)
-                }
+                className={isAcceptMode ? "btn btn-success" : "btn btn-danger"}
+                disabled={loading || (isRefuseMode && !reason)}
               >
                 {loading ? (
                   <>
@@ -337,11 +280,8 @@ export default function QuoteDecisionModal({
                   </>
                 )}
               </button>
-
             </div>
-
           </form>
-
         </div>
       </div>
     </div>

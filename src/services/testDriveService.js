@@ -5,12 +5,9 @@ import apiFetch from "./apiFetch";
 // ==========================================================
 
 export const getTestDrive = (testDriveId) => {
-  return apiFetch(
-    `/test-drives/${testDriveId}`,
-    {
-      method: "GET"
-    }
-  );
+  return apiFetch(`/test-drives/${testDriveId}`, {
+    method: "GET",
+  });
 };
 
 // ==========================================================
@@ -18,50 +15,35 @@ export const getTestDrive = (testDriveId) => {
 // ==========================================================
 
 export const getAdminTestDrives = (params) => {
-  return apiFetch(
-    `/admin/test-drives?${params.toString()}`,
-    {
-      method: "GET"
-    }
-  );
+  return apiFetch(`/admin/test-drives?${params.toString()}`, {
+    method: "GET",
+  });
 };
 
 // ==========================================================
 // MODIFIER LE STATUT D'UN ESSAI ROUTIER - ADMIN
 // ==========================================================
 
-export const updateAdminTestDriveStatus = (
-  testDriveId,
-  status
-) => {
-  return apiFetch(
-    `/admin/test-drives/${testDriveId}/status`,
-    {
-      method: "POST",
-      body: {
-        status
-      }
-    }
-  );
+export const updateAdminTestDriveStatus = (testDriveId, status) => {
+  return apiFetch(`/admin/test-drives/${testDriveId}/status`, {
+    method: "POST",
+    body: {
+      status,
+    },
+  });
 };
 
 // ==========================================================
 // MODIFIER LE STATUT D'UN ESSAI ROUTIER - CLIENT
 // ==========================================================
 
-export const updateTestDriveStatus = (
-  testDriveId,
-  status
-) => {
-  return apiFetch(
-    `/test-drives/${testDriveId}/status`,
-    {
-      method: "PATCH",
-      body: {
-        status
-      }
-    }
-  );
+export const updateTestDriveStatus = (testDriveId, status) => {
+  return apiFetch(`/test-drives/${testDriveId}/status`, {
+    method: "PATCH",
+    body: {
+      status,
+    },
+  });
 };
 
 // ==========================================================
@@ -69,25 +51,17 @@ export const updateTestDriveStatus = (
 // ==========================================================
 
 export const cancelTestDrive = (testDriveId) => {
-  return apiFetch(
-    `/test-drives/${testDriveId}/cancel`,
-    {
-      method: "POST"
-    }
-  );
+  return apiFetch(`/test-drives/${testDriveId}/cancel`, {
+    method: "POST",
+  });
 };
-
-
 
 // ==========================================================
 // RÉCUPÉRER LES ESSAIS ROUTIERS DU CLIENT CONNECTÉ
 // ==========================================================
 
 export const getMyTestDrives = () => {
-  return apiFetch(
-    "/test-drives/me",
-    {
-      method: "GET"
-    }
-  );
+  return apiFetch("/test-drives/me", {
+    method: "GET",
+  });
 };

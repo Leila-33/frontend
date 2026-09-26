@@ -19,8 +19,7 @@ export default function KanbanColumn({
   // DONNÉES D'AFFICHAGE
   // =====================================================
 
-const label =
-  LEAD_STATUSES[status]?.columnLabel || status;
+  const label = LEAD_STATUSES[status]?.columnLabel || status;
 
   const leadCount = leads.length;
 
@@ -73,9 +72,7 @@ const label =
             rounded-pill
             flex-shrink-0
           "
-          aria-label={`${leadCount} prospect${
-            leadCount > 1 ? "s" : ""
-          }`}
+          aria-label={`${leadCount} prospect${leadCount > 1 ? "s" : ""}`}
         >
           {leadCount}
         </span>
@@ -107,9 +104,7 @@ const label =
             aria-hidden="true"
           />
 
-          <small>
-            Aucun prospect
-          </small>
+          <small>Aucun prospect</small>
         </div>
       ) : (
         <div

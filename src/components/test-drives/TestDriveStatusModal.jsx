@@ -24,7 +24,6 @@ export default function TestDriveStatusModal({
   onConfirm,
   loading = false,
 }) {
-
   // =====================================================
   // CONFIGURATION DES ACTIONS
   // =====================================================
@@ -33,73 +32,74 @@ export default function TestDriveStatusModal({
   //
   // On utilise useMemo pour conserver la même référence
   // de l'objet entre les rendus.
-  const config = useMemo(() => ({
+  const config = useMemo(
+    () => ({
+      // ---------------------------------------------------
+      // CONFIRMER
+      // ---------------------------------------------------
 
-    // ---------------------------------------------------
-    // CONFIRMER
-    // ---------------------------------------------------
+      confirmed: {
+        title: "Confirmer l'essai routier",
 
-    confirmed: {
-      title: "Confirmer l'essai routier",
+        icon: "bi bi-check-circle fs-4",
 
-      icon: "bi bi-check-circle fs-4",
+        color: "success",
 
-      color: "success",
+        action: "Confirmation du rendez-vous",
 
-      action: "Confirmation du rendez-vous",
+        button: "Confirmer",
+      },
 
-      button: "Confirmer",
-    },
+      // ---------------------------------------------------
+      // REFUSER
+      // ---------------------------------------------------
 
-    // ---------------------------------------------------
-    // REFUSER
-    // ---------------------------------------------------
+      rejected: {
+        title: "Refuser l'essai routier",
 
-    rejected: {
-      title: "Refuser l'essai routier",
+        icon: "bi bi-x-circle fs-4",
 
-      icon: "bi bi-x-circle fs-4",
+        color: "danger",
 
-      color: "danger",
+        action: "Refus de la demande",
 
-      action: "Refus de la demande",
+        button: "Refuser",
+      },
 
-      button: "Refuser",
-    },
+      // ---------------------------------------------------
+      // ANNULER
+      // ---------------------------------------------------
 
-    // ---------------------------------------------------
-    // ANNULER
-    // ---------------------------------------------------
+      cancelled: {
+        title: "Annuler l'essai routier",
 
-    cancelled: {
-      title: "Annuler l'essai routier",
+        icon: "bi bi-calendar-x fs-4",
 
-      icon: "bi bi-calendar-x fs-4",
+        color: "danger",
 
-      color: "danger",
+        action: "Annulation du rendez-vous",
 
-      action: "Annulation du rendez-vous",
+        button: "Annuler",
+      },
 
-      button: "Annuler",
-    },
+      // ---------------------------------------------------
+      // TERMINER
+      // ---------------------------------------------------
 
-    // ---------------------------------------------------
-    // TERMINER
-    // ---------------------------------------------------
+      completed: {
+        title: "Terminer l'essai routier",
 
-    completed: {
-      title: "Terminer l'essai routier",
+        icon: "bi bi-flag fs-4",
 
-      icon: "bi bi-flag fs-4",
+        color: "success",
 
-      color: "success",
+        action: "Essai routier terminé",
 
-      action: "Essai routier terminé",
-
-      button: "Terminer",
-    },
-
-  }), []);
+        button: "Terminer",
+      },
+    }),
+    []
+  );
 
   // =====================================================
   // CONFIGURATION COURANTE
@@ -144,19 +144,14 @@ export default function TestDriveStatusModal({
         backgroundColor: "rgba(0, 0, 0, 0.5)",
       }}
     >
-
       <div className="modal-dialog modal-dialog-centered">
-
         <div className="modal-content border-0 shadow-lg rounded-4">
-
           {/* =================================================
               HEADER
               ================================================= */}
 
           <div className="modal-header border-0">
-
             <div className="d-flex align-items-center gap-3">
-
               {/* ---------------------------------------------
                   ICÔNE DE L'ACTION
                   --------------------------------------------- */}
@@ -185,20 +180,14 @@ export default function TestDriveStatusModal({
                   --------------------------------------------- */}
 
               <div>
-
-                <h5
-                  id="test-drive-status-modal-title"
-                  className="fw-bold mb-1"
-                >
+                <h5 id="test-drive-status-modal-title" className="fw-bold mb-1">
                   {current.title}
                 </h5>
 
                 <small className="text-muted">
                   Vérifiez les informations avant validation.
                 </small>
-
               </div>
-
             </div>
 
             {/* ---------------------------------------------
@@ -212,7 +201,6 @@ export default function TestDriveStatusModal({
               onClick={onClose}
               disabled={loading}
             />
-
           </div>
 
           {/* =================================================
@@ -220,34 +208,26 @@ export default function TestDriveStatusModal({
               ================================================= */}
 
           <div className="modal-body p-4">
-
             {/* ---------------------------------------------
               INFORMATIONS DE L'ESSAI
               --------------------------------------------- */}
 
             <div className="bg-light rounded-4 p-3">
-
               {/* ===========================================
                 CLIENT
                 =========================================== */}
 
               <div className="mb-3">
-
-                <small className="text-muted d-block mb-1">
-                  Client
-                </small>
+                <small className="text-muted d-block mb-1">Client</small>
 
                 <div className="fw-semibold">
-
                   <i
                     className="bi bi-person-circle me-2 text-primary"
                     aria-hidden="true"
                   />
 
                   {testDrive?.user?.name || "Client inconnu"}
-
                 </div>
-
               </div>
 
               {/* ===========================================
@@ -255,27 +235,18 @@ export default function TestDriveStatusModal({
                 =========================================== */}
 
               <div className="mb-3">
-
-                <small className="text-muted d-block mb-1">
-                  Véhicule
-                </small>
+                <small className="text-muted d-block mb-1">Véhicule</small>
 
                 <div className="fw-semibold">
-
                   <i
                     className="bi bi-car-front me-2 text-primary"
                     aria-hidden="true"
                   />
 
-                  {[
-                    testDrive?.vehicle?.brand,
-                    testDrive?.vehicle?.model,
-                  ]
+                  {[testDrive?.vehicle?.brand, testDrive?.vehicle?.model]
                     .filter(Boolean)
                     .join(" ") || "Véhicule inconnu"}
-
                 </div>
-
               </div>
 
               {/* ===========================================
@@ -283,19 +254,11 @@ export default function TestDriveStatusModal({
                 =========================================== */}
 
               <div>
+                <small className="text-muted d-block mb-1">Action</small>
 
-                <small className="text-muted d-block mb-1">
-                  Action
-                </small>
-
-                <div className="fw-semibold">
-                  {current.action}
-                </div>
-
+                <div className="fw-semibold">{current.action}</div>
               </div>
-
             </div>
-
           </div>
 
           {/* =================================================
@@ -303,7 +266,6 @@ export default function TestDriveStatusModal({
               ================================================= */}
 
           <div className="modal-footer border-0">
-
             {/* ---------------------------------------------
                 ANNULATION
                 --------------------------------------------- */}
@@ -314,11 +276,7 @@ export default function TestDriveStatusModal({
               onClick={onClose}
               disabled={loading}
             >
-              <i
-                className="bi bi-arrow-left me-2"
-                aria-hidden="true"
-              />
-
+              <i className="bi bi-arrow-left me-2" aria-hidden="true" />
               Retour
             </button>
 
@@ -337,7 +295,6 @@ export default function TestDriveStatusModal({
               onClick={onConfirm}
               disabled={loading}
             >
-
               {loading ? (
                 <>
                   {/* Spinner pendant l'appel API */}
@@ -346,28 +303,19 @@ export default function TestDriveStatusModal({
                     role="status"
                     aria-hidden="true"
                   />
-
                   Traitement...
                 </>
               ) : (
                 <>
-                  <i
-                    className="bi bi-check-lg me-2"
-                    aria-hidden="true"
-                  />
+                  <i className="bi bi-check-lg me-2" aria-hidden="true" />
 
                   {current.button}
                 </>
               )}
-
             </button>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

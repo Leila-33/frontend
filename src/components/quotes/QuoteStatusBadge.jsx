@@ -10,17 +10,12 @@ import { QUOTE_STATUSES } from "../../constants/quoteOptions";
  * La configuration des statuts reste centralisée
  * dans `quoteOptions.js`.
  */
-export default function QuoteStatusBadge({
-  status,
-  role = "agent",
-}) {
+export default function QuoteStatusBadge({ status, role = "agent" }) {
   const statusConfig = QUOTE_STATUSES[status];
 
   if (!statusConfig) {
     return (
-      <span className="badge bg-secondary">
-        {status || "Statut inconnu"}
-      </span>
+      <span className="badge bg-secondary">{status || "Statut inconnu"}</span>
     );
   }
 
@@ -29,9 +24,5 @@ export default function QuoteStatusBadge({
       ? statusConfig.clientLabel || statusConfig.label
       : statusConfig.agentLabel || statusConfig.label;
 
-  return (
-    <span className={`badge ${statusConfig.className}`}>
-      {label}
-    </span>
-  );
+  return <span className={`badge ${statusConfig.className}`}>{label}</span>;
 }

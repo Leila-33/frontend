@@ -20,12 +20,7 @@
  *
  * @returns {Array<{label: string, path?: string}>}
  */
-export function getTicketBreadcrumb({
-  role,
-  ticketId,
-  filter = null,
-}) {
-
+export function getTicketBreadcrumb({ role, ticketId, filter = null }) {
   // =====================================================
   // LIBELLÉS DES FILTRES SAV
   // =====================================================
@@ -39,7 +34,6 @@ export function getTicketBreadcrumb({
     open: "Tickets ouverts",
     urgent: "Tickets urgents",
   };
-
 
   // =====================================================
   // BREADCRUMB COMMUN
@@ -56,13 +50,11 @@ export function getTicketBreadcrumb({
     label: `Ticket #${ticketId}`,
   };
 
-
   // =====================================================
   // AGENT SAV
   // =====================================================
 
   if (role === "sav_agent") {
-
     /**
      * Si un filtre est présent, on conserve celui-ci
      * lors du retour vers la liste.
@@ -70,8 +62,7 @@ export function getTicketBreadcrumb({
      * Si le filtre est inconnu, on utilise simplement
      * la liste générale des tickets.
      */
-    const filterLabel =
-      filterLabels[filter] || "Tickets";
+    const filterLabel = filterLabels[filter] || "Tickets";
 
     const ticketListPath = filter
       ? `/sav/tickets?filter=${encodeURIComponent(filter)}`
@@ -86,13 +77,11 @@ export function getTicketBreadcrumb({
     ];
   }
 
-
   // =====================================================
   // CLIENT
   // =====================================================
 
   if (role === "client") {
-
     return [
       {
         label: "Mes tickets",
@@ -101,7 +90,6 @@ export function getTicketBreadcrumb({
       currentTicket,
     ];
   }
-
 
   // =====================================================
   // RÔLE NON IDENTIFIÉ

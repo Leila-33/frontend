@@ -1,13 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { toast } from "react-toastify";
 
@@ -108,9 +101,7 @@ export default function CustomerQuoteDetailPage() {
     } catch (error) {
       setQuote(null);
 
-      const message =
-        error?.message ||
-        "Impossible de charger cette offre.";
+      const message = error?.message || "Impossible de charger cette offre.";
 
       setError(message);
       toast.error(message);
@@ -141,26 +132,18 @@ export default function CustomerQuoteDetailPage() {
     try {
       setActionLoading(true);
 
-      const data = await apiFetch(
-        `/quotes/${id}/accept`,
-        {
-          method: "POST",
-        }
-      );
+      const data = await apiFetch(`/quotes/${id}/accept`, {
+        method: "POST",
+      });
 
-      toast.success(
-        data?.message ||
-        "Votre offre a été acceptée."
-      );
+      toast.success(data?.message || "Votre offre a été acceptée.");
 
       /**
        * Le dossier ayant été créé par l'API,
        * on redirige directement le client vers celui-ci.
        */
       if (data?.application_id) {
-        navigate(
-          `/applications/${data.application_id}`
-        );
+        navigate(`/applications/${data.application_id}`);
       } else {
         /**
          * Sécurité si l'API ne retourne pas
@@ -171,10 +154,7 @@ export default function CustomerQuoteDetailPage() {
 
       return true;
     } catch (error) {
-      toast.error(
-        error?.message ||
-        "Impossible d'accepter cette offre."
-      );
+      toast.error(error?.message || "Impossible d'accepter cette offre.");
 
       return false;
     } finally {
@@ -202,20 +182,15 @@ export default function CustomerQuoteDetailPage() {
       try {
         setActionLoading(true);
 
-        await apiFetch(
-          `/quotes/${id}/refuse`,
-          {
-            method: "POST",
-            body: {
-              reason: data?.reason,
-              comment: data?.comment,
-            },
-          }
-        );
+        await apiFetch(`/quotes/${id}/refuse`, {
+          method: "POST",
+          body: {
+            reason: data?.reason,
+            comment: data?.comment,
+          },
+        });
 
-        toast.success(
-          "Votre refus a été enregistré."
-        );
+        toast.success("Votre refus a été enregistré.");
 
         /**
          * On recharge l'offre afin d'afficher
@@ -225,10 +200,7 @@ export default function CustomerQuoteDetailPage() {
 
         return true;
       } catch (error) {
-        toast.error(
-          error?.message ||
-          "Impossible de refuser cette offre."
-        );
+        toast.error(error?.message || "Impossible de refuser cette offre.");
 
         return false;
       } finally {
@@ -269,7 +241,6 @@ export default function CustomerQuoteDetailPage() {
       return;
     }
 
-    
     setShowDecision(false);
     setDecisionMode(null);
   }, [actionLoading]);
@@ -297,11 +268,7 @@ export default function CustomerQuoteDetailPage() {
         setDecisionMode(null);
       }
     },
-    [
-      acceptQuote,
-      decisionMode,
-      refuseQuote,
-    ]
+    [acceptQuote, decisionMode, refuseQuote]
   );
 
   // =====================================================
@@ -321,9 +288,7 @@ export default function CustomerQuoteDetailPage() {
             aria-hidden="true"
           />
 
-          <span>
-            Chargement de l'offre...
-          </span>
+          <span>Chargement de l'offre...</span>
         </div>
       </div>
     );
@@ -336,11 +301,7 @@ export default function CustomerQuoteDetailPage() {
   if (error || !quote) {
     return (
       <div className="container py-5">
-
-        <div
-          className="alert alert-danger"
-          role="alert"
-        >
+        <div className="alert alert-danger" role="alert">
           {error || "Offre introuvable."}
         </div>
 
@@ -349,13 +310,9 @@ export default function CustomerQuoteDetailPage() {
           className="btn btn-outline-secondary"
           onClick={() => navigate(-1)}
         >
-          <i
-            className="bi bi-arrow-left me-2"
-            aria-hidden="true"
-          />
+          <i className="bi bi-arrow-left me-2" aria-hidden="true" />
           Retour
         </button>
-
       </div>
     );
   }
@@ -364,19 +321,14 @@ export default function CustomerQuoteDetailPage() {
   // DONNÉES D'AFFICHAGE
   // =====================================================
 
-  const applicationId =
-    quote.application_id;
+  const applicationId = quote.application_id;
 
   const salesAgentName =
-    [
-      quote.sales_agent?.first_name,
-      quote.sales_agent?.last_name,
-    ]
+    [quote.sales_agent?.first_name, quote.sales_agent?.last_name]
       .filter(Boolean)
-      .join(" ") ||
-      "Conseiller non renseigné";
+      .join(" ") || "Conseiller non renseigné";
 
-  const createdAt = formatDate(quote.created_at)
+  const createdAt = formatDate(quote.created_at);
 
   // =====================================================
   // AFFICHAGE
@@ -384,59 +336,36 @@ export default function CustomerQuoteDetailPage() {
 
   return (
     <div className="container py-4 pb-5">
-
       {/* =====================================================
           EN-TÊTE
       ===================================================== */}
 
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
-
         <div>
+          <h1 className="h2 fw-bold mb-1">Votre offre commerciale</h1>
 
-          <h1 className="h2 fw-bold mb-1">
-            Votre offre commerciale
-          </h1>
+          <div className="text-muted">Offre #{quote.id}</div>
 
-          <div className="text-muted">
-            Offre #{quote.id}
-          </div>
-
-          <div className="text-muted small">
-            Créée le {createdAt}
-          </div>
-
+          <div className="text-muted small">Créée le {createdAt}</div>
         </div>
 
         <div className="d-flex flex-column align-items-lg-end gap-3">
-
-          <QuoteStatusBadge
-            status={quote.status}
-            role="client"
-          />
+          <QuoteStatusBadge status={quote.status} role="client" />
 
           {/* =================================================
               DOSSIER APRÈS ACCEPTATION
           ================================================= */}
 
-          {quote.status === "ACCEPTED" &&
-            applicationId && (
-              <button
-                type="button"
-                className="btn btn-success"
-                onClick={() =>
-                  navigate(
-                    `/applications/${applicationId}`
-                  )
-                }
-              >
-                <i
-                  className="bi bi-folder2-open me-2"
-                  aria-hidden="true"
-                />
-                Voir mon dossier
-              </button>
-            )}
-
+          {quote.status === "ACCEPTED" && applicationId && (
+            <button
+              type="button"
+              className="btn btn-success"
+              onClick={() => navigate(`/applications/${applicationId}`)}
+            >
+              <i className="bi bi-folder2-open me-2" aria-hidden="true" />
+              Voir mon dossier
+            </button>
+          )}
         </div>
       </div>
 
@@ -445,87 +374,50 @@ export default function CustomerQuoteDetailPage() {
       ===================================================== */}
 
       {quote.status === "ACCEPTED" && (
-        <div
-          className="alert alert-success mb-4"
-          role="status"
-        >
+        <div className="alert alert-success mb-4" role="status">
           <div className="d-flex gap-2">
-
-            <i
-              className="bi bi-check-circle mt-1"
-              aria-hidden="true"
-            />
+            <i className="bi bi-check-circle mt-1" aria-hidden="true" />
 
             <div>
-              <strong>
-                Offre acceptée
-              </strong>
+              <strong>Offre acceptée</strong>
 
               <div>
                 Vous avez accepté cette offre.
                 {applicationId && (
-                  <>
-                    {" "}
-                    Votre dossier de financement
-                    a été créé.
-                  </>
+                  <> Votre dossier de financement a été créé.</>
                 )}
               </div>
             </div>
-
           </div>
         </div>
       )}
 
       {quote.status === "REJECTED" && (
-        <div
-          className="alert alert-danger mb-4"
-          role="status"
-        >
+        <div className="alert alert-danger mb-4" role="status">
           <div className="d-flex gap-2">
-
-            <i
-              className="bi bi-x-circle mt-1"
-              aria-hidden="true"
-            />
+            <i className="bi bi-x-circle mt-1" aria-hidden="true" />
 
             <div>
-              <strong>
-                Offre refusée
-              </strong>
+              <strong>Offre refusée</strong>
 
-              <div>
-                Vous avez refusé cette offre.
-              </div>
+              <div>Vous avez refusé cette offre.</div>
             </div>
-
           </div>
         </div>
       )}
 
       {quote.status === "EXPIRED" && (
-        <div
-          className="alert alert-warning mb-4"
-          role="status"
-        >
+        <div className="alert alert-warning mb-4" role="status">
           <div className="d-flex gap-2">
-
-            <i
-              className="bi bi-clock-history mt-1"
-              aria-hidden="true"
-            />
+            <i className="bi bi-clock-history mt-1" aria-hidden="true" />
 
             <div>
-              <strong>
-                Offre expirée
-              </strong>
+              <strong>Offre expirée</strong>
 
               <div>
-                Cette offre n'est plus valable
-                et ne peut plus être acceptée.
+                Cette offre n'est plus valable et ne peut plus être acceptée.
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -535,7 +427,6 @@ export default function CustomerQuoteDetailPage() {
       ===================================================== */}
 
       <div className="row g-4">
-
         {/* ===================================================
             VÉHICULE
         =================================================== */}
@@ -566,42 +457,26 @@ export default function CustomerQuoteDetailPage() {
 
         {quote.sales_agent && (
           <div className="col-12">
-
             <div className="card border-0 shadow-sm rounded-4">
-
               <div className="card-body p-4">
-
                 <h2 className="h5 fw-semibold mb-3">
-                  <i
-                    className="bi bi-headset me-2"
-                    aria-hidden="true"
-                  />
+                  <i className="bi bi-headset me-2" aria-hidden="true" />
                   Votre conseiller
                 </h2>
 
-                <div className="fw-semibold">
-                  {salesAgentName}
-                </div>
+                <div className="fw-semibold">{salesAgentName}</div>
 
                 {quote.sales_agent.email && (
-                  <div className="text-muted">
-                    {quote.sales_agent.email}
-                  </div>
+                  <div className="text-muted">{quote.sales_agent.email}</div>
                 )}
 
                 {quote.sales_agent.phone && (
-                  <div className="text-muted">
-                    {quote.sales_agent.phone}
-                  </div>
+                  <div className="text-muted">{quote.sales_agent.phone}</div>
                 )}
-
               </div>
-
             </div>
-
           </div>
         )}
-
       </div>
 
       {/* =====================================================
@@ -610,17 +485,13 @@ export default function CustomerQuoteDetailPage() {
 
       {quote.status === "SENT" && (
         <div className="d-flex flex-wrap gap-2 mt-4">
-
           <button
             type="button"
             className="btn btn-success"
             onClick={handleAcceptClick}
             disabled={actionLoading}
           >
-            <i
-              className="bi bi-check-circle me-2"
-              aria-hidden="true"
-            />
+            <i className="bi bi-check-circle me-2" aria-hidden="true" />
             Accepter l'offre
           </button>
 
@@ -630,13 +501,9 @@ export default function CustomerQuoteDetailPage() {
             onClick={handleRefuseClick}
             disabled={actionLoading}
           >
-            <i
-              className="bi bi-x-circle me-2"
-              aria-hidden="true"
-            />
+            <i className="bi bi-x-circle me-2" aria-hidden="true" />
             Refuser l'offre
           </button>
-
         </div>
       )}
 
@@ -645,20 +512,15 @@ export default function CustomerQuoteDetailPage() {
       ===================================================== */}
 
       <div className="mt-4">
-
         <button
           type="button"
           className="btn btn-outline-secondary"
           onClick={() => navigate(-1)}
           disabled={actionLoading}
         >
-          <i
-            className="bi bi-arrow-left me-2"
-            aria-hidden="true"
-          />
+          <i className="bi bi-arrow-left me-2" aria-hidden="true" />
           Retour
         </button>
-
       </div>
 
       {/* =====================================================
@@ -672,7 +534,6 @@ export default function CustomerQuoteDetailPage() {
         onClose={handleCloseDecision}
         onConfirm={handleDecisionConfirm}
       />
-
     </div>
   );
 }

@@ -21,7 +21,7 @@ export default function SalesSidebar({
   onClickLink,
   unreadNotificationCount = 0,
   newLeadsCount = 0,
-  myLeadsCount = 0
+  myLeadsCount = 0,
 }) {
   const location = useLocation();
 
@@ -67,11 +67,8 @@ export default function SalesSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Mes Leads
-
           {myLeadsCount > 0 && (
-            <span className="badge bg-dark rounded-pill">
-              {myLeadsCount}
-            </span>
+            <span className="badge bg-dark rounded-pill">{myLeadsCount}</span>
           )}
         </span>
       </SidebarNavItem>
@@ -88,7 +85,6 @@ export default function SalesSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Leads disponibles
-
           {newLeadsCount > 0 && (
             <span className="badge bg-danger rounded-pill">
               {newLeadsCount}
@@ -108,7 +104,6 @@ export default function SalesSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Notifications
-
           {unreadNotificationCount > 0 && (
             <span className="badge bg-danger rounded-pill">
               {unreadNotificationCount}

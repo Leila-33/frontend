@@ -8,10 +8,7 @@ import { formatDateTime } from "../../utils/dateUtils";
  * - son message ;
  * - ses métadonnées éventuelles.
  */
-export default function EventDetailModal({
-  event,
-  onClose,
-}) {
+export default function EventDetailModal({ event, onClose }) {
   // =====================================================
   // FORMATAGE
   // =====================================================
@@ -19,19 +16,14 @@ export default function EventDetailModal({
   /**
    * Formate la date de création de l'événement.
    */
-  const formattedDate = formatDateTime(event.created_at)
+  const formattedDate = formatDateTime(event.created_at);
 
   /**
    * Prépare les métadonnées pour un affichage JSON lisible.
    */
   const formattedMetadata =
-    event?.event_metadata &&
-    Object.keys(event.event_metadata).length > 0
-      ? JSON.stringify(
-          event.event_metadata,
-          null,
-          2
-        )
+    event?.event_metadata && Object.keys(event.event_metadata).length > 0
+      ? JSON.stringify(event.event_metadata, null, 2)
       : null;
 
   // =====================================================
@@ -51,20 +43,13 @@ export default function EventDetailModal({
     >
       <div className="modal-dialog modal-lg modal-dialog-centered">
         <div className="modal-content border-0 rounded-4 shadow">
-
           {/* =================================================
               EN-TÊTE
           ================================================= */}
 
           <div className="modal-header">
-            <h2
-              id="event-detail-modal-title"
-              className="h5 fw-semibold mb-0"
-            >
-              <i
-                className="bi bi-file-earmark-text me-2"
-                aria-hidden="true"
-              />
+            <h2 id="event-detail-modal-title" className="h5 fw-semibold mb-0">
+              <i className="bi bi-file-earmark-text me-2" aria-hidden="true" />
               Détail de l'événement
             </h2>
 
@@ -81,13 +66,10 @@ export default function EventDetailModal({
           ================================================= */}
 
           <div className="modal-body">
-
             {/* Type */}
 
             <div className="mb-3">
-              <div className="text-muted small mb-1">
-                Type
-              </div>
+              <div className="text-muted small mb-1">Type</div>
 
               <div className="fw-semibold">
                 {event?.type || "Non renseigné"}
@@ -97,27 +79,19 @@ export default function EventDetailModal({
             {/* Date */}
 
             <div className="mb-3">
-              <div className="text-muted small mb-1">
-                Date
-              </div>
+              <div className="text-muted small mb-1">Date</div>
 
-              <div>
-                {formattedDate}
-              </div>
+              <div>{formattedDate}</div>
             </div>
 
             {/* Message */}
 
             <div className="mb-4">
-              <div className="text-muted small mb-1">
-                Message
-              </div>
+              <div className="text-muted small mb-1">Message</div>
 
               <div className="bg-light rounded-3 p-3">
                 {event?.message || (
-                  <span className="text-muted">
-                    Aucun message.
-                  </span>
+                  <span className="text-muted">Aucun message.</span>
                 )}
               </div>
             </div>
@@ -126,9 +100,7 @@ export default function EventDetailModal({
 
             {/* Métadonnées */}
 
-            <h3 className="h6 fw-semibold mb-3">
-              Métadonnées
-            </h3>
+            <h3 className="h6 fw-semibold mb-3">Métadonnées</h3>
 
             {formattedMetadata ? (
               <pre
@@ -149,9 +121,7 @@ export default function EventDetailModal({
                 {formattedMetadata}
               </pre>
             ) : (
-              <div className="text-muted">
-                Aucune métadonnée.
-              </div>
+              <div className="text-muted">Aucune métadonnée.</div>
             )}
           </div>
 
@@ -168,7 +138,6 @@ export default function EventDetailModal({
               Fermer
             </button>
           </div>
-
         </div>
       </div>
     </div>

@@ -1,20 +1,12 @@
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import {
-  toast,
-} from "react-toastify";
+import { toast } from "react-toastify";
 
 import apiFetch from "../../services/apiFetch";
 
-import {
-  ROLE_CONFIG,
-} from "../../constants/roleOptions";
+import { ROLE_CONFIG } from "../../constants/roleOptions";
 
 // ==========================================================
 // ÉTAT INITIAL
@@ -63,12 +55,7 @@ const validate = (data) => {
 
   if (!data.email.trim()) {
     newErrors.email = "Email requis";
-
-  } else if (
-    !/\S+@\S+\.\S+/.test(
-      data.email.trim()
-    )
-  ) {
+  } else if (!/\S+@\S+\.\S+/.test(data.email.trim())) {
     newErrors.email = "Email invalide";
   }
 
@@ -77,9 +64,7 @@ const validate = (data) => {
   // ========================================================
 
   if (!data.password) {
-    newErrors.password =
-      "Mot de passe requis";
-
+    newErrors.password = "Mot de passe requis";
   } else if (
     !/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/.test(
       data.password
@@ -95,7 +80,6 @@ const validate = (data) => {
 
   if (!data.role) {
     newErrors.role = "Rôle requis";
-
   } else if (!ROLE_CONFIG[data.role]) {
     newErrors.role = "Rôle invalide";
   }
@@ -114,9 +98,7 @@ const validate = (data) => {
 export default function AdminCreateUserPage() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState(
-    INITIAL_FORM
-  );
+  const [form, setForm] = useState(INITIAL_FORM);
 
   const [errors, setErrors] = useState({});
 
@@ -133,10 +115,7 @@ export default function AdminCreateUserPage() {
    * Les erreurs sont donc affichées en temps réel.
    */
   const handleChange = (event) => {
-    const {
-      name,
-      value,
-    } = event.target;
+    const { name, value } = event.target;
 
     const updatedForm = {
       ...form,
@@ -146,9 +125,7 @@ export default function AdminCreateUserPage() {
     setForm(updatedForm);
 
     // Validation en temps réel.
-    setErrors(
-      validate(updatedForm)
-    );
+    setErrors(validate(updatedForm));
   };
 
   // ========================================================
@@ -159,56 +136,41 @@ export default function AdminCreateUserPage() {
     event.preventDefault();
 
     // Validation finale avant l'envoi.
-    const validationErrors =
-      validate(form);
+    const validationErrors = validate(form);
 
     setErrors(validationErrors);
 
     // Empêche l'envoi si le formulaire est invalide.
-    if (
-      Object.keys(validationErrors).length > 0 ||
-      loading
-    ) {
+    if (Object.keys(validationErrors).length > 0 || loading) {
       return;
     }
 
     setLoading(true);
 
     try {
-      await apiFetch(
-        "/admin/auth",
-        {
-          method: "POST",
+      await apiFetch("/admin/auth", {
+        method: "POST",
 
-          body: {
-            ...form,
+        body: {
+          ...form,
 
-            // Nettoyage des champs textuels
-            // avant l'envoi au backend.
-            email: form.email.trim(),
-            last_name: form.last_name.trim(),
-            first_name: form.first_name.trim(),
-          },
-        }
-      );
+          // Nettoyage des champs textuels
+          // avant l'envoi au backend.
+          email: form.email.trim(),
+          last_name: form.last_name.trim(),
+          first_name: form.first_name.trim(),
+        },
+      });
 
-      toast.success(
-        "Compte créé avec succès 🎉"
-      );
+      toast.success("Compte créé avec succès 🎉");
 
       navigate("/admin/users");
-
     } catch (error) {
-      console.error(
-        "create user error:",
-        error
-      );
+      console.error("create user error:", error);
 
       toast.error(
-        error?.message ??
-          "Erreur lors de la création de l'utilisateur"
+        error?.message ?? "Erreur lors de la création de l'utilisateur"
       );
-
     } finally {
       setLoading(false);
     }
@@ -247,22 +209,16 @@ export default function AdminCreateUserPage() {
         maxWidth: "600px",
       }}
     >
-
       {/* ====================================================
           HEADER
       ==================================================== */}
 
       <div className="mb-4">
-
-        <h3 className="fw-bold mb-1">
-          Créer un utilisateur
-        </h3>
+        <h3 className="fw-bold mb-1">Créer un utilisateur</h3>
 
         <p className="text-muted mb-0">
-          Créez un nouveau compte utilisateur
-          et définissez son rôle.
+          Créez un nouveau compte utilisateur et définissez son rôle.
         </p>
-
       </div>
 
       {/* ====================================================
@@ -274,17 +230,12 @@ export default function AdminCreateUserPage() {
         className="card border-0 shadow-sm rounded-4 p-4"
         noValidate
       >
-
         {/* ==================================================
             EMAIL
         ================================================== */}
 
         <div className="mb-3">
-
-          <label
-            htmlFor="user-email"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="user-email" className="form-label fw-semibold">
             Email
           </label>
 
@@ -293,11 +244,7 @@ export default function AdminCreateUserPage() {
             type="email"
             name="email"
             className={`form-control ${
-              errors.email
-                ? "is-invalid"
-                : form.email
-                  ? "is-valid"
-                  : ""
+              errors.email ? "is-invalid" : form.email ? "is-valid" : ""
             }`}
             value={form.email}
             onChange={handleChange}
@@ -307,11 +254,8 @@ export default function AdminCreateUserPage() {
           />
 
           {errors.email && (
-            <div className="invalid-feedback">
-              {errors.email}
-            </div>
+            <div className="invalid-feedback">{errors.email}</div>
           )}
-
         </div>
 
         {/* ==================================================
@@ -319,11 +263,7 @@ export default function AdminCreateUserPage() {
         ================================================== */}
 
         <div className="mb-3">
-
-          <label
-            htmlFor="user-password"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="user-password" className="form-label fw-semibold">
             Mot de passe
           </label>
 
@@ -332,11 +272,7 @@ export default function AdminCreateUserPage() {
             type="password"
             name="password"
             className={`form-control ${
-              errors.password
-                ? "is-invalid"
-                : form.password
-                  ? "is-valid"
-                  : ""
+              errors.password ? "is-invalid" : form.password ? "is-valid" : ""
             }`}
             value={form.password}
             onChange={handleChange}
@@ -347,11 +283,8 @@ export default function AdminCreateUserPage() {
           />
 
           {errors.password && (
-            <div className="invalid-feedback">
-              {errors.password}
-            </div>
+            <div className="invalid-feedback">{errors.password}</div>
           )}
-
         </div>
 
         {/* ==================================================
@@ -359,11 +292,7 @@ export default function AdminCreateUserPage() {
         ================================================== */}
 
         <div className="mb-3">
-
-          <label
-            htmlFor="user-last-name"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="user-last-name" className="form-label fw-semibold">
             Nom
           </label>
 
@@ -372,11 +301,7 @@ export default function AdminCreateUserPage() {
             type="text"
             name="last_name"
             className={`form-control ${
-              errors.last_name
-                ? "is-invalid"
-                : form.last_name
-                  ? "is-valid"
-                  : ""
+              errors.last_name ? "is-invalid" : form.last_name ? "is-valid" : ""
             }`}
             value={form.last_name}
             onChange={handleChange}
@@ -386,11 +311,8 @@ export default function AdminCreateUserPage() {
           />
 
           {errors.last_name && (
-            <div className="invalid-feedback">
-              {errors.last_name}
-            </div>
+            <div className="invalid-feedback">{errors.last_name}</div>
           )}
-
         </div>
 
         {/* ==================================================
@@ -398,11 +320,7 @@ export default function AdminCreateUserPage() {
         ================================================== */}
 
         <div className="mb-3">
-
-          <label
-            htmlFor="user-first-name"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="user-first-name" className="form-label fw-semibold">
             Prénom
           </label>
 
@@ -425,11 +343,8 @@ export default function AdminCreateUserPage() {
           />
 
           {errors.first_name && (
-            <div className="invalid-feedback">
-              {errors.first_name}
-            </div>
+            <div className="invalid-feedback">{errors.first_name}</div>
           )}
-
         </div>
 
         {/* ==================================================
@@ -437,47 +352,27 @@ export default function AdminCreateUserPage() {
         ================================================== */}
 
         <div className="mb-4">
-
-          <label
-            htmlFor="user-role"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="user-role" className="form-label fw-semibold">
             Rôle
           </label>
 
           <select
             id="user-role"
             name="role"
-            className={`form-select ${
-              errors.role
-                ? "is-invalid"
-                : ""
-            }`}
+            className={`form-select ${errors.role ? "is-invalid" : ""}`}
             value={form.role}
             onChange={handleChange}
             required
             disabled={loading}
           >
-            {Object.entries(
-              ROLE_CONFIG
-            ).map(
-              ([role, config]) => (
-                <option
-                  key={role}
-                  value={role}
-                >
-                  {config.label}
-                </option>
-              )
-            )}
+            {Object.entries(ROLE_CONFIG).map(([role, config]) => (
+              <option key={role} value={role}>
+                {config.label}
+              </option>
+            ))}
           </select>
 
-          {errors.role && (
-            <div className="invalid-feedback">
-              {errors.role}
-            </div>
-          )}
-
+          {errors.role && <div className="invalid-feedback">{errors.role}</div>}
         </div>
 
         {/* ==================================================
@@ -485,14 +380,10 @@ export default function AdminCreateUserPage() {
         ================================================== */}
 
         <div className="d-flex gap-2">
-
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={
-              loading ||
-              !isFormValid
-            }
+            disabled={loading || !isFormValid}
           >
             {loading ? (
               <>
@@ -501,14 +392,10 @@ export default function AdminCreateUserPage() {
                   role="status"
                   aria-hidden="true"
                 />
-
                 Création...
               </>
             ) : (
-              <>
-
-                Créer utilisateur
-              </>
+              <>Créer utilisateur</>
             )}
           </button>
 
@@ -520,11 +407,8 @@ export default function AdminCreateUserPage() {
           >
             Annuler
           </button>
-
         </div>
-
       </form>
-
     </div>
   );
 }

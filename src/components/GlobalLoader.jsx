@@ -2,7 +2,6 @@ import { useContext } from "react";
 
 import { LoaderContext } from "../contexts/LoaderContext";
 
-
 // =====================================================
 // COMPOSANT : GLOBAL LOADER
 // =====================================================
@@ -14,17 +13,14 @@ import { LoaderContext } from "../contexts/LoaderContext";
 // Cela permet de déclencher le loader depuis différents
 // composants sans devoir le gérer individuellement.
 export default function GlobalLoader() {
-
   // Récupération de l'état global du chargement.
   const { loading } = useContext(LoaderContext);
-
 
   // Si aucune requête globale n'est en cours,
   // aucun élément n'est ajouté au DOM.
   if (!loading) {
     return null;
   }
-
 
   // ===================================================
   // RENDU
@@ -56,7 +52,6 @@ export default function GlobalLoader() {
       aria-live="polite"
       aria-label="Chargement en cours"
     >
-
       {/* =================================================
           CONTENEUR DU LOADER
       ================================================= */}
@@ -73,7 +68,6 @@ export default function GlobalLoader() {
           gap-3
         "
       >
-
         {/* -----------------------------------------------
             INDICATEUR DE CHARGEMENT
         ----------------------------------------------- */}
@@ -87,7 +81,6 @@ export default function GlobalLoader() {
           aria-hidden="true"
         />
 
-
         {/* -----------------------------------------------
             MESSAGE ACCESSIBLE ET VISIBLE
         ----------------------------------------------- */}
@@ -95,15 +88,12 @@ export default function GlobalLoader() {
         <span className="text-muted small fw-medium">
           Chargement en cours...
         </span>
-
       </div>
-
 
       {/* Texte destiné aux lecteurs d'écran. */}
       <span className="visually-hidden">
         Veuillez patienter, chargement en cours.
       </span>
-
     </div>
   );
 }

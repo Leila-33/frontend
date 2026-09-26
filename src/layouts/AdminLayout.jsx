@@ -16,16 +16,11 @@ import { useNotifications } from "../contexts/NotificationContext";
 // ==========================================================
 
 export default function AdminLayout() {
-
   // ========================================================
   // NOTIFICATIONS / COMPTEURS
   // ========================================================
 
-  const {
-    pendingTestDriveCount,
-    unreadNotificationCount
-  } = useNotifications();
-
+  const { pendingTestDriveCount, unreadNotificationCount } = useNotifications();
 
   // ========================================================
   // SIDEBAR
@@ -40,11 +35,5 @@ export default function AdminLayout() {
     />
   );
 
-
-  return (
-    <DashboardLayout
-      sidebar={renderSidebar}
-      mobileTitle="Mmotors"
-    />
-  );
+  return <DashboardLayout sidebar={renderSidebar} mobileTitle="Mmotors" />;
 }

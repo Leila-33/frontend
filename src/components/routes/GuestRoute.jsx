@@ -9,20 +9,17 @@ export default function GuestRoute({ children }) {
     isSavAgent,
     isSalesAgent,
     postLoginRedirect,
-  clearPostLoginRedirect,
+    clearPostLoginRedirect,
   } = useAuth();
 
+  if (isAuthenticated) {
+    if (postLoginRedirect) {
+      const redirect = postLoginRedirect;
 
-if (isAuthenticated) {
+      clearPostLoginRedirect();
 
-  if (postLoginRedirect) {
-
-    const redirect = postLoginRedirect;
-
-    clearPostLoginRedirect();
-
-    return <Navigate to={redirect} replace />;
-  }
+      return <Navigate to={redirect} replace />;
+    }
     let redirectTo = "/dashboard"; // fallback client
 
     if (isAdmin) {

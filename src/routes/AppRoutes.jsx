@@ -2,18 +2,18 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 
 // PUBLIC
-import Home from "../pages/Home";
-import Vehicles from "../pages/Vehicles.jsx";
+import Home from "../pages/public/Home";
+import Vehicles from "../pages/public/Vehicles.jsx";
 import VehicleDetail from "../pages/public/VehicleDetail";
 import Register from "../pages/auth/Register";
 import Login from "../pages/auth/Login";
 import VerifyEmail from "../pages/auth/VerifyEmail";
-import ApplicationDeleted from "../pages/ApplicationDeleted.jsx";
 import ActivateAccountPage from "../pages/sales/client/ActivateAccountPage.jsx";
+import NotFound from "../pages/public/NotFound";
 
 // CLIENT
 import Applications from "../pages/client/Applications";
-import ApplicationDetails from "../pages/client/ApplicationDetails";
+import Application from "../pages/client/Application";
 import MyTestDrives from "../pages/client/MyTestDrives";
 import DashboardPage from "../pages/client/Dashboard";
 import FavoritesPage from "../pages/client/Favorites";
@@ -27,7 +27,7 @@ import CustomerQuoteDetailPage from "../pages/sales/client/CustomerQuoteDetailPa
 
 // ADMIN
 import AdminApplications from "../pages/admin/Applications";
-import AdminApplicationDetails from "../pages/admin/ApplicationDetails";
+import AdminApplication from "../pages/admin/AdminApplication";
 import AdminVehicles from "../pages/admin/Vehicles";
 import AdminOptions from "../pages/admin/Options";
 import Dashboard from "../pages/admin/Dashboard";
@@ -53,13 +53,13 @@ import QuoteFormContainer from "../pages/sales/agent/QuoteFormContainer.jsx";
 
 // SHARED
 import NotificationsPage from "../pages/shared/NotificationsPage";
-import NotFound from "../pages/NotFound";
 import TestDriveDetails from "../pages/shared/TestDriveDetails.jsx";
 import ApplicationNotFound from "../pages/shared/ApplicationNotFound.jsx";
+import ApplicationDeleted from "../pages/shared/ApplicationDeleted.jsx";
 
 // COMPONENTS
 import Navbar from "../components/Navbar";
-import ProtectedRoute from "../components/ProtectedRoute";
+import ProtectedRoute from "../components/routes/ProtectedRoute.jsx";
 import ClientRoute from "../components/routes/ClientRoute.jsx";
 import AdminRoute from "../components/routes/AdminRoute.jsx";
 import GuestRoute from "../components/routes/GuestRoute.jsx";
@@ -160,11 +160,8 @@ export default function AppRoutes() {
             <Route path="dashboard" element={<SalesDashboard />} />
             <Route path="leads" element={<LeadsPage />} />
             <Route path="leads/:id" element={<LeadDetailPage />} />
-            <Route path="/sales/quotes/new" element={<QuoteFormContainer />} />
-            <Route
-              path="/sales/quotes/:id/edit"
-              element={<QuoteFormContainer />}
-            />
+            <Route path="quotes/new/:leadId" element={<QuoteFormContainer />} />
+            <Route path="quotes/:id/edit" element={<QuoteFormContainer />} />
             <Route path="quotes/:id" element={<QuoteDetailPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
           </Route>
@@ -179,10 +176,10 @@ export default function AppRoutes() {
             <Route path="dashboard" element={<DashboardPage />} />
 
             <Route path="applications" element={<Applications />} />
-            <Route path="applications/:id" element={<ApplicationDetails />} />
+            <Route path="applications/:id" element={<Application />} />
             <Route
               path="applications/new/:vehicleId"
-              element={<ApplicationDetails />}
+              element={<Application />}
             />
 
             <Route path="mytestdrives" element={<MyTestDrives />} />
@@ -220,10 +217,7 @@ export default function AppRoutes() {
             <Route path="analytics" element={<Analytics />} />
 
             <Route path="applications" element={<AdminApplications />} />
-            <Route
-              path="applications/:id"
-              element={<AdminApplicationDetails />}
-            />
+            <Route path="applications/:id" element={<AdminApplication />} />
 
             <Route path="vehicles" element={<AdminVehicles />} />
             <Route path="vehicle/:id" element={<VehicleDetail />} />

@@ -1,15 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useState,
-} from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
-import {
-  Link,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { toast } from "react-toastify";
 
@@ -37,10 +28,7 @@ export default function ActivateAccountPage() {
   // AUTHENTIFICATION ET NAVIGATION
   // =====================================================
 
-  const {
-    login,
-    setPostLoginRedirect,
-  } = useAuth();
+  const { login, setPostLoginRedirect } = useAuth();
 
   const navigate = useNavigate();
 
@@ -83,13 +71,11 @@ export default function ActivateAccountPage() {
   const [user, setUser] = useState(null);
 
   // États retournés par l'API de vérification.
-  const [alreadyVerified, setAlreadyVerified] =
-    useState(false);
+  const [alreadyVerified, setAlreadyVerified] = useState(false);
 
   const [expired, setExpired] = useState(false);
 
-  const [validToken, setValidToken] =
-    useState(false);
+  const [validToken, setValidToken] = useState(false);
 
   // =====================================================
   // VALIDATION DU FORMULAIRE
@@ -110,11 +96,11 @@ export default function ActivateAccountPage() {
     // -------------------------
 
     if (!form.password) {
-      validationErrors.password =
-        "Mot de passe requis";
+      validationErrors.password = "Mot de passe requis";
     } else if (
-      !/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/
-        .test(form.password)
+      !/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/.test(
+        form.password
+      )
     ) {
       validationErrors.password =
         "8 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial";
@@ -124,9 +110,7 @@ export default function ActivateAccountPage() {
     // CONFIRMATION
     // -------------------------
 
-    if (
-      form.password !== form.confirmPassword
-    ) {
+    if (form.password !== form.confirmPassword) {
       validationErrors.confirmPassword =
         "Les mots de passe ne correspondent pas";
     }
@@ -136,15 +120,12 @@ export default function ActivateAccountPage() {
     // -------------------------
 
     if (!form.cgu) {
-      validationErrors.cgu =
-        "Vous devez accepter les CGU";
+      validationErrors.cgu = "Vous devez accepter les CGU";
     }
 
     setErrors(validationErrors);
 
-    return (
-      Object.keys(validationErrors).length === 0
-    );
+    return Object.keys(validationErrors).length === 0;
   }, [form]);
 
   // =====================================================
@@ -152,19 +133,11 @@ export default function ActivateAccountPage() {
   // =====================================================
 
   const handleChange = useCallback((event) => {
-    const {
-      name,
-      value,
-      checked,
-      type,
-    } = event.target;
+    const { name, value, checked, type } = event.target;
 
     setForm((currentForm) => ({
       ...currentForm,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
 
     // Supprime l'erreur du champ dès que l'utilisateur
@@ -210,13 +183,9 @@ export default function ActivateAccountPage() {
 
       setUser(data);
 
-      setAlreadyVerified(
-        Boolean(data?.already_verified)
-      );
+      setAlreadyVerified(Boolean(data?.already_verified));
 
-      setExpired(
-        Boolean(data?.expired)
-      );
+      setExpired(Boolean(data?.expired));
 
       // Le token peut être techniquement reconnu
       // tout en étant expiré ou déjà utilisé.
@@ -225,8 +194,7 @@ export default function ActivateAccountPage() {
       setValidToken(false);
 
       toast.error(
-        error?.message ||
-        "Impossible de vérifier le lien d'activation."
+        error?.message || "Impossible de vérifier le lien d'activation."
       );
     } finally {
       setChecking(false);
@@ -259,53 +227,32 @@ export default function ActivateAccountPage() {
       try {
         setLoading(true);
 
-        const result = await apiFetch(
-          "/auth/activate-account",
-          {
-            method: "POST",
-            body: {
-              token,
-              password: form.password,
-              accepted_cgu: form.cgu,
-            },
-          }
-        );
+        const result = await apiFetch("/auth/activate-account", {
+          method: "POST",
+          body: {
+            token,
+            password: form.password,
+            accepted_cgu: form.cgu,
+          },
+        });
 
-        toast.success(
-          "Votre compte est activé."
-        );
+        toast.success("Votre compte est activé.");
 
         // La redirection éventuelle après connexion
         // est enregistrée avant la connexion.
-        setPostLoginRedirect(
-          result.redirect
-        );
+        setPostLoginRedirect(result.redirect);
 
         // Une seule connexion automatique.
-        login(
-          result.access_token,
-          result.refresh_token
-        );
+        login(result.access_token, result.refresh_token);
 
         navigate(result.redirect);
       } catch (error) {
-        toast.error(
-          error?.message ||
-          "Impossible d'activer votre compte."
-        );
+        toast.error(error?.message || "Impossible d'activer votre compte.");
       } finally {
         setLoading(false);
       }
     },
-    [
-      form,
-      loading,
-      login,
-      navigate,
-      setPostLoginRedirect,
-      token,
-      validateForm,
-    ]
+    [form, loading, login, navigate, setPostLoginRedirect, token, validateForm]
   );
 
   // =====================================================
@@ -334,9 +281,7 @@ export default function ActivateAccountPage() {
             aria-hidden="true"
           />
 
-          <span>
-            Vérification du lien...
-          </span>
+          <span>Vérification du lien...</span>
         </div>
       </main>
     );
@@ -362,19 +307,13 @@ export default function ActivateAccountPage() {
               aria-hidden="true"
             />
 
-            <h1 className="h4 fw-bold mb-3">
-              Lien invalide
-            </h1>
+            <h1 className="h4 fw-bold mb-3">Lien invalide</h1>
 
             <p className="text-muted mb-4">
-              Ce lien d'activation est invalide
-              ou ne peut plus être utilisé.
+              Ce lien d'activation est invalide ou ne peut plus être utilisé.
             </p>
 
-            <Link
-              to="/"
-              className="btn btn-dark"
-            >
+            <Link to="/" className="btn btn-dark">
               Retour
             </Link>
           </div>
@@ -403,13 +342,10 @@ export default function ActivateAccountPage() {
               aria-hidden="true"
             />
 
-            <h1 className="h4 fw-bold mb-3">
-              Lien expiré
-            </h1>
+            <h1 className="h4 fw-bold mb-3">Lien expiré</h1>
 
             <p className="text-muted mb-0">
-              Ce lien d'activation a expiré.
-              Veuillez demander un nouveau lien
+              Ce lien d'activation a expiré. Veuillez demander un nouveau lien
               d'activation.
             </p>
           </div>
@@ -438,25 +374,16 @@ export default function ActivateAccountPage() {
               aria-hidden="true"
             />
 
-            <h1 className="h4 fw-bold mb-3">
-              Compte déjà activé
-            </h1>
+            <h1 className="h4 fw-bold mb-3">Compte déjà activé</h1>
 
             <p className="text-muted mb-4">
-              Bonjour{" "}
-              <strong>
-                {user?.first_name}
-              </strong>
+              Bonjour <strong>{user?.first_name}</strong>
               , votre compte est déjà activé.
               <br />
-              Vous pouvez vous connecter pour
-              consulter vos offres.
+              Vous pouvez vous connecter pour consulter vos offres.
             </p>
 
-            <Link
-              to="/login"
-              className="btn btn-dark w-100"
-            >
+            <Link to="/login" className="btn btn-dark w-100">
               Se connecter
             </Link>
           </div>
@@ -479,14 +406,10 @@ export default function ActivateAccountPage() {
         }}
       >
         <div className="card-body p-4">
-          <h1 className="h3 fw-bold mb-2">
-            Bienvenue{" "}
-            {user?.first_name}
-          </h1>
+          <h1 className="h3 fw-bold mb-2">Bienvenue {user?.first_name}</h1>
 
           <p className="text-muted mb-4">
-            Choisissez votre mot de passe pour
-            accéder à votre espace client.
+            Choisissez votre mot de passe pour accéder à votre espace client.
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -495,10 +418,7 @@ export default function ActivateAccountPage() {
             ========================================= */}
 
             <div className="mb-3">
-              <label
-                htmlFor={passwordId}
-                className="form-label"
-              >
+              <label htmlFor={passwordId} className="form-label">
                 Mot de passe
               </label>
 
@@ -507,29 +427,20 @@ export default function ActivateAccountPage() {
                 type="password"
                 name="password"
                 className={`form-control ${
-                  errors.password
-                    ? "is-invalid"
-                    : ""
+                  errors.password ? "is-invalid" : ""
                 }`}
                 value={form.password}
                 onChange={handleChange}
                 autoComplete="new-password"
                 disabled={loading}
-                aria-invalid={
-                  Boolean(errors.password)
-                }
+                aria-invalid={Boolean(errors.password)}
                 aria-describedby={
-                  errors.password
-                    ? `${passwordId}-error`
-                    : undefined
+                  errors.password ? `${passwordId}-error` : undefined
                 }
               />
 
               {errors.password && (
-                <div
-                  id={`${passwordId}-error`}
-                  className="invalid-feedback"
-                >
+                <div id={`${passwordId}-error`} className="invalid-feedback">
                   {errors.password}
                 </div>
               )}
@@ -540,10 +451,7 @@ export default function ActivateAccountPage() {
             ========================================= */}
 
             <div className="mb-3">
-              <label
-                htmlFor={confirmPasswordId}
-                className="form-label"
-              >
+              <label htmlFor={confirmPasswordId} className="form-label">
                 Confirmation du mot de passe
               </label>
 
@@ -552,19 +460,13 @@ export default function ActivateAccountPage() {
                 type="password"
                 name="confirmPassword"
                 className={`form-control ${
-                  errors.confirmPassword
-                    ? "is-invalid"
-                    : ""
+                  errors.confirmPassword ? "is-invalid" : ""
                 }`}
                 value={form.confirmPassword}
                 onChange={handleChange}
                 autoComplete="new-password"
                 disabled={loading}
-                aria-invalid={
-                  Boolean(
-                    errors.confirmPassword
-                  )
-                }
+                aria-invalid={Boolean(errors.confirmPassword)}
                 aria-describedby={
                   errors.confirmPassword
                     ? `${confirmPasswordId}-error`
@@ -591,38 +493,25 @@ export default function ActivateAccountPage() {
                 <input
                   id={cguId}
                   className={`form-check-input ${
-                    errors.cgu
-                      ? "is-invalid"
-                      : ""
+                    errors.cgu ? "is-invalid" : ""
                   }`}
                   type="checkbox"
                   name="cgu"
                   checked={form.cgu}
                   onChange={handleChange}
                   disabled={loading}
-                  aria-invalid={Boolean(
-                    errors.cgu
-                  )}
+                  aria-invalid={Boolean(errors.cgu)}
                 />
 
-                <label
-                  htmlFor={cguId}
-                  className="form-check-label"
-                >
+                <label htmlFor={cguId} className="form-check-label">
                   J'accepte les{" "}
-                  <Link
-                    to="/cgu"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <Link to="/cgu" target="_blank" rel="noopener noreferrer">
                     CGU
                   </Link>
                 </label>
 
                 {errors.cgu && (
-                  <div className="invalid-feedback">
-                    {errors.cgu}
-                  </div>
+                  <div className="invalid-feedback">{errors.cgu}</div>
                 )}
               </div>
             </div>
@@ -634,10 +523,7 @@ export default function ActivateAccountPage() {
             <button
               type="submit"
               className="btn btn-dark w-100"
-              disabled={
-                loading ||
-                !isFormValid
-              }
+              disabled={loading || !isFormValid}
             >
               {loading ? (
                 <>
@@ -645,16 +531,11 @@ export default function ActivateAccountPage() {
                     className="spinner-border spinner-border-sm me-2"
                     aria-hidden="true"
                   />
-
                   Activation...
                 </>
               ) : (
                 <>
-                  <i
-                    className="bi bi-check-circle me-2"
-                    aria-hidden="true"
-                  />
-
+                  <i className="bi bi-check-circle me-2" aria-hidden="true" />
                   Activer mon compte
                 </>
               )}

@@ -16,7 +16,6 @@ export default function TicketReplyBox({
   onSend,
   placeholder = "Écrire un message...",
 }) {
-
   // =====================================================
   // ÉTAT DU MESSAGE
   // =====================================================
@@ -25,7 +24,6 @@ export default function TicketReplyBox({
    * Contenu actuellement saisi par l'utilisateur.
    */
   const [message, setMessage] = useState("");
-
 
   // =====================================================
   // SOUMISSION
@@ -65,7 +63,6 @@ export default function TicketReplyBox({
     }
   };
 
-
   // =====================================================
   // ÉTAT DU BOUTON
   // =====================================================
@@ -74,9 +71,7 @@ export default function TicketReplyBox({
    * Le bouton est désactivé lorsqu'aucun contenu valide
    * n'est présent dans le champ.
    */
-  const isDisabled =
-    message.trim().length === 0;
-
+  const isDisabled = message.trim().length === 0;
 
   // =====================================================
   // AFFICHAGE
@@ -88,17 +83,12 @@ export default function TicketReplyBox({
       className="card border-0 shadow-sm rounded-4"
       aria-label="Répondre au ticket"
     >
-
       <div className="card-body p-4">
-
         {/* =================================================
             CHAMP DE MESSAGE
         ================================================= */}
 
-        <label
-          htmlFor="ticket-reply"
-          className="form-label fw-semibold"
-        >
+        <label htmlFor="ticket-reply" className="form-label fw-semibold">
           Votre réponse
         </label>
 
@@ -107,9 +97,7 @@ export default function TicketReplyBox({
           rows={4}
           className="form-control"
           value={message}
-          onChange={(event) =>
-            setMessage(event.target.value)
-          }
+          onChange={(event) => setMessage(event.target.value)}
           placeholder={placeholder}
           aria-label="Message"
         />
@@ -119,23 +107,16 @@ export default function TicketReplyBox({
         ================================================= */}
 
         <div className="d-flex justify-content-end mt-3">
-
           <button
             type="submit"
             className="btn btn-primary"
             disabled={isDisabled}
           >
-            <i
-              className="bi bi-send me-2"
-              aria-hidden="true"
-            />
+            <i className="bi bi-send me-2" aria-hidden="true" />
             Envoyer
           </button>
-
         </div>
-
       </div>
-
     </form>
   );
 }

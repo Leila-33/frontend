@@ -1,6 +1,4 @@
-import {
-  TICKET_CATEGORIES,
-} from "../../constants/supportTicketOptions";
+import { TICKET_CATEGORIES } from "../../constants/supportTicketOptions";
 
 /**
  * Badge permettant d'afficher la catégorie d'un ticket.
@@ -9,12 +7,7 @@ import {
  * - un libellé compréhensible pour l'utilisateur ;
  * - une couleur Bootstrap adaptée.
  */
-export default function TicketCategoryBadge({
-  category,
-}) {
-
-  
-
+export default function TicketCategoryBadge({ category }) {
   // =====================================================
   // CATÉGORIE COURANTE
   // =====================================================
@@ -26,18 +19,11 @@ export default function TicketCategoryBadge({
    * Si la catégorie est absente ou inconnue, la catégorie
    * "OTHER" est utilisée comme valeur de secours.
    */
-  const current =
-    TICKET_CATEGORIES[category] ||
-    TICKET_CATEGORIES.OTHER;
-
+  const current = TICKET_CATEGORIES[category] || TICKET_CATEGORIES.OTHER;
 
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
-  return (
-    <span className={`badge bg-${current.color}`}>
-      {current.label}
-    </span>
-  );
+  return <span className={`badge bg-${current.color}`}>{current.label}</span>;
 }

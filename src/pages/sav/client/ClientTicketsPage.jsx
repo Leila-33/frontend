@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -43,9 +39,7 @@ export default function ClientTicketsPage() {
     try {
       setLoading(true);
 
-      const data = await apiFetch(
-        "/support-tickets"
-      );
+      const data = await apiFetch("/support-tickets");
 
       // Le backend peut retourner :
       // { items: [...] }
@@ -58,10 +52,7 @@ export default function ClientTicketsPage() {
             : []
       );
     } catch (error) {
-      toast.error(
-        error.message ||
-        "Impossible de récupérer vos tickets."
-      );
+      toast.error(error.message || "Impossible de récupérer vos tickets.");
 
       // Évite de conserver d'anciennes données
       // lorsque la requête échoue.
@@ -85,7 +76,6 @@ export default function ClientTicketsPage() {
 
   return (
     <div className="container py-4">
-
       {/* =========================
           HEADER
           ========================= */}
@@ -102,9 +92,7 @@ export default function ClientTicketsPage() {
         "
       >
         <div>
-          <h1 className="h3 fw-bold mb-1">
-            Mes tickets
-          </h1>
+          <h1 className="h3 fw-bold mb-1">Mes tickets</h1>
 
           <p className="text-muted mb-0">
             Consultez vos demandes auprès du service après-vente.
@@ -115,10 +103,7 @@ export default function ClientTicketsPage() {
           to="/support-tickets/create"
           className="btn btn-primary flex-shrink-0"
         >
-          <i
-            className="bi bi-plus-lg me-2"
-            aria-hidden="true"
-          />
+          <i className="bi bi-plus-lg me-2" aria-hidden="true" />
           Créer un ticket
         </Link>
       </div>
@@ -137,15 +122,11 @@ export default function ClientTicketsPage() {
             className="spinner-border spinner-border-sm me-2"
             aria-hidden="true"
           />
-
           Chargement de vos tickets...
         </div>
       ) : (
-        <ClientTicketsTable
-          tickets={tickets}
-        />
+        <ClientTicketsTable tickets={tickets} />
       )}
-
     </div>
   );
 }

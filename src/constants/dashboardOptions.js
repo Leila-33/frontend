@@ -41,7 +41,6 @@ export const ADMIN_DASHBOARD_STAT_CARDS = [
   },
 ];
 
-
 // ==========================================================
 // ACTIONS RAPIDES
 // ==========================================================
@@ -66,7 +65,6 @@ export const ADMIN_DASHBOARD_QUICK_ACTIONS = [
     buttonClass: "btn-outline-secondary",
   },
 ];
-
 
 // ==========================================================
 // CARTES STATISTIQUES DU DASHBOARD UTILISATEUR

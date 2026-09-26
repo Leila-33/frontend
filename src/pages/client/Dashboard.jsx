@@ -3,19 +3,11 @@ import { Link } from "react-router-dom";
 
 import apiFetch from "../../services/apiFetch";
 
-import {
-  APPLICATION_STATUSES,
-} from "../../constants/applicationOptions";
+import { APPLICATION_STATUSES } from "../../constants/applicationOptions";
 
-import {
-  USER_DASHBOARD_STAT_CARDS,
-} from "../../constants/dashboardOptions";
+import { USER_DASHBOARD_STAT_CARDS } from "../../constants/dashboardOptions";
 
-import {
-  formatDate,
-  formatDateTime,
-} from "../../utils/dateUtils";
-
+import { formatDate, formatDateTime } from "../../utils/dateUtils";
 
 // ==========================================================
 // DONNÉES PAR DÉFAUT DU DASHBOARD
@@ -32,7 +24,6 @@ const DEFAULT_DASHBOARD = {
   notifications: [],
 };
 
-
 // ==========================================================
 // CARTE STATISTIQUE
 // ==========================================================
@@ -47,29 +38,18 @@ function StatCard({
 }) {
   return (
     <div className="col-md-6 col-xl-3">
-
       <div className="card border-0 shadow-sm rounded-5 h-100">
-
         <div className="card-body p-4">
-
           <div className="d-flex justify-content-between align-items-center">
-
             {/* ------------------------------------------------
                 INFORMATIONS
                 ------------------------------------------------ */}
 
             <div>
+              <small className="text-muted fw-semibold">{title}</small>
 
-              <small className="text-muted fw-semibold">
-                {title}
-              </small>
-
-              <h2 className="fw-bold mt-2 mb-0">
-                {value}
-              </h2>
-
+              <h2 className="fw-bold mt-2 mb-0">{value}</h2>
             </div>
-
 
             {/* ------------------------------------------------
                 ICÔNE
@@ -79,11 +59,7 @@ function StatCard({
               className={`
                 rounded-circle
                 bg-${color}
-                ${
-                  color === "warning"
-                    ? "text-dark"
-                    : "text-white"
-                }
+                ${color === "warning" ? "text-dark" : "text-white"}
                 d-flex
                 align-items-center
                 justify-content-center
@@ -96,16 +72,13 @@ function StatCard({
             >
               <i className={`bi ${icon}`}></i>
             </div>
-
           </div>
-
 
           {/* ------------------------------------------------
               DESCRIPTION
               ------------------------------------------------ */}
 
           <div className="mt-4">
-
             <small
               className={
                 descriptionColor === "muted"
@@ -115,17 +88,12 @@ function StatCard({
             >
               {description}
             </small>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }
-
 
 // ==========================================================
 // DASHBOARD UTILISATEUR
@@ -155,31 +123,22 @@ function StatCard({
  * de la présentation de ces données.
  */
 export default function DashboardPage() {
-
   // ========================================================
   // ÉTAT
   // ========================================================
 
-  const [dashboard, setDashboard] = useState(
-    DEFAULT_DASHBOARD
-  );
+  const [dashboard, setDashboard] = useState(DEFAULT_DASHBOARD);
 
   const [loading, setLoading] = useState(true);
-
 
   // ========================================================
   // CHARGEMENT DU DASHBOARD
   // ========================================================
 
   useEffect(() => {
-
     const fetchDashboard = async () => {
-
       try {
-
-        const response = await apiFetch(
-          "/dashboard"
-        );
+        const response = await apiFetch("/dashboard");
 
         setDashboard({
           ...DEFAULT_DASHBOARD,
@@ -187,32 +146,19 @@ export default function DashboardPage() {
 
           // Sécurise les listes utilisées
           // avec .map().
-          applications:
-            response.applications ?? [],
+          applications: response.applications ?? [],
 
-          notifications:
-            response.notifications ?? [],
+          notifications: response.notifications ?? [],
         });
-
       } catch (err) {
-
-        console.error(
-          "Erreur lors du chargement du dashboard :",
-          err
-        );
-
+        console.error("Erreur lors du chargement du dashboard :", err);
       } finally {
-
         setLoading(false);
-
       }
     };
 
-
     fetchDashboard();
-
   }, []);
-
 
   // ========================================================
   // DONNÉES DU DASHBOARD
@@ -225,49 +171,32 @@ export default function DashboardPage() {
     notifications,
   } = dashboard;
 
-
   // ========================================================
   // AFFICHAGE DU CHARGEMENT
   // ========================================================
 
   if (loading) {
-
     return (
-
       <div className="container py-5">
-
         <div className="text-center text-muted">
-
           <div
             className="spinner-border"
             role="status"
             aria-hidden="true"
           ></div>
 
-          <p className="mt-3 mb-0">
-            Chargement du tableau de bord...
-          </p>
-
+          <p className="mt-3 mb-0">Chargement du tableau de bord...</p>
         </div>
-
       </div>
-
     );
-
   }
-
 
   // ========================================================
   // AFFICHAGE
   // ========================================================
 
   return (
-
-    <div
-      className="container py-4"
-      style={{ maxWidth: 1400 }}
-    >
-
+    <div className="container py-4" style={{ maxWidth: 1400 }}>
       {/* ====================================================
           HERO / EN-TÊTE
           ==================================================== */}
@@ -275,19 +204,15 @@ export default function DashboardPage() {
       <div
         className="p-4 p-lg-5 rounded-5 mb-4 text-white position-relative overflow-hidden"
         style={{
-          background:
-            "linear-gradient(135deg, #111 0%, #1f1f1f 100%)",
+          background: "linear-gradient(135deg, #111 0%, #1f1f1f 100%)",
         }}
       >
-
         <div className="position-relative">
-
           {/* ------------------------------------------------
               ICÔNE + TITRE
               ------------------------------------------------ */}
 
           <div className="d-flex align-items-center gap-3 mb-3">
-
             <div
               className="
                 d-flex
@@ -306,36 +231,24 @@ export default function DashboardPage() {
               <i className="bi bi-speedometer2"></i>
             </div>
 
-
             <div>
-
-              <h2 className="fw-bold mb-1">
-                Tableau de bord
-              </h2>
+              <h2 className="fw-bold mb-1">Tableau de bord</h2>
 
               <p className="mb-0 text-light opacity-75">
                 Gérez vos dossiers et vos essais routiers
               </p>
-
             </div>
-
           </div>
-
 
           {/* ------------------------------------------------
               ACTIONS PRINCIPALES
               ------------------------------------------------ */}
 
           <div className="d-flex flex-wrap gap-3 mt-4">
-
-            <Link
-              to="/vehicles"
-              className="btn btn-light rounded-pill px-4"
-            >
+            <Link to="/vehicles" className="btn btn-light rounded-pill px-4">
               <i className="bi bi-search me-2"></i>
               Rechercher un véhicule
             </Link>
-
 
             <Link
               to="/applications"
@@ -344,22 +257,16 @@ export default function DashboardPage() {
               <i className="bi bi-folder2-open me-2"></i>
               Mes dossiers
             </Link>
-
           </div>
-
         </div>
-
       </div>
-
 
       {/* ====================================================
           STATISTIQUES DES DOSSIERS
           ==================================================== */}
 
       <div className="row g-4 mb-4">
-
         {USER_DASHBOARD_STAT_CARDS.map((card) => (
-
           <StatCard
             key={card.key}
             title={card.title}
@@ -367,48 +274,32 @@ export default function DashboardPage() {
             icon={card.icon}
             color={card.color}
             description={card.description}
-            descriptionColor={
-              card.descriptionColor
-            }
+            descriptionColor={card.descriptionColor}
           />
-
         ))}
-
       </div>
-
 
       {/* ====================================================
           CONTENU PRINCIPAL
           ==================================================== */}
 
       <div className="row g-4">
-
-
         {/* ==================================================
             COLONNE GAUCHE
             ================================================== */}
 
         <div className="col-lg-8">
-
-
           {/* ------------------------------------------------
               PROCHAIN ESSAI ROUTIER
               ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5 mb-4">
-
             <div className="card-body p-4">
-
               <div className="d-flex justify-content-between align-items-center mb-4">
-
                 <h5 className="fw-bold mb-0">
-
                   <i className="bi bi-car-front-fill me-2"></i>
-
                   Prochain essai routier
-
                 </h5>
-
 
                 <Link
                   to="/mytestdrives"
@@ -416,45 +307,31 @@ export default function DashboardPage() {
                 >
                   Voir tout
                 </Link>
-
               </div>
-
 
               {/* ------------------------------------------------
                   AUCUN ESSAI CONFIRMÉ
                   ------------------------------------------------ */}
 
               {!upcoming_test_drive && (
-
                 <div className="text-center py-5 text-muted">
+                  <i className="bi bi-calendar-x" style={{ fontSize: 40 }}></i>
 
-                  <i
-                    className="bi bi-calendar-x"
-                    style={{ fontSize: 40 }}
-                  ></i>
-
-                  <p className="mt-3 mb-0">
-                    Aucun essai confirmé
-                  </p>
-
+                  <p className="mt-3 mb-0">Aucun essai confirmé</p>
                 </div>
-
               )}
-
 
               {/* ------------------------------------------------
                   ESSAI CONFIRMÉ
                   ------------------------------------------------ */}
 
               {upcoming_test_drive && (
-
                 <div
                   className="p-4 rounded-5"
                   style={{
                     background: "#f8f9fa",
                   }}
                 >
-
                   <div
                     className="
                       d-flex
@@ -465,30 +342,18 @@ export default function DashboardPage() {
                       gap-3
                     "
                   >
-
                     <div>
-
                       <h4 className="fw-bold mb-2">
-
                         {upcoming_test_drive.vehicle?.brand}{" "}
-
                         {upcoming_test_drive.vehicle?.model}
-
                       </h4>
 
-
                       <div className="text-muted">
-
                         <i className="bi bi-calendar-event me-2"></i>
 
-                        {formatDateTime(
-                          upcoming_test_drive.appointment_date
-                        )}
-
+                        {formatDateTime(upcoming_test_drive.appointment_date)}
                       </div>
-
                     </div>
-
 
                     <Link
                       to={`/test-drives/${upcoming_test_drive.id}`}
@@ -496,36 +361,23 @@ export default function DashboardPage() {
                     >
                       Voir détails
                     </Link>
-
                   </div>
-
                 </div>
-
               )}
-
             </div>
-
           </div>
-
 
           {/* ------------------------------------------------
               DOSSIERS RÉCENTS
               ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5">
-
             <div className="card-body p-4">
-
               <div className="d-flex justify-content-between align-items-center mb-4">
-
                 <h5 className="fw-bold mb-0">
-
                   <i className="bi bi-folder-fill me-2"></i>
-
                   Mes dossiers
-
                 </h5>
-
 
                 <Link
                   to="/applications"
@@ -533,53 +385,32 @@ export default function DashboardPage() {
                 >
                   Voir tout
                 </Link>
-
               </div>
 
-
               <div className="d-flex flex-column gap-3">
-
                 {applications.map((app) => (
-
                   <Link
                     key={app.id}
                     to={`/applications/${app.id}`}
                     className="text-decoration-none text-dark"
                   >
-
                     <div className="p-4 rounded-5 border bg-white">
-
                       <div className="d-flex justify-content-between align-items-center">
-
                         {/* ------------------------------------
                             INFORMATIONS DU DOSSIER
                             ------------------------------------ */}
 
                         <div>
-
                           <div className="fw-bold mb-2">
-
-                            Dossier #
-
-                            {app.id
-                              ? app.id.slice(0, 8)
-                              : "N/A"}
-
+                            Dossier #{app.id ? app.id.slice(0, 8) : "N/A"}
                           </div>
-
 
                           <div className="small text-muted">
-
                             <i className="bi bi-clock me-1"></i>
 
-                            {formatDate(
-                              app.created_at
-                            )}
-
+                            {formatDate(app.created_at)}
                           </div>
-
                         </div>
-
 
                         {/* ------------------------------------
                             STATUT
@@ -592,92 +423,56 @@ export default function DashboardPage() {
                             px-3
                             py-2
                             bg-${
-                              APPLICATION_STATUSES[
-                                app.status
-                              ]?.color ?? "secondary"
+                              APPLICATION_STATUSES[app.status]?.color ??
+                              "secondary"
                             }
                           `}
                         >
-                          {
-                            APPLICATION_STATUSES[
-                              app.status
-                            ]?.label ?? app.status
-                          }
+                          {APPLICATION_STATUSES[app.status]?.label ??
+                            app.status}
                         </span>
-
                       </div>
-
                     </div>
-
                   </Link>
-
                 ))}
-
 
                 {/* ------------------------------------------------
                     AUCUN DOSSIER
                     ------------------------------------------------ */}
 
                 {applications.length === 0 && (
-
                   <div className="text-center py-5 text-muted">
+                    <i className="bi bi-folder-x" style={{ fontSize: 40 }}></i>
 
-                    <i
-                      className="bi bi-folder-x"
-                      style={{ fontSize: 40 }}
-                    ></i>
-
-                    <p className="mt-3 mb-0">
-                      Aucun dossier
-                    </p>
-
+                    <p className="mt-3 mb-0">Aucun dossier</p>
                   </div>
-
                 )}
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
 
         {/* ==================================================
             COLONNE DROITE
             ================================================== */}
 
         <div className="col-lg-4">
-
-
           {/* ------------------------------------------------
               ACTIONS RAPIDES
               ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5 mb-4">
-
             <div className="card-body p-4">
-
               <h5 className="fw-bold mb-4">
-
                 <i className="bi bi-lightning-charge-fill me-2"></i>
-
                 Actions rapides
-
               </h5>
 
-
               <div className="d-grid gap-3">
-
-                <Link
-                  to="/vehicles"
-                  className="btn btn-dark rounded-pill py-3"
-                >
+                <Link to="/vehicles" className="btn btn-dark rounded-pill py-3">
                   <i className="bi bi-search me-2"></i>
                   Rechercher un véhicule
                 </Link>
-
 
                 <Link
                   to="/applications"
@@ -687,57 +482,38 @@ export default function DashboardPage() {
                   Voir mes dossiers
                 </Link>
 
-
                 <Link
                   to="/notifications"
                   className="btn btn-outline-dark rounded-pill py-3"
                 >
                   <i className="bi bi-bell me-2"></i>
                   Notifications
-
                   {unread_notifications > 0 && (
-
                     <span className="badge bg-warning text-dark rounded-pill ms-2">
                       {unread_notifications}
                     </span>
-
                   )}
-
                 </Link>
-
               </div>
-
             </div>
-
           </div>
-
 
           {/* ------------------------------------------------
               ACTIVITÉ RÉCENTE
               ------------------------------------------------ */}
 
           <div className="card border-0 shadow-sm rounded-5">
-
             <div className="card-body p-4">
-
               <div className="d-flex justify-content-between align-items-center mb-4">
-
                 <h5 className="fw-bold mb-0">
-
                   <i className="bi bi-activity me-2"></i>
-
                   Activité récente
-
                   {unread_notifications > 0 && (
-
                     <span className="badge bg-warning text-dark rounded-pill ms-2">
                       {unread_notifications}
                     </span>
-
                   )}
-
                 </h5>
-
 
                 <Link
                   to="/notifications"
@@ -745,19 +521,11 @@ export default function DashboardPage() {
                 >
                   Tout voir
                 </Link>
-
               </div>
 
-
               <div className="d-flex flex-column gap-4">
-
                 {notifications.map((notif) => (
-
-                  <div
-                    key={notif.id}
-                    className="d-flex gap-3"
-                  >
-
+                  <div key={notif.id} className="d-flex gap-3">
                     {/* ----------------------------------------
                         ICÔNE
                         ---------------------------------------- */}
@@ -780,72 +548,44 @@ export default function DashboardPage() {
                         flexShrink: 0,
                       }}
                     >
-
                       <i className="bi bi-bell-fill"></i>
-
                     </div>
-
 
                     {/* ----------------------------------------
                         CONTENU
                         ---------------------------------------- */}
 
                     <div>
+                      <div className="fw-semibold">{notif.title}</div>
 
-                      <div className="fw-semibold">
-                        {notif.title}
-                      </div>
-
-
-                      <div className="small text-muted">
-                        {notif.message}
-                      </div>
-
+                      <div className="small text-muted">{notif.message}</div>
 
                       <div className="small text-muted mt-1">
-                        {formatDateTime(
-                          notif.created_at
-                        )}
+                        {formatDateTime(notif.created_at)}
                       </div>
-
                     </div>
-
                   </div>
-
                 ))}
-
 
                 {/* ------------------------------------------------
                     AUCUNE NOTIFICATION
                     ------------------------------------------------ */}
 
                 {notifications.length === 0 && (
-
                   <div className="text-center py-4 text-muted">
-
                     <i
                       className="bi bi-bell-slash"
                       style={{ fontSize: 32 }}
                     ></i>
 
-                    <p className="mt-2 mb-0">
-                      Aucune notification récente
-                    </p>
-
+                    <p className="mt-2 mb-0">Aucune notification récente</p>
                   </div>
-
                 )}
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

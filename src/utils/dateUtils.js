@@ -25,7 +25,6 @@ export const formatDate = (value) => {
   });
 };
 
-
 // ==========================================================
 // FORMATER UNE DATE AVEC DATE + HEURE
 // ==========================================================
@@ -51,7 +50,6 @@ export const formatDateTime = (value) => {
     timeStyle: "short",
   });
 };
-
 
 // ==========================================================
 // FORMATER UNIQUEMENT L'HEURE
@@ -79,7 +77,6 @@ export const formatTime = (value) => {
   });
 };
 
-
 // ==========================================================
 // FORMATER UNE DATE POUR L'API
 // ==========================================================
@@ -94,9 +91,7 @@ export const formatDateForApi = (value) => {
     return null;
   }
 
-  const date = value instanceof Date
-    ? value
-    : new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return null;
@@ -104,7 +99,6 @@ export const formatDateForApi = (value) => {
 
   return new Intl.DateTimeFormat("en-CA").format(date);
 };
-
 
 // ==========================================================
 // FORMATER UNE DATE RELATIVE POUR UN RENDEZ-VOUS
@@ -148,8 +142,7 @@ export const formatAppointmentDate = (dateString) => {
   );
 
   const diffDays = Math.round(
-    (appointmentDay - currentDay) /
-      (1000 * 60 * 60 * 24)
+    (appointmentDay - currentDay) / (1000 * 60 * 60 * 24)
   );
 
   if (diffDays === 0) {
@@ -170,7 +163,6 @@ export const formatAppointmentDate = (dateString) => {
 
   return `Il y a ${Math.abs(diffDays)} jours`;
 };
-
 
 // ==========================================================
 // SAVOIR SI UNE DATE CORRESPOND À AUJOURD'HUI
@@ -198,7 +190,6 @@ export const isToday = (value) => {
     date.getFullYear() === today.getFullYear()
   );
 };
-
 
 // ==========================================================
 // FORMATER UNE DATE POUR UN GRAPHIQUE
@@ -231,7 +222,6 @@ export const formatChartDate = (value) => {
   });
 };
 
-
 // ==========================================================
 // FORMATER UN MOIS POUR UN GRAPHIQUE
 // ==========================================================
@@ -253,11 +243,7 @@ export const formatMonth = (value) => {
 
   const [year, monthNumber] = value.split("-");
 
-  const date = new Date(
-    Number(year),
-    Number(monthNumber) - 1,
-    1
-  );
+  const date = new Date(Number(year), Number(monthNumber) - 1, 1);
 
   if (Number.isNaN(date.getTime())) {
     return "";

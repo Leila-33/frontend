@@ -16,15 +16,11 @@ import { useNotifications } from "../contexts/NotificationContext";
 // ==========================================================
 
 export default function SavLayout() {
-
   // ========================================================
   // NOTIFICATIONS / COMPTEURS
   // ========================================================
 
-  const {
-    unreadTicketCount
-  } = useNotifications();
-
+  const { unreadTicketCount } = useNotifications();
 
   // ========================================================
   // SIDEBAR
@@ -38,11 +34,5 @@ export default function SavLayout() {
     />
   );
 
-
-  return (
-    <DashboardLayout
-      sidebar={renderSidebar}
-      mobileTitle="Mmotors"
-    />
-  );
+  return <DashboardLayout sidebar={renderSidebar} mobileTitle="Mmotors" />;
 }

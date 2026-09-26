@@ -63,9 +63,7 @@ export default function Navbar() {
   // ==========================================================
 
   const userName =
-    [user?.first_name, user?.last_name]
-      .filter(Boolean)
-      .join(" ") ||
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ") ||
     user?.email ||
     "Mon compte";
 
@@ -84,18 +82,18 @@ export default function Navbar() {
           {
             to: dashboardPath,
             label: "Dashboard",
-            icon: "bi-grid"
+            icon: "bi-grid",
           },
           {
             to: "/admin/users",
             label: "Utilisateurs",
-            icon: "bi-people"
+            icon: "bi-people",
           },
           {
             to: "/admin/vehicles",
             label: "Véhicules",
-            icon: "bi-car-front"
-          }
+            icon: "bi-car-front",
+          },
         ];
 
       // ------------------------------------------------------
@@ -107,18 +105,18 @@ export default function Navbar() {
           {
             to: dashboardPath,
             label: "Dashboard",
-            icon: "bi-grid"
+            icon: "bi-grid",
           },
           {
             to: "/sales/leads",
             label: "Mes leads",
-            icon: "bi-person-lines-fill"
+            icon: "bi-person-lines-fill",
           },
           {
             to: "/sales/vehicles",
             label: "Véhicules",
-            icon: "bi-car-front"
-          }
+            icon: "bi-car-front",
+          },
         ];
 
       // ------------------------------------------------------
@@ -130,13 +128,13 @@ export default function Navbar() {
           {
             to: dashboardPath,
             label: "Dashboard",
-            icon: "bi-grid"
+            icon: "bi-grid",
           },
           {
             to: "/sav/tickets",
             label: "Tickets SAV",
-            icon: "bi-tools"
-          }
+            icon: "bi-tools",
+          },
         ];
 
       // ------------------------------------------------------
@@ -149,18 +147,18 @@ export default function Navbar() {
           {
             to: dashboardPath,
             label: "Dashboard",
-            icon: "bi-grid"
+            icon: "bi-grid",
           },
           {
             to: "/mytestdrives",
             label: "Mes essais",
-            icon: "bi-car-front"
+            icon: "bi-car-front",
           },
           {
             to: "/applications",
             label: "Mes dossiers",
-            icon: "bi-folder2-open"
-          }
+            icon: "bi-folder2-open",
+          },
         ];
     }
   };
@@ -170,7 +168,6 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
       <div className="container">
-
         {/* ==================================================
             LOGO
         ================================================== */}
@@ -184,7 +181,7 @@ export default function Navbar() {
             className="d-flex align-items-center justify-content-center bg-white text-dark rounded-3"
             style={{
               width: 36,
-              height: 36
+              height: 36,
             }}
           >
             <i className="bi bi-car-front-fill" />
@@ -203,11 +200,7 @@ export default function Navbar() {
           onClick={() => setIsOpen((previous) => !previous)}
           aria-expanded={isOpen}
           aria-controls="main-navbar"
-          aria-label={
-            isOpen
-              ? "Fermer le menu"
-              : "Ouvrir le menu"
-          }
+          aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
         >
           <span className="navbar-toggler-icon" />
         </button>
@@ -218,12 +211,9 @@ export default function Navbar() {
 
         <div
           id="main-navbar"
-          className={`collapse navbar-collapse ${
-            isOpen ? "show" : ""
-          }`}
+          className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
         >
           <ul className="navbar-nav ms-auto align-items-center gap-2">
-
             {/* ==================================================
                 UTILISATEUR CONNECTÉ
             ================================================== */}
@@ -243,7 +233,6 @@ export default function Navbar() {
                 ------------------------------------------------ */}
 
                 <li className="nav-item dropdown">
-
                   <button
                     type="button"
                     className="btn btn-dark d-flex align-items-center gap-2 px-3 py-2 rounded-3"
@@ -256,7 +245,7 @@ export default function Navbar() {
                       className="d-flex align-items-center justify-content-center bg-secondary rounded-circle"
                       style={{
                         width: 34,
-                        height: 34
+                        height: 34,
                       }}
                     >
                       <i className="bi bi-person-fill" />
@@ -282,13 +271,10 @@ export default function Navbar() {
                   ------------------------------------------------ */}
 
                   <ul className="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 p-2">
-
                     {/* Informations utilisateur */}
 
                     <li className="px-3 py-2">
-                      <div className="fw-semibold">
-                        {userName}
-                      </div>
+                      <div className="fw-semibold">{userName}</div>
 
                       {user?.email && (
                         <div className="text-muted small text-truncate">
@@ -310,9 +296,7 @@ export default function Navbar() {
                           to={item.to}
                           onClick={closeMenu}
                         >
-                          <i
-                            className={`bi ${item.icon} me-2`}
-                          />
+                          <i className={`bi ${item.icon} me-2`} />
 
                           {item.label}
                         </Link>
@@ -340,7 +324,6 @@ export default function Navbar() {
                         Déconnexion
                       </button>
                     </li>
-
                   </ul>
                 </li>
               </>
@@ -374,7 +357,6 @@ export default function Navbar() {
                 </li>
               </>
             )}
-
           </ul>
         </div>
       </div>

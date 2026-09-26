@@ -1,9 +1,4 @@
-function Pagination({
-  page,
-  totalPages,
-  onPageChange,
-}) {
-
+function Pagination({ page, totalPages, onPageChange }) {
   if (totalPages <= 1) {
     return null;
   }
@@ -17,7 +12,6 @@ function Pagination({
         gap-3
       "
     >
-
       {/* =========================
           PAGE PRÉCÉDENTE
       ========================= */}
@@ -26,31 +20,19 @@ function Pagination({
         type="button"
         className="btn btn-outline-secondary"
         disabled={page <= 1}
-        onClick={() =>
-          onPageChange(page - 1)
-        }
+        onClick={() => onPageChange(page - 1)}
       >
         <i className="bi bi-chevron-left me-1" />
         Précédent
       </button>
-
 
       {/* =========================
           PAGE ACTUELLE
       ========================= */}
 
       <div className="text-muted text-nowrap">
-
-        Page{" "}
-
-        <strong>
-          {page}
-        </strong>{" "}
-
-        / {totalPages}
-
+        Page <strong>{page}</strong> / {totalPages}
       </div>
-
 
       {/* =========================
           PAGE SUIVANTE
@@ -60,16 +42,11 @@ function Pagination({
         type="button"
         className="btn btn-outline-secondary"
         disabled={page >= totalPages}
-        onClick={() =>
-          onPageChange(page + 1)
-        }
+        onClick={() => onPageChange(page + 1)}
       >
         Suivant
-
         <i className="bi bi-chevron-right ms-1" />
-
       </button>
-
     </div>
   );
 }

@@ -24,7 +24,6 @@ export const ROLE_CONFIG = {
   },
 };
 
-
 // ==========================================================
 // DASHBOARD PAR RÔLE
 // ==========================================================
@@ -35,7 +34,6 @@ export const ROLE_DASHBOARD_PATHS = {
   sav_agent: "/sav",
   client: "/dashboard",
 };
-
 
 // ==========================================================
 // RÉCUPÉRER LE DASHBOARD D'UN UTILISATEUR
@@ -51,7 +49,6 @@ export const getDashboardPath = (role) => {
   return ROLE_DASHBOARD_PATHS[role] ?? "/dashboard";
 };
 
-
 // ==========================================================
 // RÉCUPÉRER LE LIBELLÉ D'UN RÔLE
 // ==========================================================
@@ -62,7 +59,6 @@ export const getDashboardPath = (role) => {
 export const getRoleLabel = (role) => {
   return ROLE_CONFIG[role]?.label ?? role ?? "-";
 };
-
 
 // ==========================================================
 // RÉCUPÉRER LA COULEUR D'UN RÔLE

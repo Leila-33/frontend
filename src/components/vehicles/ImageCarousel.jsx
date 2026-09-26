@@ -1,8 +1,5 @@
-
 import { useEffect, useState } from "react";
-import {
-  BsImage,
-} from "react-icons/bs";
+import { BsImage } from "react-icons/bs";
 /* ================= CAROUSEL ================= */
 
 /**
@@ -15,15 +12,13 @@ import {
  * - Le carrousel revient automatiquement à la première image
  *   lorsque la liste des images change.
  */
-export function ImageCarousel({ images = [] }) {
-
+export function ImageCarousel({ images = [], height = 200 }) {
   /* =======================================================
      ÉTAT
   ======================================================= */
 
   // Index de l'image actuellement affichée.
   const [index, setIndex] = useState(0);
-
 
   /* =======================================================
      NORMALISATION DES IMAGES
@@ -39,11 +34,7 @@ export function ImageCarousel({ images = [] }) {
    * pour l'affichage.
    */
   const safeImages = images
-    .map((image) =>
-      typeof image === "string"
-        ? image
-        : image?.url
-    )
+    .map((image) => (typeof image === "string" ? image : image?.url))
     .filter(Boolean);
 
   // Nombre total d'images disponibles.
@@ -51,7 +42,6 @@ export function ImageCarousel({ images = [] }) {
 
   // Indique si au moins une image est disponible.
   const hasImages = imageCount > 0;
-
 
   /* =======================================================
      SYNCHRONISATION AVEC LA LISTE DES IMAGES
@@ -77,7 +67,6 @@ export function ImageCarousel({ images = [] }) {
       return Math.min(currentIndex, imageCount - 1);
     });
   }, [imageCount]);
-
 
   /* =======================================================
      STYLE DES BOUTONS
@@ -117,7 +106,6 @@ export function ImageCarousel({ images = [] }) {
     zIndex: 2,
   });
 
-
   /* =======================================================
      NAVIGATION
   ======================================================= */
@@ -129,11 +117,8 @@ export function ImageCarousel({ images = [] }) {
     // Empêche le clic de remonter vers un éventuel parent cliquable.
     event.stopPropagation();
 
-    setIndex((currentIndex) => (
-      (currentIndex + 1) % imageCount
-    ));
+    setIndex((currentIndex) => (currentIndex + 1) % imageCount);
   };
-
 
   /**
    * Affiche l'image précédente.
@@ -142,11 +127,8 @@ export function ImageCarousel({ images = [] }) {
     // Empêche le clic de remonter vers un éventuel parent cliquable.
     event.stopPropagation();
 
-    setIndex((currentIndex) => (
-      (currentIndex - 1 + imageCount) % imageCount
-    ));
+    setIndex((currentIndex) => (currentIndex - 1 + imageCount) % imageCount);
   };
-
 
   /* =======================================================
      RENDU
@@ -156,11 +138,10 @@ export function ImageCarousel({ images = [] }) {
     <div
       className="position-relative overflow-hidden"
       style={{
-        height: 200,
+        height,
         background: "#f5f5f5",
       }}
     >
-
       {/* ===================================================
           IMAGE
       =================================================== */}
@@ -193,7 +174,6 @@ export function ImageCarousel({ images = [] }) {
         </div>
       )}
 
-
       {/* ===================================================
           BOUTONS DE NAVIGATION
       =================================================== */}
@@ -221,7 +201,6 @@ export function ImageCarousel({ images = [] }) {
           </button>
         </>
       )}
-
     </div>
   );
 }

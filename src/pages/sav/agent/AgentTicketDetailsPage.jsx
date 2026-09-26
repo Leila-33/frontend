@@ -21,11 +21,9 @@ import DetailLayout from "../../../layouts/DetailLayout";
 
 import { useAuth } from "../../../contexts/AuthContext";
 
-import { getTicketBreadcrumb } from "../../../utils/breadcrumb";
-
+import { getTicketBreadcrumb } from "../../../utils/breadcrumbUtils";
 
 export default function AgentTicketDetailsPage() {
-
   // =====================================================
   // PARAMÈTRES ET CONTEXTE
   // =====================================================
@@ -35,7 +33,6 @@ export default function AgentTicketDetailsPage() {
    */
   const { id } = useParams();
 
-
   /**
    * Utilisateur actuellement connecté.
    *
@@ -44,13 +41,11 @@ export default function AgentTicketDetailsPage() {
    */
   const { user } = useAuth();
 
-
   /**
    * Informations de navigation transmises
    * lors de l'ouverture du ticket.
    */
   const location = useLocation();
-
 
   /**
    * Filtre utilisé dans la liste précédente.
@@ -58,9 +53,7 @@ export default function AgentTicketDetailsPage() {
    * Il permet de conserver le contexte de navigation
    * lors du retour vers la liste des tickets.
    */
-  const filter =
-    location.state?.filter ?? "all";
-
+  const filter = location.state?.filter ?? "all";
 
   // =====================================================
   // DONNÉES DU TICKET
@@ -75,7 +68,6 @@ export default function AgentTicketDetailsPage() {
     canReply,
   } = useSupportTicket(id);
 
-
   // =====================================================
   // CHARGEMENT
   // =====================================================
@@ -87,19 +79,15 @@ export default function AgentTicketDetailsPage() {
   if (!ticket) {
     return (
       <div className="container py-5 text-center text-muted">
-
         <div
           className="spinner-border spinner-border-sm me-2"
           role="status"
           aria-hidden="true"
         />
-
         Chargement du ticket...
-
       </div>
     );
   }
-
 
   // =====================================================
   // ÉTAT DU TICKET
@@ -109,10 +97,7 @@ export default function AgentTicketDetailsPage() {
    * Un ticket résolu ou fermé ne peut plus
    * être modifié depuis le sélecteur de statut.
    */
-  const isClosed =
-    ticket.status === "RESOLVED" ||
-    ticket.status === "CLOSED";
-
+  const isClosed = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
 
   // =====================================================
   // BREADCRUMB
@@ -130,22 +115,17 @@ export default function AgentTicketDetailsPage() {
     filter,
   });
 
-
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
   return (
-    <DetailLayout
-      breadcrumb={breadcrumb}
-    >
-
+    <DetailLayout breadcrumb={breadcrumb}>
       {/* =================================================
           CONTENU PRINCIPAL
       ================================================= */}
 
       <div className="container-fluid py-4">
-
         {/* =================================================
             EN-TÊTE DU TICKET
         ================================================= */}
@@ -156,27 +136,19 @@ export default function AgentTicketDetailsPage() {
           onStatusChange={updateStatus}
         />
 
-
         {/* =================================================
             DESCRIPTION
         ================================================= */}
 
         <section className="card border-0 shadow-sm rounded-4 mb-4">
-
           <div className="card-body p-4">
-
-            <h5 className="fw-bold mb-3">
-              Description
-            </h5>
+            <h5 className="fw-bold mb-3">Description</h5>
 
             <p className="mb-0 text-muted text-break">
               {ticket.description || "Aucune description."}
             </p>
-
           </div>
-
         </section>
-
 
         {/* =================================================
             CONVERSATION
@@ -190,54 +162,38 @@ export default function AgentTicketDetailsPage() {
           }}
           aria-label="Conversation du ticket"
         >
-
           <div className="card-body p-4">
-
             <TicketMessages
               messages={messages}
               currentRole="sav_agent"
               messagesEndRef={messagesEndRef}
             />
-
           </div>
-
         </section>
-
 
         {/* =================================================
             RÉPONSE
         ================================================= */}
 
         {canReply ? (
-
           <TicketReplyBox
             onSend={sendMessage}
             placeholder="Répondre au client..."
           />
-
         ) : (
-
           <div
             className="alert alert-secondary d-flex align-items-center gap-2"
             role="status"
           >
-
-            <i
-              className="bi bi-lock"
-              aria-hidden="true"
-            />
+            <i className="bi bi-lock" aria-hidden="true" />
 
             <span>
-              Ce ticket est clôturé.
-              Il n'est plus possible d'envoyer de message.
+              Ce ticket est clôturé. Il n'est plus possible d'envoyer de
+              message.
             </span>
-
           </div>
-
         )}
-
       </div>
-
     </DetailLayout>
   );
 }

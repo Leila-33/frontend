@@ -10,7 +10,6 @@ export default function TicketRow({
   onArchive,
   onTakeOwnership,
 }) {
-
   // =====================================================
   // ÉTAT DU TICKET
   // =====================================================
@@ -24,15 +23,12 @@ export default function TicketRow({
    */
   const isNew = ticket.unread === true;
 
-
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
   return (
-
     <tr className={isNew ? "fw-bold" : ""}>
-
       {/* =================================================
           NOUVEAU
           
@@ -40,18 +36,7 @@ export default function TicketRow({
           contenant une nouvelle activité.
       ================================================= */}
 
-      <td>
-
-        {isNew && (
-
-          <span className="badge bg-danger">
-            Nouveau
-          </span>
-
-        )}
-
-      </td>
-
+      <td>{isNew && <span className="badge bg-danger">Nouveau</span>}</td>
 
       {/* =================================================
           SUJET
@@ -61,17 +46,10 @@ export default function TicketRow({
       ================================================= */}
 
       <td>
+        <div>{ticket.subject || "Sans sujet"}</div>
 
-        <div>
-          {ticket.subject || "Sans sujet"}
-        </div>
-
-        <small className="text-muted">
-          #{ticket.id}
-        </small>
-
+        <small className="text-muted">#{ticket.id}</small>
       </td>
-
 
       {/* =================================================
           CLIENT
@@ -83,49 +61,31 @@ export default function TicketRow({
           l'identifiant utilisateur comme solution de secours.
       ================================================= */}
 
-      <td>
-        {ticket.user_name || ticket.user_id || "—"}
-      </td>
-
+      <td>{ticket.user_name || ticket.user_id || "—"}</td>
 
       {/* =================================================
           CATÉGORIE
       ================================================= */}
 
       <td>
-
-        <TicketCategoryBadge
-          category={ticket.category}
-        />
-
+        <TicketCategoryBadge category={ticket.category} />
       </td>
-
 
       {/* =================================================
           PRIORITÉ
       ================================================= */}
 
       <td>
-
-        <TicketPriorityBadge
-          priority={ticket.priority}
-        />
-
+        <TicketPriorityBadge priority={ticket.priority} />
       </td>
-
 
       {/* =================================================
           STATUT
       ================================================= */}
 
       <td>
-
-        <TicketStatusBadge
-          status={ticket.status}
-        />
-
+        <TicketStatusBadge status={ticket.status} />
       </td>
-
 
       {/* =================================================
           DERNIÈRE ACTIVITÉ
@@ -139,29 +99,20 @@ export default function TicketRow({
       ================================================= */}
 
       <td>
-
         <div className="d-flex flex-column">
-
-          <small>
-            {ticket.last_actor || "—"}
-          </small>
+          <small>{ticket.last_actor || "—"}</small>
 
           <small
             className="text-muted text-truncate"
             style={{
               maxWidth: "250px",
             }}
-            title={
-              ticket.last_message_preview || ""
-            }
+            title={ticket.last_message_preview || ""}
           >
             {ticket.last_message_preview || "Aucune activité"}
           </small>
-
         </div>
-
       </td>
-
 
       {/* =================================================
           ACTIONS
@@ -179,7 +130,6 @@ export default function TicketRow({
       ================================================= */}
 
       <td>
-
         <TicketActions
           ticket={ticket}
           basePath={basePath}
@@ -187,9 +137,7 @@ export default function TicketRow({
           onArchive={onArchive}
           onTakeOwnership={onTakeOwnership}
         />
-
       </td>
-
     </tr>
   );
 }

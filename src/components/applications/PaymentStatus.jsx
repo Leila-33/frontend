@@ -1,13 +1,6 @@
-import {
-  BsCreditCard,
-  BsCheckCircleFill
-} from "react-icons/bs";
+import { BsCreditCard, BsCheckCircleFill } from "react-icons/bs";
 
-export default function PaymentStatus({
-  application,
-  onPay
-}) {
-
+export default function PaymentStatus({ application, onPay }) {
   if (!application) return null;
 
   if (application.payment_status === "paid") {
@@ -15,9 +8,7 @@ export default function PaymentStatus({
       <div className="mt-3">
         <div className="alert alert-success rounded-4 border-0 mb-0 d-flex align-items-center justify-content-center gap-2">
           <BsCheckCircleFill />
-          <span className="fw-semibold">
-            Paiement confirmé
-          </span>
+          <span className="fw-semibold">Paiement confirmé</span>
         </div>
       </div>
     );

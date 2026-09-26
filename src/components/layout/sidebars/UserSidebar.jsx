@@ -26,7 +26,7 @@ export default function UserSidebar({
   unreadNotificationCount = 0,
   pendingTestDrives = 0,
   unreadTicketCount = 0,
-  actionRequiredQuoteCount = 0
+  actionRequiredQuoteCount = 0,
 }) {
   return (
     <Sidebar
@@ -39,11 +39,7 @@ export default function UserSidebar({
           TABLEAU DE BORD
           ====================================================== */}
 
-      <SidebarNavItem
-        to="/dashboard"
-        icon="bi bi-grid"
-        onClick={onClickLink}
-      >
+      <SidebarNavItem to="/dashboard" icon="bi bi-grid" onClick={onClickLink}>
         Dashboard
       </SidebarNavItem>
 
@@ -58,7 +54,6 @@ export default function UserSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Mes essais
-
           {pendingTestDrives > 0 && (
             <span className="badge bg-primary rounded-pill">
               {pendingTestDrives}
@@ -90,7 +85,6 @@ export default function UserSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Mes offres
-
           {actionRequiredQuoteCount > 0 && (
             <span className="badge bg-primary rounded-pill">
               {actionRequiredQuoteCount}
@@ -110,7 +104,6 @@ export default function UserSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Notifications
-
           {unreadNotificationCount > 0 && (
             <span className="badge bg-danger rounded-pill">
               {unreadNotificationCount}
@@ -130,7 +123,6 @@ export default function UserSidebar({
       >
         <span className="d-flex align-items-center gap-2">
           Support / SAV
-
           {unreadTicketCount > 0 && (
             <span className="badge bg-danger rounded-pill">
               {unreadTicketCount}
@@ -143,11 +135,7 @@ export default function UserSidebar({
           FAVORIS
           ====================================================== */}
 
-      <SidebarNavItem
-        to="/favorites"
-        icon="bi bi-heart"
-        onClick={onClickLink}
-      >
+      <SidebarNavItem to="/favorites" icon="bi bi-heart" onClick={onClickLink}>
         Favoris
       </SidebarNavItem>
     </Sidebar>

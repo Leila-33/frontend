@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { toast } from "react-toastify";
 
@@ -51,12 +47,9 @@ export default function MyLeadsPage() {
     try {
       setLoading(true);
 
-      const data = await apiFetch(
-        "/agent/leads?scope=my",
-        {
-          method: "GET",
-        }
-      );
+      const data = await apiFetch("/agent/leads?scope=my", {
+        method: "GET",
+      });
 
       /**
        * Sécurise la récupération des données.
@@ -64,15 +57,10 @@ export default function MyLeadsPage() {
        * Si l'API ne renvoie pas de tableau `items`,
        * la page affiche simplement une liste vide.
        */
-      setLeads(
-        Array.isArray(data?.items)
-          ? data.items
-          : []
-      );
+      setLeads(Array.isArray(data?.items) ? data.items : []);
     } catch (error) {
       toast.error(
-        error?.message ||
-        "Erreur lors du chargement de vos prospects."
+        error?.message || "Erreur lors du chargement de vos prospects."
       );
 
       setLeads([]);
@@ -95,7 +83,6 @@ export default function MyLeadsPage() {
 
   return (
     <div className="container py-4">
-
       {/* =================================================
           EN-TÊTE
       ================================================= */}
@@ -112,13 +99,9 @@ export default function MyLeadsPage() {
         "
       >
         <div>
-          <h1 className="h3 fw-bold mb-1">
-            Mes prospects
-          </h1>
+          <h1 className="h3 fw-bold mb-1">Mes prospects</h1>
 
-          <p className="text-muted mb-0">
-            Leads qui vous sont assignés.
-          </p>
+          <p className="text-muted mb-0">Leads qui vous sont assignés.</p>
         </div>
 
         <button
@@ -141,7 +124,6 @@ export default function MyLeadsPage() {
                 "
                 aria-hidden="true"
               />
-
               Actualisation...
             </>
           ) : (
@@ -154,7 +136,6 @@ export default function MyLeadsPage() {
                 "
                 aria-hidden="true"
               />
-
               Actualiser
             </>
           )}
@@ -187,9 +168,7 @@ export default function MyLeadsPage() {
             aria-hidden="true"
           />
 
-          <p className="mb-0">
-            Chargement de vos prospects...
-          </p>
+          <p className="mb-0">Chargement de vos prospects...</p>
         </div>
       ) : leads.length === 0 ? (
         // -------------------------------------------------
@@ -216,13 +195,10 @@ export default function MyLeadsPage() {
             aria-hidden="true"
           />
 
-          <h2 className="h5 fw-semibold mb-2">
-            Aucun prospect assigné
-          </h2>
+          <h2 className="h5 fw-semibold mb-2">Aucun prospect assigné</h2>
 
           <p className="mb-0">
-            Vous n'avez actuellement aucun lead
-            dans votre portefeuille.
+            Vous n'avez actuellement aucun lead dans votre portefeuille.
           </p>
         </div>
       ) : (
@@ -230,10 +206,7 @@ export default function MyLeadsPage() {
         // KANBAN
         // -------------------------------------------------
 
-        <KanbanBoard
-          leads={leads}
-          mode="my-leads"
-        />
+        <KanbanBoard leads={leads} mode="my-leads" />
       )}
     </div>
   );

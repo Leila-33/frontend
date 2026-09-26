@@ -4,7 +4,6 @@ import { WS_URL } from "../config/api";
 const RECONNECT_DELAY = 3000;
 
 export default function useNotificationSocket(userId, onMessage) {
-
   const onMessageRef = useRef(onMessage);
 
   // Garde toujours la dernière version du callback
@@ -21,35 +20,24 @@ export default function useNotificationSocket(userId, onMessage) {
     let shouldReconnect = true;
 
     const connect = () => {
-
       if (!shouldReconnect) return;
 
       console.log("WS CONNECTING for", userId);
 
-      ws = new WebSocket(
-        `${WS_URL}/ws/notifications/${userId}`
-      );
+      ws = new WebSocket(`${WS_URL}/ws/notifications/${userId}`);
 
       ws.onopen = () => {
         console.log("WS connected");
       };
 
       ws.onmessage = (event) => {
-
         try {
-
           const data = JSON.parse(event.data);
           console.log("WS EVENT TYPE:", data.type);
           console.log("WS DATA:", data);
           onMessageRef.current?.(data);
-
         } catch (error) {
-
-          console.error(
-            "Erreur parsing message WebSocket :",
-            error
-          );
-
+          console.error("Erreur parsing message WebSocket :", error);
         }
       };
 
@@ -58,12 +46,7 @@ export default function useNotificationSocket(userId, onMessage) {
       };
 
       ws.onclose = (event) => {
-
-        console.log(
-          "WS closed",
-          event.code,
-          event.reason
-        );
+        console.log("WS closed", event.code, event.reason);
 
         if (!shouldReconnect) return;
 
@@ -76,7 +59,6 @@ export default function useNotificationSocket(userId, onMessage) {
     connect();
 
     return () => {
-
       shouldReconnect = false;
 
       if (reconnectTimer) {
@@ -89,6 +71,5 @@ export default function useNotificationSocket(userId, onMessage) {
 
       console.log("WS cleanup");
     };
-
   }, [userId]);
 }

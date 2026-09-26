@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
 
 /**
  * Hook permettant de gérer un calendrier de réservation
@@ -19,31 +15,28 @@ import {
  * @param {Object} vehicle
  * @param {Array} unavailableRanges
  */
-export function useCalendar(
-  vehicle,
-  unavailableRanges = []
-) {
-// =====================================================
-// DATE ACTUELLE
-// =====================================================
+export function useCalendar(vehicle, unavailableRanges = []) {
+  // =====================================================
+  // DATE ACTUELLE
+  // =====================================================
 
-/**
- * Date actuelle utilisée ailleurs dans le hook.
- */
-const today = new Date();
+  /**
+   * Date actuelle utilisée ailleurs dans le hook.
+   */
+  const today = new Date();
 
-/**
- * Date actuelle sans l'heure.
- */
-const todayStart = useMemo(() => {
-  const currentDate = new Date();
+  /**
+   * Date actuelle sans l'heure.
+   */
+  const todayStart = useMemo(() => {
+    const currentDate = new Date();
 
-  return new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    currentDate.getDate()
-  );
-}, []);
+    return new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate()
+    );
+  }, []);
 
   // =====================================================
   // MOIS ACTUELLEMENT AFFICHÉ
@@ -51,11 +44,7 @@ const todayStart = useMemo(() => {
 
   // Le calendrier est initialisé sur le mois actuel.
   const [currentMonth, setCurrentMonth] = useState(
-    new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1
-    )
+    new Date(today.getFullYear(), today.getMonth(), 1)
   );
 
   // =====================================================
@@ -92,43 +81,37 @@ const todayStart = useMemo(() => {
     );
   };
 
-// =====================================================
-// VÉRIFICATION DES DATES BLOQUÉES
-// =====================================================
+  // =====================================================
+  // VÉRIFICATION DES DATES BLOQUÉES
+  // =====================================================
 
-/**
- * Vérifie si une date ne peut pas être sélectionnée.
- *
- * Une date est bloquée si :
- * - elle est antérieure à aujourd'hui ;
- * - elle se trouve dans une période déjà réservée.
- */
-const isBlocked = useCallback(
-  (date) => {
-    const currentDate = normalizeDate(date);
+  /**
+   * Vérifie si une date ne peut pas être sélectionnée.
+   *
+   * Une date est bloquée si :
+   * - elle est antérieure à aujourd'hui ;
+   * - elle se trouve dans une période déjà réservée.
+   */
+  const isBlocked = useCallback(
+    (date) => {
+      const currentDate = normalizeDate(date);
 
-    // Les dates passées ne sont pas disponibles.
-    if (currentDate < todayStart) {
-      return true;
-    }
+      // Les dates passées ne sont pas disponibles.
+      if (currentDate < todayStart) {
+        return true;
+      }
 
-    // Vérification des périodes d'indisponibilité
-    // fournies par le backend.
-    return unavailableRanges.some((range) => {
-      const rangeStart = normalizeDate(range.start);
-      const rangeEnd = normalizeDate(range.end);
+      // Vérification des périodes d'indisponibilité
+      // fournies par le backend.
+      return unavailableRanges.some((range) => {
+        const rangeStart = normalizeDate(range.start);
+        const rangeEnd = normalizeDate(range.end);
 
-      return (
-        currentDate >= rangeStart &&
-        currentDate <= rangeEnd
-      );
-    });
-  },
-  [
-    unavailableRanges,
-    todayStart,
-  ]
-);
+        return currentDate >= rangeStart && currentDate <= rangeEnd;
+      });
+    },
+    [unavailableRanges, todayStart]
+  );
   // =====================================================
   // SÉLECTION D'UNE DATE
   // =====================================================
@@ -151,10 +134,7 @@ const isBlocked = useCallback(
     // Si aucune date de début n'est sélectionnée,
     // ou si une période complète existe déjà,
     // on commence une nouvelle sélection.
-    if (
-      !selectedDates.start ||
-      selectedDates.end
-    ) {
+    if (!selectedDates.start || selectedDates.end) {
       setSelectedDates({
         start: date,
         end: null,
@@ -165,9 +145,7 @@ const isBlocked = useCallback(
       return;
     }
 
-    const start = normalizeDate(
-      selectedDates.start
-    );
+    const start = normalizeDate(selectedDates.start);
 
     const end = normalizeDate(date);
 
@@ -200,9 +178,7 @@ const isBlocked = useCallback(
         return;
       }
 
-      currentDate.setDate(
-        currentDate.getDate() + 1
-      );
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     // La période est valide :
@@ -228,17 +204,11 @@ const isBlocked = useCallback(
     // - aucune date de début ;
     // - une période est déjà complète ;
     // - aucune date n'est survolée.
-    if (
-      !selectedDates.start ||
-      selectedDates.end ||
-      !hoverDate
-    ) {
+    if (!selectedDates.start || selectedDates.end || !hoverDate) {
       return false;
     }
 
-    const start = normalizeDate(
-      selectedDates.start
-    );
+    const start = normalizeDate(selectedDates.start);
 
     const hover = normalizeDate(hoverDate);
 
@@ -246,94 +216,66 @@ const isBlocked = useCallback(
 
     // Permet de gérer le cas où l'utilisateur
     // survole une date située avant la date de début.
-    const previewStart =
-      start < hover ? start : hover;
+    const previewStart = start < hover ? start : hover;
 
-    const previewEnd =
-      start < hover ? hover : start;
+    const previewEnd = start < hover ? hover : start;
 
-    return (
-      currentDate >= previewStart &&
-      currentDate <= previewEnd
-    );
+    return currentDate >= previewStart && currentDate <= previewEnd;
   };
 
-
   // =====================================================
-// VÉRIFICATION DES DATES DANS LA PÉRIODE SÉLECTIONNÉE
-// =====================================================
+  // VÉRIFICATION DES DATES DANS LA PÉRIODE SÉLECTIONNÉE
+  // =====================================================
 
-/**
- * Vérifie si une date se trouve entre la date de début
- * et la date de fin sélectionnées.
- */
-const isInSelectedRange = (date) => {
-  if (
-    !selectedDates.start ||
-    !selectedDates.end
-  ) {
-    return false;
-  }
-
-  const currentDate = normalizeDate(date);
-
-  const startDate = normalizeDate(
-    selectedDates.start
-  );
-
-  const endDate = normalizeDate(
-    selectedDates.end
-  );
-
-  return (
-    currentDate >= startDate &&
-    currentDate <= endDate
-  );
-};
-// =====================================================
-// VALIDATION DE LA PÉRIODE
-// =====================================================
-
-/**
- * Vérifie que la période sélectionnée
- * ne contient aucune date bloquée.
- */
-const isRangeValid = useMemo(() => {
-  // Une période nécessite une date de début
-  // et une date de fin.
-  if (
-    !selectedDates.start ||
-    !selectedDates.end
-  ) {
-    return false;
-  }
-
-  const start = normalizeDate(
-    selectedDates.start
-  );
-
-  const end = normalizeDate(
-    selectedDates.end
-  );
-
-  const currentDate = new Date(start);
-
-  // Vérification de chaque jour de la période.
-  while (currentDate <= end) {
-    if (isBlocked(currentDate)) {
+  /**
+   * Vérifie si une date se trouve entre la date de début
+   * et la date de fin sélectionnées.
+   */
+  const isInSelectedRange = (date) => {
+    if (!selectedDates.start || !selectedDates.end) {
       return false;
     }
 
-    currentDate.setDate(
-      currentDate.getDate() + 1
-    );
-  }
+    const currentDate = normalizeDate(date);
 
-  return true;
-}, [
-  selectedDates,
-  isBlocked,
-]);
+    const startDate = normalizeDate(selectedDates.start);
+
+    const endDate = normalizeDate(selectedDates.end);
+
+    return currentDate >= startDate && currentDate <= endDate;
+  };
+  // =====================================================
+  // VALIDATION DE LA PÉRIODE
+  // =====================================================
+
+  /**
+   * Vérifie que la période sélectionnée
+   * ne contient aucune date bloquée.
+   */
+  const isRangeValid = useMemo(() => {
+    // Une période nécessite une date de début
+    // et une date de fin.
+    if (!selectedDates.start || !selectedDates.end) {
+      return false;
+    }
+
+    const start = normalizeDate(selectedDates.start);
+
+    const end = normalizeDate(selectedDates.end);
+
+    const currentDate = new Date(start);
+
+    // Vérification de chaque jour de la période.
+    while (currentDate <= end) {
+      if (isBlocked(currentDate)) {
+        return false;
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return true;
+  }, [selectedDates, isBlocked]);
 
   // =====================================================
   // VALIDATION DU FORMULAIRE
@@ -349,11 +291,7 @@ const isRangeValid = useMemo(() => {
   const isFormValid =
     vehicle?.type !== "rent"
       ? true
-      : Boolean(
-          selectedDates.start &&
-          selectedDates.end &&
-          isRangeValid
-        );
+      : Boolean(selectedDates.start && selectedDates.end && isRangeValid);
 
   // =====================================================
   // NAVIGATION ENTRE LES MOIS
@@ -364,10 +302,8 @@ const isRangeValid = useMemo(() => {
    * le mois en cours.
    */
   const isCurrentMonth =
-    currentMonth.getFullYear() ===
-      todayStart.getFullYear() &&
-    currentMonth.getMonth() ===
-      todayStart.getMonth();
+    currentMonth.getFullYear() === todayStart.getFullYear() &&
+    currentMonth.getMonth() === todayStart.getMonth();
 
   /**
    * Affiche le mois précédent.
@@ -381,11 +317,7 @@ const isRangeValid = useMemo(() => {
     }
 
     setCurrentMonth((prev) => {
-      return new Date(
-        prev.getFullYear(),
-        prev.getMonth() - 1,
-        1
-      );
+      return new Date(prev.getFullYear(), prev.getMonth() - 1, 1);
     });
   };
 
@@ -394,11 +326,7 @@ const isRangeValid = useMemo(() => {
    */
   const nextMonth = () => {
     setCurrentMonth((prev) => {
-      return new Date(
-        prev.getFullYear(),
-        prev.getMonth() + 1,
-        1
-      );
+      return new Date(prev.getFullYear(), prev.getMonth() + 1, 1);
     });
   };
 
@@ -408,15 +336,7 @@ const isRangeValid = useMemo(() => {
 
   // Le calendrier commence volontairement par lundi,
   // conformément à l'affichage habituel en France.
-  const weekDays = [
-    "L",
-    "M",
-    "M",
-    "J",
-    "V",
-    "S",
-    "D",
-  ];
+  const weekDays = ["L", "M", "M", "J", "V", "S", "D"];
 
   // =====================================================
   // GÉNÉRATION DES JOURS DU MOIS
@@ -427,18 +347,10 @@ const isRangeValid = useMemo(() => {
     const month = currentMonth.getMonth();
 
     // Premier jour du mois.
-    const firstDay = new Date(
-      year,
-      month,
-      1
-    );
+    const firstDay = new Date(year, month, 1);
 
     // Dernier jour du mois.
-    const lastDay = new Date(
-      year,
-      month + 1,
-      0
-    );
+    const lastDay = new Date(year, month + 1, 0);
 
     const monthDays = [];
 
@@ -462,16 +374,11 @@ const isRangeValid = useMemo(() => {
      * ...
      * dimanche = 6
      */
-    const firstDayIndex =
-      (firstDay.getDay() + 6) % 7;
+    const firstDayIndex = (firstDay.getDay() + 6) % 7;
 
     // Ajout des cases vides nécessaires
     // pour aligner correctement le premier jour.
-    for (
-      let index = 0;
-      index < firstDayIndex;
-      index++
-    ) {
+    for (let index = 0; index < firstDayIndex; index++) {
       monthDays.push(null);
     }
 
@@ -479,14 +386,8 @@ const isRangeValid = useMemo(() => {
     // AJOUT DES JOURS DU MOIS
     // ===================================================
 
-    for (
-      let day = 1;
-      day <= lastDay.getDate();
-      day++
-    ) {
-      monthDays.push(
-        new Date(year, month, day)
-      );
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      monthDays.push(new Date(year, month, day));
     }
 
     return monthDays;
@@ -504,13 +405,10 @@ const isRangeValid = useMemo(() => {
    * "septembre 2026"
    */
   const monthLabel = useMemo(() => {
-    return new Intl.DateTimeFormat(
-      "fr-FR",
-      {
-        month: "long",
-        year: "numeric",
-      }
-    ).format(currentMonth);
+    return new Intl.DateTimeFormat("fr-FR", {
+      month: "long",
+      year: "numeric",
+    }).format(currentMonth);
   }, [currentMonth]);
 
   // =====================================================

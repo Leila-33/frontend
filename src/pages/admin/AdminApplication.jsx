@@ -10,6 +10,7 @@ import {
 } from "../../constants/documentOptions";
 import { formatDate } from "../../utils/dateUtils";
 import { formatAmount } from "../../utils/priceUtils";
+import ConfirmActionModal from "../../components/common/ConfirmActionModal";
 
 export default function AdminApplication() {
   const { id } = useParams();
@@ -101,7 +102,17 @@ export default function AdminApplication() {
   const openRefuseModal = () => {
     setModal({ open: true, type: "refuse", reason: "" });
   };
+  // ==========================================================
+  // OUVERTURE DE LA MODALE DE PRISE EN CHARGE
+  // ==========================================================
 
+  const openTakeOverModal = () => {
+    setModal({
+      open: true,
+      type: "process",
+      reason: "",
+    });
+  };
   // Met à jour le statut du dossier via l'API.
   const updateApplicationStatus = async (
     applicationId,
@@ -130,19 +141,26 @@ export default function AdminApplication() {
     }
   };
 
-  // Exécute l'action de validation ou de refus du dossier.
+  // ==========================================================
+  // CONFIRMATION DE L'ACTION
+  // ==========================================================
+
   const confirmAction = async () => {
     try {
       if (!modal.type) return;
 
-      // Validation du dossier.
+      if (modal.type === "process") {
+        await updateApplicationStatus(application.id, "processing");
+
+        toast.success("Dossier pris en charge");
+      }
+
       if (modal.type === "validate") {
         await updateApplicationStatus(application.id, "approved");
 
         toast.success("Dossier validé");
       }
 
-      // Refus du dossier avec un motif obligatoire.
       if (modal.type === "refuse") {
         if (!modal.reason?.trim()) {
           toast.error("Veuillez indiquer un motif");
@@ -154,10 +172,8 @@ export default function AdminApplication() {
         toast.success("Dossier refusé");
       }
 
-      // Recharge les informations après modification.
-      fetchApplication();
+      await fetchApplication();
 
-      // Ferme la modale.
       setModal({
         open: false,
         type: null,
@@ -165,8 +181,23 @@ export default function AdminApplication() {
       });
     } catch (err) {
       console.error(err);
-
       toast.error("Erreur lors de l'action");
+    }
+  };
+
+  // ==========================================================
+  // PRISE EN CHARGE DU DOSSIER
+  // ==========================================================
+
+  const handleTakeOver = async () => {
+    try {
+      await updateApplicationStatus(application.id, "processing");
+
+      toast.success("Dossier pris en charge");
+
+      await fetchApplication();
+    } catch (err) {
+      console.error("Erreur lors de la prise en charge :", err);
     }
   };
 
@@ -327,6 +358,15 @@ export default function AdminApplication() {
                 >
                   <i className="bi bi-x-lg me-2"></i>
                   Refuser
+                </button>
+              )}
+              {application.status === "submitted" && (
+                <button
+                  type="button"
+                  className="btn btn-primary rounded-pill px-4"
+                  onClick={openTakeOverModal}
+                >
+                  Prendre en charge
                 </button>
               )}
             </div>
@@ -797,59 +837,62 @@ export default function AdminApplication() {
                         UNIQUEMENT EN ATTENTE
                     ========================= */}
 
-                          {isPending && doc.download_url && (
-                            <>
-                              {/* VALIDATION */}
+                          {application.status === "processing" &&
+                            isPending &&
+                            doc.download_url && (
+                              <>
+                                {/* VALIDATION */}
 
-                              <button
-                                type="button"
-                                className="btn btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                                style={{
-                                  width: "42px",
-                                  height: "42px",
-                                }}
-                                disabled={isUpdating}
-                                title="Valider le document"
-                                onClick={() => {
-                                  setUpdatingDocumentId(doc.id);
+                                <button
+                                  type="button"
+                                  className="btn btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                  style={{
+                                    width: "42px",
+                                    height: "42px",
+                                  }}
+                                  disabled={isUpdating}
+                                  title="Valider le document"
+                                  onClick={() => {
+                                    setUpdatingDocumentId(doc.id);
 
-                                  updateDocStatus(doc.id, "validated").finally(
-                                    () => {
+                                    updateDocStatus(
+                                      doc.id,
+                                      "validated"
+                                    ).finally(() => {
                                       setUpdatingDocumentId(null);
-                                    }
-                                  );
-                                }}
-                              >
-                                {isUpdating ? (
-                                  <span
-                                    className="spinner-border spinner-border-sm"
-                                    role="status"
-                                    aria-hidden="true"
-                                  />
-                                ) : (
-                                  <i className="bi bi-check-lg" />
-                                )}
-                              </button>
+                                    });
+                                  }}
+                                >
+                                  {isUpdating ? (
+                                    <span
+                                      className="spinner-border spinner-border-sm"
+                                      role="status"
+                                      aria-hidden="true"
+                                    />
+                                  ) : (
+                                    <i className="bi bi-check-lg" />
+                                  )}
+                                </button>
 
-                              {/* REFUS */}
+                                {/* REFUS */}
 
-                              <button
-                                type="button"
-                                className="btn btn-danger rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                                style={{
-                                  width: "42px",
-                                  height: "42px",
-                                }}
-                                disabled={isUpdating}
-                                title="Refuser le document"
-                                onClick={() =>
-                                  openRejectModal(doc.id, doc.type)
-                                }
-                              >
-                                <i className="bi bi-x-lg" />
-                              </button>
-                            </>
-                          )}
+                                <button
+                                  type="button"
+                                  className="btn btn-danger rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                  style={{
+                                    width: "42px",
+                                    height: "42px",
+                                  }}
+                                  disabled={isUpdating}
+                                  title="Refuser le document"
+                                  onClick={() =>
+                                    openRejectModal(doc.id, doc.type)
+                                  }
+                                >
+                                  <i className="bi bi-x-lg" />
+                                </button>
+                              </>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -945,88 +988,47 @@ export default function AdminApplication() {
 
       {/* ---------------- MODALE DE VALIDATION / REFUS DU DOSSIER ---------------- */}
 
-      {modal.open && (
-        <div
-          className="modal d-block"
-          style={{ background: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {modal.type === "validate"
-                    ? "Valider le dossier"
-                    : "Refuser le dossier"}
-                </h5>
-
-                <button
-                  className="btn-close"
-                  onClick={() =>
-                    setModal({
-                      open: false,
-                      type: null,
-                      reason: "",
-                    })
-                  }
-                />
-              </div>
-
-              <div className="modal-body">
-                {/* Confirmation simple pour la validation. */}
-                {modal.type === "validate" && (
-                  <p>Confirmer la validation du dossier ?</p>
-                )}
-
-                {/* Saisie du motif lorsque le dossier est refusé. */}
-                {modal.type === "refuse" && (
-                  <>
-                    <p>Indique le motif du refus :</p>
-
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      value={modal.reason}
-                      onChange={(e) =>
-                        setModal((prev) => ({
-                          ...prev,
-                          reason: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex : document illisible, incomplet..."
-                    />
-                  </>
-                )}
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    setModal({
-                      open: false,
-                      type: null,
-                      reason: "",
-                    })
-                  }
-                >
-                  Annuler
-                </button>
-
-                {/* Confirmation de l'action sélectionnée. */}
-                <button
-                  className={`btn ${
-                    modal.type === "validate" ? "btn-success" : "btn-danger"
-                  }`}
-                  disabled={modal.type === "refuse" && !modal.reason?.trim()}
-                  onClick={confirmAction}
-                >
-                  Confirmer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmActionModal
+        open={modal.open}
+        type={modal.type}
+        title={
+          modal.type === "process"
+            ? "Prendre en charge le dossier"
+            : modal.type === "validate"
+              ? "Valider le dossier"
+              : "Refuser le dossier"
+        }
+        description={
+          modal.type === "process"
+            ? "Confirmer la prise en charge de ce dossier ?"
+            : modal.type === "validate"
+              ? "Confirmer la validation du dossier ?"
+              : "Indique le motif du refus :"
+        }
+        onCancel={() =>
+          setModal({
+            open: false,
+            type: null,
+            reason: "",
+          })
+        }
+        onConfirm={confirmAction}
+      >
+        {modal.type === "refuse" && (
+          <textarea
+            className="form-control"
+            rows="3"
+            value={modal.reason}
+            onChange={(e) =>
+              setModal((prev) => ({
+                ...prev,
+                reason: e.target.value,
+              }))
+            }
+            placeholder="Ex : document illisible, incomplet..."
+          />
+        )}
+      </ConfirmActionModal>
     </div>
   );
 }

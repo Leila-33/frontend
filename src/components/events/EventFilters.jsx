@@ -1,6 +1,4 @@
-import {
-  EVENT_CATEGORIES,
-} from "../../constants/eventOptions";
+import { EVENT_CATEGORIES } from "../../constants/eventOptions";
 
 /**
  * Filtres utilisés pour la recherche dans l'historique
@@ -23,16 +21,12 @@ export default function EventFilters({
       aria-label="Filtres des événements"
     >
       <div className="row g-3 align-items-end">
-
         {/* =================================================
             RECHERCHE
         ================================================= */}
 
         <div className="col-12 col-lg-5">
-          <label
-            htmlFor="event-search"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="event-search" className="form-label fw-semibold">
             Recherche
           </label>
 
@@ -42,9 +36,7 @@ export default function EventFilters({
             className="form-control"
             placeholder="Rechercher un événement..."
             value={searchInput}
-            onChange={(event) =>
-              onSearchChange(event.target.value)
-            }
+            onChange={(event) => onSearchChange(event.target.value)}
             aria-label="Rechercher un événement"
           />
         </div>
@@ -54,10 +46,7 @@ export default function EventFilters({
         ================================================= */}
 
         <div className="col-12 col-lg-3">
-          <label
-            htmlFor="event-category"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="event-category" className="form-label fw-semibold">
             Catégorie
           </label>
 
@@ -65,27 +54,15 @@ export default function EventFilters({
             id="event-category"
             className="form-select"
             value={filters.category}
-            onChange={(event) =>
-              onFilterChange(
-                "category",
-                event.target.value
-              )
-            }
+            onChange={(event) => onFilterChange("category", event.target.value)}
           >
-            <option value="all">
-              Tous les événements
-            </option>
+            <option value="all">Tous les événements</option>
 
-            {Object.entries(EVENT_CATEGORIES).map(
-              ([value, category]) => (
-                <option
-                  key={value}
-                  value={value}
-                >
-                  {category.label}
-                </option>
-              )
-            )}
+            {Object.entries(EVENT_CATEGORIES).map(([value, category]) => (
+              <option key={value} value={value}>
+                {category.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -94,10 +71,7 @@ export default function EventFilters({
         ================================================= */}
 
         <div className="col-12 col-lg-2">
-          <label
-            htmlFor="event-date"
-            className="form-label fw-semibold"
-          >
+          <label htmlFor="event-date" className="form-label fw-semibold">
             Date
           </label>
 
@@ -106,12 +80,7 @@ export default function EventFilters({
             type="date"
             className="form-control"
             value={filters.date}
-            onChange={(event) =>
-              onFilterChange(
-                "date",
-                event.target.value
-              )
-            }
+            onChange={(event) => onFilterChange("date", event.target.value)}
           />
         </div>
 
@@ -127,14 +96,10 @@ export default function EventFilters({
             title="Actualiser les événements"
             aria-label="Actualiser les événements"
           >
-            <i
-              className="bi bi-arrow-repeat me-2"
-              aria-hidden="true"
-            />
+            <i className="bi bi-arrow-repeat me-2" aria-hidden="true" />
             Actualiser
           </button>
         </div>
-
       </div>
     </section>
   );

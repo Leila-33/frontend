@@ -16,7 +16,6 @@ import { useNotifications } from "../contexts/NotificationContext";
 // ==========================================================
 
 export default function UserLayout() {
-
   // ========================================================
   // NOTIFICATIONS / COMPTEURS
   // ========================================================
@@ -24,9 +23,8 @@ export default function UserLayout() {
   const {
     unreadNotificationCount,
     unreadTicketCount,
-    actionRequiredQuoteCount
+    actionRequiredQuoteCount,
   } = useNotifications();
-
 
   // ========================================================
   // SIDEBAR
@@ -42,11 +40,5 @@ export default function UserLayout() {
     />
   );
 
-
-  return (
-    <DashboardLayout
-      sidebar={renderSidebar}
-      mobileTitle="Mmotors"
-    />
-  );
+  return <DashboardLayout sidebar={renderSidebar} mobileTitle="Mmotors" />;
 }

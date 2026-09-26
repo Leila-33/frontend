@@ -12,9 +12,8 @@ export default function QuoteVehicleCard({ quote }) {
   // ==========================================================
 
   const vehicleName =
-    [vehicle?.brand, vehicle?.model]
-      .filter(Boolean)
-      .join(" ") || "Véhicule non renseigné";
+    [vehicle?.brand, vehicle?.model].filter(Boolean).join(" ") ||
+    "Véhicule non renseigné";
 
   // ==========================================================
   // PRIX CATALOGUE
@@ -25,22 +24,14 @@ export default function QuoteVehicleCard({ quote }) {
   return (
     <div className="card border-0 shadow-sm rounded-4 h-100">
       <div className="card-body p-4">
+        <h2 className="h5 fw-semibold mb-3">Véhicule</h2>
 
-        <h2 className="h5 fw-semibold mb-3">
-          Véhicule
-        </h2>
-
-        <div className="fw-semibold">
-          {vehicleName}
-        </div>
+        <div className="fw-semibold">{vehicleName}</div>
 
         <div className="text-muted">
           Prix catalogue :{" "}
-          {hasBasePrice
-            ? `${formatAmount(quote.base_price)}`
-            : "Non renseigné"}
+          {hasBasePrice ? `${formatAmount(quote.base_price)}` : "Non renseigné"}
         </div>
-
       </div>
     </div>
   );

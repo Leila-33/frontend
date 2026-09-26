@@ -18,7 +18,7 @@ export default function Sidebar({
   title,
   userRoleLabel,
   userIcon,
-  children
+  children,
 }) {
   // Récupère l'utilisateur actuellement connecté.
   // Cela évite de renseigner manuellement son nom et son email
@@ -26,10 +26,7 @@ export default function Sidebar({
   const { user } = useAuth();
 
   // Construit le nom complet de l'utilisateur.
-  const userName = [
-    user?.first_name,
-    user?.last_name
-  ]
+  const userName = [user?.first_name, user?.last_name]
     .filter(Boolean)
     .join(" ");
 
@@ -48,22 +45,16 @@ export default function Sidebar({
           ====================================================== */}
 
       <div className="mb-4 px-2">
-        <h4 className="fw-bold mb-1">
-          Mmotors
-        </h4>
+        <h4 className="fw-bold mb-1">Mmotors</h4>
 
-        <p className="text-muted small mb-0">
-          {title}
-        </p>
+        <p className="text-muted small mb-0">{title}</p>
       </div>
 
       {/* ======================================================
           NAVIGATION
           ====================================================== */}
 
-      <nav className="d-flex flex-column gap-1">
-        {children}
-      </nav>
+      <nav className="d-flex flex-column gap-1">{children}</nav>
 
       {/* ======================================================
           INFORMATIONS UTILISATEUR
@@ -72,13 +63,12 @@ export default function Sidebar({
       <div className="mt-auto pt-4">
         <div className="border rounded-4 p-3 bg-light">
           <div className="d-flex align-items-center gap-3">
-
             {/* Icône utilisateur */}
             <div
               className="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center"
               style={{
                 width: 42,
-                height: 42
+                height: 42,
               }}
             >
               <i className={`bi ${userIcon}`} />
@@ -86,7 +76,6 @@ export default function Sidebar({
 
             {/* Nom et rôle */}
             <div className="overflow-hidden">
-
               <div className="fw-semibold small text-truncate">
                 {displayName}
               </div>
@@ -103,7 +92,6 @@ export default function Sidebar({
                   {user.email}
                 </div>
               )}
-
             </div>
           </div>
         </div>

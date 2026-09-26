@@ -13,7 +13,6 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { formatDate, formatTime } from "../../utils/dateUtils";
 
 export default function AdminEventsPage() {
-
   /* =======================================================
      ÉTAT DE LA RÉPONSE
   ======================================================= */
@@ -26,14 +25,11 @@ export default function AdminEventsPage() {
     total_pages: 1,
   });
 
-
   /* =======================================================
      ÉVÉNEMENT SÉLECTIONNÉ
   ======================================================= */
 
-  const [selectedEvent, setSelectedEvent] =
-    useState(null);
-
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   /* =======================================================
      FILTRES
@@ -72,10 +68,7 @@ export default function AdminEventsPage() {
 
   // Valeur utilisée pour la recherche après 400 ms
   // sans nouvelle frappe.
-  const debouncedSearch = useDebounce(
-    searchInput,
-    400
-  );
+  const debouncedSearch = useDebounce(searchInput, 400);
 
   // =======================================================
   // SYNCHRONISATION DE LA RECHERCHE
@@ -100,9 +93,7 @@ export default function AdminEventsPage() {
    */
   const fetchEvents = useCallback(
     async (page) => {
-
       try {
-
         const params = new URLSearchParams({
           page: String(page),
           limit: String(filters.limit),
@@ -113,10 +104,7 @@ export default function AdminEventsPage() {
         // =====================================================
 
         if (filters.search.trim()) {
-          params.set(
-            "search",
-            filters.search.trim()
-          );
+          params.set("search", filters.search.trim());
         }
 
         // =====================================================
@@ -124,10 +112,7 @@ export default function AdminEventsPage() {
         // =====================================================
 
         if (filters.category !== "all") {
-          params.set(
-            "event_category",
-            filters.category
-          );
+          params.set("event_category", filters.category);
         }
 
         // =====================================================
@@ -135,79 +120,48 @@ export default function AdminEventsPage() {
         // =====================================================
 
         if (filters.date) {
-          params.set(
-            "date",
-            filters.date
-          );
+          params.set("date", filters.date);
         }
 
         // =====================================================
         // REQUÊTE API
         // =====================================================
 
-        const data = await apiFetch(
-          `/admin/events?${params.toString()}`
-        );
+        const data = await apiFetch(`/admin/events?${params.toString()}`);
 
         setResponse(data);
-
       } catch (err) {
-
-        toast.error(
-          err?.message ||
-          "Erreur lors du chargement des événements"
-        );
-
+        toast.error(err?.message || "Erreur lors du chargement des événements");
       }
     },
-    [
-      filters.limit,
-      filters.search,
-      filters.category,
-      filters.date,
-    ]
+    [filters.limit, filters.search, filters.category, filters.date]
   );
-
 
   /* =======================================================
      RECHARGEMENT AUTOMATIQUE
   ======================================================= */
 
   useEffect(() => {
-
     fetchEvents(filters.page);
-
-  }, [
-    fetchEvents,
-    filters.page,
-  ]);
-
+  }, [fetchEvents, filters.page]);
 
   /* =======================================================
      AFFICHAGE
   ======================================================= */
 
   return (
-
     <div className="container-fluid">
-
       {/* =================================================
           TITRE
       ================================================= */}
 
       <div className="mb-4">
-
-        <h2 className="fw-bold mb-1">
-          Historique des événements
-        </h2>
+        <h2 className="fw-bold mb-1">Historique des événements</h2>
 
         <p className="text-muted mb-0">
-          Consultez l'ensemble des événements enregistrés
-          sur la plateforme.
+          Consultez l'ensemble des événements enregistrés sur la plateforme.
         </p>
-
       </div>
-
 
       {/* =================================================
           FILTRES
@@ -221,78 +175,58 @@ export default function AdminEventsPage() {
         onRefresh={() => fetchEvents(filters.page)}
       />
 
-
       {/* =================================================
           TABLEAU
       ================================================= */}
 
-      <div className="
+      <div
+        className="
         card
         shadow-sm
         border-0
         rounded-4
         overflow-hidden
-      ">
-
+      "
+      >
         <div className="table-responsive">
-
-          <table className="
+          <table
+            className="
             table
             align-middle
             mb-0
-          ">
-
+          "
+          >
             {/* =============================================
                 EN-TÊTE
             ============================================= */}
 
             <thead className="table-light">
-
               <tr>
+                <th>Date</th>
 
-                <th>
-                  Date
-                </th>
+                <th>Type</th>
 
-                <th>
-                  Type
-                </th>
+                <th>Catégorie</th>
 
-                <th>
-                  Catégorie
-                </th>
+                <th>Message</th>
 
-                <th>
-                  Message
-                </th>
+                <th>Utilisateur</th>
 
-                <th>
-                  Utilisateur
-                </th>
-
-                <th>
-                  Actions
-                </th>
-
+                <th>Actions</th>
               </tr>
-
             </thead>
-
 
             {/* =============================================
                 CORPS
             ============================================= */}
 
             <tbody>
-
               {/* -----------------------------------------
                   AUCUN ÉVÉNEMENT
               ----------------------------------------- */}
 
               {response.items.length === 0 && (
-
                 <tr>
-
                   <td
                     colSpan="6"
                     className="
@@ -301,37 +235,30 @@ export default function AdminEventsPage() {
                       text-muted
                     "
                   >
-
-                    <i className="
+                    <i
+                      className="
                       bi bi-clock-history
                       fs-1
                       d-block
                       mb-3
-                    "/>
-
+                    "
+                    />
                     Aucun événement trouvé.
-
                   </td>
-
                 </tr>
-
               )}
-
 
               {/* -----------------------------------------
                   ÉVÉNEMENTS
               ----------------------------------------- */}
 
               {response.items.map((event) => (
-
                 <tr key={event.id}>
-
                   {/* =================================================
                       DATE
                   ================================================= */}
 
                   <td>
-
                     <div className="fw-semibold">
                       {formatDate(event.created_at)}
                     </div>
@@ -339,66 +266,49 @@ export default function AdminEventsPage() {
                     <small className="text-muted">
                       {formatTime(event.created_at)}
                     </small>
-
                   </td>
-
 
                   {/* =================================================
                       TYPE
                   ================================================= */}
 
                   <td>
-
                     <span
-                      className={`badge bg-${getEventTypeColor(
-                        event.type
-                      )}`}
+                      className={`badge bg-${getEventTypeColor(event.type)}`}
                     >
                       {getEventTypeLabel(event.type)}
                     </span>
-
                   </td>
-
 
                   {/* =================================================
         CATÉGORIE
     ================================================= */}
 
                   <td>
-
                     <span className="text-muted">
                       {getEventCategoryLabel(event.type)}
                     </span>
-
                   </td>
-
 
                   {/* =================================================
         MESSAGE
     ================================================= */}
 
                   <td>
-                    <span>
-                      {event.message || "-"}
-                    </span>
+                    <span>{event.message || "-"}</span>
                   </td>
-
 
                   {/* =================================================
         UTILISATEUR
     ================================================= */}
 
-                  <td>
-                    {event.user_id ?? "-"}
-                  </td>
-
+                  <td>{event.user_id ?? "-"}</td>
 
                   {/* =================================================
                       ACTIONS
                   ================================================= */}
 
                   <td>
-
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-secondary"
@@ -411,25 +321,19 @@ export default function AdminEventsPage() {
                         aria-hidden="true"
                       />
                     </button>
-
                   </td>
-
                 </tr>
-
               ))}
-
             </tbody>
-
           </table>
-
         </div>
-
 
         {/* =================================================
             PAGINATION
         ================================================= */}
 
-        <div className="
+        <div
+          className="
           d-flex
           justify-content-between
           align-items-center
@@ -438,14 +342,9 @@ export default function AdminEventsPage() {
           px-3
           py-3
           border-top
-        ">
-
-          <div className="text-muted">
-
-            {response.total} événement(s)
-
-          </div>
-
+        "
+        >
+          <div className="text-muted">{response.total} événement(s)</div>
 
           {/* =========================
           PAGINATION
@@ -461,28 +360,19 @@ export default function AdminEventsPage() {
               }))
             }
           />
-
         </div>
-
       </div>
-
 
       {/* =================================================
           MODALE DE DÉTAIL
       ================================================= */}
 
       {selectedEvent && (
-
         <EventDetailModal
           event={selectedEvent}
-          onClose={() =>
-            setSelectedEvent(null)
-          }
+          onClose={() => setSelectedEvent(null)}
         />
-
       )}
-
     </div>
-
   );
 }

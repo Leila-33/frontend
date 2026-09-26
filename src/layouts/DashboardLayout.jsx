@@ -20,7 +20,7 @@ import { Outlet } from "react-router-dom";
 export default function DashboardLayout({
   sidebar,
   mobileTitle = "Mmotors",
-  contentClassName = "p-3 p-lg-4"
+  contentClassName = "p-3 p-lg-4",
 }) {
   // ========================================================
   // MENU MOBILE
@@ -35,13 +35,11 @@ export default function DashboardLayout({
 
   return (
     <div className="d-flex">
-
       {/* ====================================================
           SIDEBAR DESKTOP
           ==================================================== */}
 
       {sidebar(false, closeMobileMenu)}
-
 
       {/* ====================================================
           SIDEBAR MOBILE
@@ -63,19 +61,16 @@ export default function DashboardLayout({
         </div>
       )}
 
-
       {/* ====================================================
           CONTENU PRINCIPAL
           ==================================================== */}
 
       <div className="flex-grow-1">
-
         {/* ==================================================
             BARRE MOBILE
             ================================================== */}
 
         <div className="d-lg-none p-3 border-bottom d-flex align-items-center justify-content-between">
-
           <button
             type="button"
             className="btn btn-outline-dark btn-sm"
@@ -85,16 +80,12 @@ export default function DashboardLayout({
             <i className="bi bi-list fs-5" />
           </button>
 
-          <h5 className="mb-0 fw-bold">
-            {mobileTitle}
-          </h5>
+          <h5 className="mb-0 fw-bold">{mobileTitle}</h5>
 
           {/* Élément vide permettant de conserver
               le titre centré dans la barre mobile. */}
           <div />
-
         </div>
-
 
         {/* ==================================================
             PAGE
@@ -103,9 +94,7 @@ export default function DashboardLayout({
         <div className={contentClassName}>
           <Outlet />
         </div>
-
       </div>
-
     </div>
   );
 }

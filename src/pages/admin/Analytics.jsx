@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   LineChart,
@@ -23,14 +19,9 @@ import { toast } from "react-toastify";
 
 import apiFetch from "../../services/apiFetch";
 
-import {
-  formatChartDate,
-  formatMonth,
-} from "../../utils/dateUtils";
+import { formatChartDate, formatMonth } from "../../utils/dateUtils";
 
-import {
-  APPLICATION_STATUSES,
-} from "../../constants/applicationOptions";
+import { APPLICATION_STATUSES } from "../../constants/applicationOptions";
 
 import {
   ADMIN_ANALYTICS_STAT_CARDS,
@@ -65,24 +56,14 @@ const DEFAULT_ANALYTICS_DATA = {
  * uniquement utilisé dans cette page et ne contient
  * aucune logique métier réutilisable.
  */
-function StatCard({
-  title,
-  value,
-  color = "dark",
-}) {
+function StatCard({ title, value, color = "dark" }) {
   return (
     <div className="col-6 col-md">
       <div className="card border-0 shadow-sm rounded-4 h-100">
         <div className="card-body">
-          <div className="text-muted small">
-            {title}
-          </div>
+          <div className="text-muted small">{title}</div>
 
-          <div
-            className={`fs-3 fw-bold text-${color}`}
-          >
-            {value ?? 0}
-          </div>
+          <div className={`fs-3 fw-bold text-${color}`}>{value ?? 0}</div>
         </div>
       </div>
     </div>
@@ -102,21 +83,15 @@ const normalizeAnalyticsData = (response) => {
   const stats = response?.stats ?? {};
 
   return {
-    applications_by_day: Array.isArray(
-      response?.applications_by_day
-    )
+    applications_by_day: Array.isArray(response?.applications_by_day)
       ? response.applications_by_day
       : [],
 
-    status_distribution: Array.isArray(
-      response?.status_distribution
-    )
+    status_distribution: Array.isArray(response?.status_distribution)
       ? response.status_distribution
       : [],
 
-    revenue: Array.isArray(response?.revenue)
-      ? response.revenue
-      : [],
+    revenue: Array.isArray(response?.revenue) ? response.revenue : [],
 
     stats: {
       total: stats.total ?? 0,
@@ -133,9 +108,7 @@ const normalizeAnalyticsData = (response) => {
 // ==========================================================
 
 export default function AdminAnalytics() {
-  const [data, setData] = useState(
-    DEFAULT_ANALYTICS_DATA
-  );
+  const [data, setData] = useState(DEFAULT_ANALYTICS_DATA);
 
   const [loading, setLoading] = useState(true);
 
@@ -151,22 +124,14 @@ export default function AdminAnalytics() {
     setLoading(true);
 
     try {
-      const response = await apiFetch(
-        "/admin/analytics"
-      );
+      const response = await apiFetch("/admin/analytics");
 
-      setData(
-        normalizeAnalyticsData(response)
-      );
+      setData(normalizeAnalyticsData(response));
     } catch (error) {
-      console.error(
-        "fetchAnalytics error:",
-        error
-      );
+      console.error("fetchAnalytics error:", error);
 
       toast.error(
-        error?.message ??
-          "Erreur lors du chargement des statistiques"
+        error?.message ?? "Erreur lors du chargement des statistiques"
       );
     } finally {
       setLoading(false);
@@ -194,14 +159,11 @@ export default function AdminAnalytics() {
    * "processing" → "Pris en charge"
    * "approved"   → "Validé"
    */
-  const statusData =
-    data.status_distribution.map((item) => ({
-      ...item,
+  const statusData = data.status_distribution.map((item) => ({
+    ...item,
 
-      displayName:
-        APPLICATION_STATUSES[item.name]?.label ??
-        item.name,
-    }));
+    displayName: APPLICATION_STATUSES[item.name]?.label ?? item.name,
+  }));
 
   // ========================================================
   // RENDU
@@ -209,21 +171,15 @@ export default function AdminAnalytics() {
 
   return (
     <div className="container py-4">
-
       {/* ====================================================
           HEADER
       ==================================================== */}
 
       <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-
         <div>
-          <h2 className="fw-bold mb-1">
-            Statistiques
-          </h2>
+          <h2 className="fw-bold mb-1">Statistiques</h2>
 
-          <p className="text-muted mb-0">
-            Performance globale du système
-          </p>
+          <p className="text-muted mb-0">Performance globale du système</p>
         </div>
 
         <button
@@ -239,21 +195,15 @@ export default function AdminAnalytics() {
                 role="status"
                 aria-hidden="true"
               />
-
               Actualisation...
             </>
           ) : (
             <>
-              <i
-                className="bi bi-arrow-clockwise me-2"
-                aria-hidden="true"
-              />
-
+              <i className="bi bi-arrow-clockwise me-2" aria-hidden="true" />
               Actualiser
             </>
           )}
         </button>
-
       </div>
 
       {/* ====================================================
@@ -261,30 +211,23 @@ export default function AdminAnalytics() {
       ==================================================== */}
 
       <div className="row g-3 mb-4">
+        {ADMIN_ANALYTICS_STAT_CARDS.map((stat) => {
+          // Les statuts utilisent directement
+          // la configuration centralisée de
+          // applicationOptions.js.
+          const color = stat.status
+            ? APPLICATION_STATUSES[stat.status]?.color
+            : stat.color;
 
-        {ADMIN_ANALYTICS_STAT_CARDS.map(
-          (stat) => {
-
-            // Les statuts utilisent directement
-            // la configuration centralisée de
-            // applicationOptions.js.
-            const color = stat.status
-              ? APPLICATION_STATUSES[
-                  stat.status
-                ]?.color
-              : stat.color;
-
-            return (
-              <StatCard
-                key={stat.key}
-                title={stat.title}
-                value={data.stats[stat.key]}
-                color={color}
-              />
-            );
-          }
-        )}
-
+          return (
+            <StatCard
+              key={stat.key}
+              title={stat.title}
+              value={data.stats[stat.key]}
+              color={color}
+            />
+          );
+        })}
       </div>
 
       {/* ====================================================
@@ -292,47 +235,26 @@ export default function AdminAnalytics() {
       ==================================================== */}
 
       <div className="row g-4">
-
         {/* ==================================================
             DOSSIERS CRÉÉS
         ================================================== */}
 
         <div className="col-lg-8">
-
           <div className="card border-0 shadow-sm rounded-4 p-3 h-100">
-
-            <h5 className="fw-semibold mb-3">
-              Dossiers créés
-            </h5>
+            <h5 className="fw-semibold mb-3">Dossiers créés</h5>
 
             {data.applications_by_day.length === 0 ? (
               <div className="text-muted text-center py-5">
                 Aucune donnée disponible
               </div>
             ) : (
-              <ResponsiveContainer
-                width="100%"
-                height={300}
-              >
-                <LineChart
-                  data={
-                    data.applications_by_day
-                  }
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                  />
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={data.applications_by_day}>
+                  <CartesianGrid strokeDasharray="3 3" />
 
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={
-                      formatChartDate
-                    }
-                  />
+                  <XAxis dataKey="date" tickFormatter={formatChartDate} />
 
-                  <YAxis
-                    allowDecimals={false}
-                  />
+                  <YAxis allowDecimals={false} />
 
                   <Tooltip />
 
@@ -346,9 +268,7 @@ export default function AdminAnalytics() {
                 </LineChart>
               </ResponsiveContainer>
             )}
-
           </div>
-
         </div>
 
         {/* ==================================================
@@ -356,24 +276,16 @@ export default function AdminAnalytics() {
         ================================================== */}
 
         <div className="col-lg-4">
-
           <div className="card border-0 shadow-sm rounded-4 p-3 h-100">
-
-            <h5 className="fw-semibold mb-3">
-              Statuts des dossiers
-            </h5>
+            <h5 className="fw-semibold mb-3">Statuts des dossiers</h5>
 
             {statusData.length === 0 ? (
               <div className="text-muted text-center py-5">
                 Aucune donnée disponible
               </div>
             ) : (
-              <ResponsiveContainer
-                width="100%"
-                height={300}
-              >
+              <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-
                   <Pie
                     data={statusData}
                     dataKey="value"
@@ -381,29 +293,23 @@ export default function AdminAnalytics() {
                     outerRadius={100}
                     label
                   >
-                    {statusData.map(
-                      (item, index) => (
-                        <Cell
-                          key={item.name}
-                          fill={
-                            ANALYTICS_CHART_COLORS[
-                              index %
-                                ANALYTICS_CHART_COLORS.length
-                            ]
-                          }
-                        />
-                      )
-                    )}
+                    {statusData.map((item, index) => (
+                      <Cell
+                        key={item.name}
+                        fill={
+                          ANALYTICS_CHART_COLORS[
+                            index % ANALYTICS_CHART_COLORS.length
+                          ]
+                        }
+                      />
+                    ))}
                   </Pie>
 
                   <Tooltip />
-
                 </PieChart>
               </ResponsiveContainer>
             )}
-
           </div>
-
         </div>
 
         {/* ==================================================
@@ -411,54 +317,31 @@ export default function AdminAnalytics() {
         ================================================== */}
 
         <div className="col-12">
-
           <div className="card border-0 shadow-sm rounded-4 p-3">
-
-            <h5 className="fw-semibold mb-3">
-              Revenus estimés / mois
-            </h5>
+            <h5 className="fw-semibold mb-3">Revenus estimés / mois</h5>
 
             {data.revenue.length === 0 ? (
               <div className="text-muted text-center py-5">
                 Aucune donnée disponible
               </div>
             ) : (
-              <ResponsiveContainer
-                width="100%"
-                height={300}
-              >
-                <BarChart
-                  data={data.revenue}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                  />
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={data.revenue}>
+                  <CartesianGrid strokeDasharray="3 3" />
 
-                  <XAxis
-                    dataKey="month"
-                    tickFormatter={
-                      formatMonth
-                    }
-                  />
+                  <XAxis dataKey="month" tickFormatter={formatMonth} />
 
                   <YAxis />
 
                   <Tooltip />
 
-                  <Bar
-                    dataKey="amount"
-                    fill="#198754"
-                  />
+                  <Bar dataKey="amount" fill="#198754" />
                 </BarChart>
               </ResponsiveContainer>
             )}
-
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

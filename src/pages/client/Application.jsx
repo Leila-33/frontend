@@ -9,7 +9,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import ApplicationTimeline from "../../components/applications/ApplicationTimeline";
 import PaymentStatus from "../../components/applications/PaymentStatus";
 import { APPLICATION_STATUSES } from "../../constants/applicationOptions";
-import { computePricing } from "../../utils/pricing";
+import { computePricing } from "../../utils/pricingUtils";
 import { BsCheckCircleFill } from "react-icons/bs";
 import { formatAmount } from "../../utils/priceUtils";
 import {
@@ -18,6 +18,7 @@ import {
   DOCUMENT_LABELS,
 } from "../../constants/documentOptions";
 import { TRADE_IN_CONDITIONS } from "../../constants/vehicleOptions";
+import { validateTradeIn } from "../../utils/tradeInValidation";
 
 export default function Application() {
   const navigate = useNavigate();
@@ -390,56 +391,6 @@ export default function Application() {
   // =========================
   // 6. FONCTIONS DE VALIDATION
   // =========================
-
-  const validateTradeIn = (data = form) => {
-    const errors = {};
-    const currentYear = new Date().getFullYear();
-
-    // =========================
-    // BRAND
-    // =========================
-    if (!data.trade_brand?.trim()) {
-      errors.trade_brand = "Marque requise";
-    }
-
-    // =========================
-    // MODEL
-    // =========================
-    if (!data.trade_model?.trim()) {
-      errors.trade_model = "Modèle requis";
-    }
-
-    // =========================
-    // YEAR
-    // =========================
-    const year = Number(data.trade_year);
-
-    if (data.trade_year === "" || data.trade_year == null) {
-      errors.trade_year = "Année requise";
-    } else if (!Number.isInteger(year) || year < 1900 || year > currentYear) {
-      errors.trade_year = "Année invalide";
-    }
-
-    // =========================
-    // MILEAGE
-    // =========================
-    const mileage = Number(data.trade_mileage);
-
-    if (data.trade_mileage === "" || data.trade_mileage == null) {
-      errors.trade_mileage = "Kilométrage requis";
-    } else if (!Number.isFinite(mileage) || mileage < 0) {
-      errors.trade_mileage = "Kilométrage invalide";
-    }
-
-    // =========================
-    // CONDITION
-    // =========================
-    if (!data.trade_condition) {
-      errors.trade_condition = "État requis";
-    }
-
-    return errors;
-  };
 
   const isTradeInValid = () => {
     if (!form.trade_in_enabled) return false;
@@ -1111,6 +1062,7 @@ export default function Application() {
 
     return (
       <div
+        key={type}
         className={`
         mb-3
         border

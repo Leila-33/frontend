@@ -10,29 +10,20 @@ import { formatAmount } from "../../utils/priceUtils";
  * - durée ;
  * - mensualité.
  */
-export default function QuoteFinancingCard({
-  quote,
-}) {
+export default function QuoteFinancingCard({ quote }) {
   return (
     <div className="card border-0 shadow-sm rounded-4 h-100">
       <div className="card-body p-4">
-
-        <h2 className="h5 fw-semibold mb-4">
-          Financement
-        </h2>
+        <h2 className="h5 fw-semibold mb-4">Financement</h2>
 
         {/* =====================================================
             PRIX DU VÉHICULE
         ===================================================== */}
 
         <div className="d-flex justify-content-between gap-3 mb-2">
-          <span>
-            Prix véhicule
-          </span>
+          <span>Prix véhicule</span>
 
-          <strong>
-            {formatAmount(quote?.base_price)}
-          </strong>
+          <strong>{formatAmount(quote?.base_price)}</strong>
         </div>
 
         {/* =====================================================
@@ -40,13 +31,9 @@ export default function QuoteFinancingCard({
         ===================================================== */}
 
         <div className="d-flex justify-content-between gap-3 mb-2">
-          <span>
-            Remise
-          </span>
+          <span>Remise</span>
 
-          <strong>
-            - {formatAmount(quote?.discount)}
-          </strong>
+          <strong>- {formatAmount(quote?.discount)}</strong>
         </div>
 
         {/* =====================================================
@@ -54,13 +41,9 @@ export default function QuoteFinancingCard({
         ===================================================== */}
 
         <div className="d-flex justify-content-between gap-3 mb-2">
-          <span>
-            Apport
-          </span>
+          <span>Apport</span>
 
-          <strong>
-            - {formatAmount(quote?.down_payment)}
-          </strong>
+          <strong>- {formatAmount(quote?.down_payment)}</strong>
         </div>
 
         {/* =====================================================
@@ -68,13 +51,9 @@ export default function QuoteFinancingCard({
         ===================================================== */}
 
         <div className="d-flex justify-content-between gap-3 mb-3">
-          <span>
-            Reprise
-          </span>
+          <span>Reprise</span>
 
-          <strong>
-            - {formatAmount(quote?.trade_in_value)}
-          </strong>
+          <strong>- {formatAmount(quote?.trade_in_value)}</strong>
         </div>
 
         <hr />
@@ -84,13 +63,9 @@ export default function QuoteFinancingCard({
         ===================================================== */}
 
         <div className="d-flex justify-content-between gap-3 mb-2">
-          <span>
-            Montant financé
-          </span>
+          <span>Montant financé</span>
 
-          <strong>
-            {formatAmount(quote?.financed_amount)}
-          </strong>
+          <strong>{formatAmount(quote?.financed_amount)}</strong>
         </div>
 
         {/* =====================================================
@@ -98,9 +73,7 @@ export default function QuoteFinancingCard({
         ===================================================== */}
 
         <div className="d-flex justify-content-between gap-3 mb-2">
-          <span>
-            Durée
-          </span>
+          <span>Durée</span>
 
           <strong>
             {quote?.duration_months != null
@@ -114,9 +87,7 @@ export default function QuoteFinancingCard({
         ===================================================== */}
 
         <div className="d-flex justify-content-between gap-3">
-          <span>
-            Mensualité
-          </span>
+          <span>Mensualité</span>
 
           <strong>
             {quote?.monthly_payment != null
@@ -124,7 +95,6 @@ export default function QuoteFinancingCard({
               : "Non renseignée"}
           </strong>
         </div>
-
       </div>
     </div>
   );

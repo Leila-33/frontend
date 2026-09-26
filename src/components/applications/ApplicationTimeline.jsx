@@ -12,36 +12,22 @@ import { formatDateTime } from "../../utils/dateUtils";
 /**
  * Affiche l'historique des événements associés au dossier.
  */
-export default function ApplicationTimeline({
-  events = [],
-}) {
+export default function ApplicationTimeline({ events = [] }) {
   return (
     <div className="card border-0 shadow-sm rounded-4">
-
       <div className="card-body p-4">
-
-        <h5 className="fw-bold mb-4">
-          Historique du dossier
-        </h5>
+        <h5 className="fw-bold mb-4">Historique du dossier</h5>
 
         <div className="d-flex flex-column gap-4">
-
           {events.length > 0 ? (
-
             events.map((event) => {
-
               // Récupère la configuration visuelle
               // correspondant au type d'événement.
               const eventConfig =
-                EVENT_TYPE_CONFIG[event.type] ??
-                DEFAULT_EVENT_TYPE_CONFIG;
+                EVENT_TYPE_CONFIG[event.type] ?? DEFAULT_EVENT_TYPE_CONFIG;
 
               return (
-                <div
-                  key={event.id}
-                  className="d-flex gap-3"
-                >
-
+                <div key={event.id} className="d-flex gap-3">
                   {/* ==================================================
                       ICÔNE
                       ================================================== */}
@@ -64,7 +50,6 @@ export default function ApplicationTimeline({
                       ================================================== */}
 
                   <div className="flex-grow-1 min-width-0">
-
                     <div className="fw-semibold">
                       {event.message || "Événement"}
                     </div>
@@ -72,25 +57,15 @@ export default function ApplicationTimeline({
                     <div className="text-muted small">
                       {formatDateTime(event.created_at)}
                     </div>
-
                   </div>
-
                 </div>
               );
             })
-
           ) : (
-
-            <div className="text-muted text-center py-3">
-              Aucun événement
-            </div>
-
+            <div className="text-muted text-center py-3">Aucun événement</div>
           )}
-
         </div>
-
       </div>
-
     </div>
   );
 }

@@ -1,13 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import {
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { toast } from "react-toastify";
 
@@ -30,7 +23,7 @@ import QuoteFormPage from "../../../components/sales/QuoteForm";
  * de l'affichage et de la gestion du formulaire.
  */
 export default function QuoteFormContainer() {
-  const { id } = useParams();
+  const { id, leadId } = useParams();
   const navigate = useNavigate();
 
   // =====================================================
@@ -39,9 +32,7 @@ export default function QuoteFormContainer() {
 
   const isEditMode = Boolean(id);
 
-  const mode = isEditMode
-    ? "edit"
-    : "create";
+  const mode = isEditMode ? "edit" : "create";
 
   // =====================================================
   // ÉTAT
@@ -64,29 +55,19 @@ export default function QuoteFormContainer() {
     try {
       setLoading(true);
 
-      const data = await apiFetch(
-        `/agent/quotes/${id}`,
-        {
-          method: "GET",
-        }
-      );
+      const data = await apiFetch(`/agent/quotes/${id}`, {
+        method: "GET",
+      });
 
       setQuote(data);
     } catch (error) {
-      toast.error(
-        error?.message ||
-        "Impossible de charger l'offre."
-      );
+      toast.error(error?.message || "Impossible de charger l'offre.");
 
       navigate(-1);
     } finally {
       setLoading(false);
     }
-  }, [
-    id,
-    isEditMode,
-    navigate,
-  ]);
+  }, [id, isEditMode, navigate]);
 
   // =====================================================
   // INITIALISATION
@@ -107,21 +88,14 @@ export default function QuoteFormContainer() {
         // MODIFICATION
         // -------------------------
 
-        await apiFetch(
-          `/agent/quotes/${id}`,
-          {
-            method: "PUT",
-            body: payload,
-          }
-        );
+        await apiFetch(`/agent/quotes/${id}`, {
+          method: "PUT",
+          body: payload,
+        });
 
-        toast.success(
-          "Offre modifiée avec succès."
-        );
+        toast.success("Offre modifiée avec succès.");
 
-        navigate(
-          `/sales/quotes/${id}`
-        );
+        navigate(`/sales/quotes/${id}`);
 
         return;
       }
@@ -130,27 +104,16 @@ export default function QuoteFormContainer() {
       // CRÉATION
       // -------------------------
 
-      const result = await apiFetch(
-        "/agent/quotes",
-        {
-          method: "POST",
-          body: payload,
-        }
-      );
+      const result = await apiFetch("/agent/quotes", {
+        method: "POST",
+        body: payload,
+      });
 
-      toast.success(
-        "Offre créée avec succès."
-      );
+      toast.success("Offre créée avec succès.");
 
-      navigate(
-        `/sales/quotes/${result.quote_id}`
-      );
+      navigate(`/sales/quotes/${result.quote_id}`);
     },
-    [
-      id,
-      isEditMode,
-      navigate,
-    ]
+    [id, isEditMode, navigate]
   );
 
   // =====================================================
@@ -170,9 +133,7 @@ export default function QuoteFormContainer() {
             aria-hidden="true"
           />
 
-          <span>
-            Chargement de l'offre...
-          </span>
+          <span>Chargement de l'offre...</span>
         </div>
       </div>
     );
@@ -185,9 +146,7 @@ export default function QuoteFormContainer() {
   if (isEditMode && !quote) {
     return (
       <div className="container py-5">
-        <div className="alert alert-warning mb-0">
-          Offre introuvable.
-        </div>
+        <div className="alert alert-warning mb-0">Offre introuvable.</div>
       </div>
     );
   }
@@ -200,6 +159,7 @@ export default function QuoteFormContainer() {
     <QuoteFormPage
       mode={mode}
       initialValues={quote}
+      leadId={leadId}
       onSubmit={handleSubmit}
     />
   );

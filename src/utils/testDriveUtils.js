@@ -1,11 +1,9 @@
 import {
   TEST_DRIVE_STATUSES,
   DEFAULT_TEST_DRIVE_STATS,
-  DATE_DISPLAY_STATUSES
+  DATE_DISPLAY_STATUSES,
 } from "../constants/testDriveOptions";
-import {
-  formatAppointmentDate,
-} from "./dateUtils";
+import { formatAppointmentDate } from "./dateUtils";
 
 // ==========================================================
 // CONFIGURATION D'UN STATUT
@@ -44,13 +42,9 @@ export const getTestDriveStatusLabel = (status) => {
  * Retourne la classe Bootstrap correspondant au statut.
  */
 export const getTestDriveStatusColor = (status) => {
-  const className =
-    getTestDriveStatusConfig(status).className;
+  const className = getTestDriveStatusConfig(status).className;
 
-  return className
-    .replace("badge ", "")
-    .replace("text-dark", "")
-    .trim();
+  return className.replace("badge ", "").replace("text-dark", "").trim();
 };
 
 // ==========================================================
@@ -78,7 +72,6 @@ export const getTestDriveStats = (stats) => {
   };
 };
 
-
 // ==========================================================
 // LIBELLÉ DE LA DATE DE RENDEZ-VOUS
 // ==========================================================
@@ -92,24 +85,13 @@ export const getTestDriveStats = (stats) => {
  * Les autres utilisent un affichage relatif.
  */
 export const getAppointmentLabel = (testDrive) => {
-  if (
-    DATE_DISPLAY_STATUSES.includes(
-      testDrive.status
-    )
-  ) {
-    return new Date(
-      testDrive.appointment_date
-    ).toLocaleDateString(
-      "fr-FR",
-      {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }
-    );
+  if (DATE_DISPLAY_STATUSES.includes(testDrive.status)) {
+    return new Date(testDrive.appointment_date).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   }
 
-  return formatAppointmentDate(
-    testDrive.appointment_date
-  );
+  return formatAppointmentDate(testDrive.appointment_date);
 };

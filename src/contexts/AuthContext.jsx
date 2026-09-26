@@ -14,7 +14,6 @@ import apiFetch from "../services/apiFetch";
 // - les informations de redirection après connexion
 const AuthContext = createContext();
 
-
 // ============================================================
 // AUTH PROVIDER
 // ============================================================
@@ -24,7 +23,6 @@ const AuthContext = createContext();
 // Tous les composants situés dans <App /> pourront utiliser
 // le hook useAuth().
 export function AuthProvider({ children }) {
-
   // Utilisateur actuellement connecté.
   // null signifie qu'aucun utilisateur n'est authentifié.
   const [user, setUser] = useState(null);
@@ -36,7 +34,6 @@ export function AuthProvider({ children }) {
   // une page non authentifiée avant d'avoir vérifié le token.
   const [loading, setLoading] = useState(true);
 
-
   // ==========================================================
   // FETCH ME
   // ==========================================================
@@ -46,9 +43,7 @@ export function AuthProvider({ children }) {
   // Le token est normalement récupéré automatiquement par
   // apiFetch et envoyé dans la requête.
   const fetchMe = async () => {
-
     try {
-
       // Appel de l'endpoint permettant de récupérer
       // l'utilisateur actuellement connecté.
       const me = await apiFetch("/auth/me");
@@ -57,9 +52,7 @@ export function AuthProvider({ children }) {
       setUser(me);
 
       return me;
-
     } catch (err) {
-
       // Une erreur peut notamment signifier que le token
       // est invalide ou expiré.
       console.error("Auth error:", err);
@@ -75,7 +68,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-
   // ==========================================================
   // INIT AUTH
   // ==========================================================
@@ -85,9 +77,7 @@ export function AuthProvider({ children }) {
   // Son objectif est de restaurer la session utilisateur
   // lorsqu'un token existe déjà dans le navigateur.
   useEffect(() => {
-
     const init = async () => {
-
       // Vérifie si un token d'accès existe dans le navigateur.
       const token = localStorage.getItem("access_token");
 
@@ -99,18 +89,14 @@ export function AuthProvider({ children }) {
       }
 
       try {
-
         // Un token existe : on vérifie qu'il est toujours valide
         // en récupérant l'utilisateur connecté.
         await fetchMe();
-
       } catch (_) {
-
         // L'erreur est déjà traitée dans fetchMe().
         //
         // On ne fait donc rien ici.
       } finally {
-
         // Dans tous les cas, la vérification d'authentification
         // est terminée.
         setLoading(false);
@@ -118,9 +104,7 @@ export function AuthProvider({ children }) {
     };
 
     init();
-
   }, []);
-
 
   // ==========================================================
   // LOGIN
@@ -131,12 +115,8 @@ export function AuthProvider({ children }) {
   // Celui-ci est sauvegardé afin de pouvoir authentifier
   // les prochaines requêtes API.
   const login = async (token) => {
-
     // Sauvegarde du token d'accès dans le navigateur.
-    localStorage.setItem(
-      "access_token",
-      token
-    );
+    localStorage.setItem("access_token", token);
 
     // IMPORTANT :
     // Après avoir enregistré le token, on récupère les
@@ -147,7 +127,6 @@ export function AuthProvider({ children }) {
     await fetchMe();
   };
 
-
   // ==========================================================
   // LOGOUT
   // ==========================================================
@@ -156,31 +135,17 @@ export function AuthProvider({ children }) {
   // On prévient d'abord le backend afin qu'il puisse effectuer
   // les éventuelles opérations nécessaires côté serveur.
   const logout = async () => {
-
     try {
-
-      await apiFetch(
-        "/auth/logout",
-        {
-          method: "POST",
-        }
-      );
-
+      await apiFetch("/auth/logout", {
+        method: "POST",
+      });
     } catch (error) {
-
       // Même si l'appel backend échoue, on poursuit la
       // déconnexion côté frontend.
-      console.error(
-        "Erreur lors de la déconnexion",
-        error
-      );
-
+      console.error("Erreur lors de la déconnexion", error);
     } finally {
-
       // Suppression du token local.
-      localStorage.removeItem(
-        "access_token"
-      );
+      localStorage.removeItem("access_token");
 
       // Suppression de l'utilisateur du contexte.
       //
@@ -189,7 +154,6 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
   };
-
 
   // ==========================================================
   // UPDATE USER
@@ -204,14 +168,11 @@ export function AuthProvider({ children }) {
   // Les anciennes propriétés sont conservées grâce au spread
   // de l'utilisateur précédent.
   const updateUser = (newUser) => {
-
-    setUser(prev => ({
+    setUser((prev) => ({
       ...prev,
-      ...newUser
+      ...newUser,
     }));
-
   };
-
 
   // ==========================================================
   // POST LOGIN REDIRECT
@@ -225,13 +186,11 @@ export function AuthProvider({ children }) {
   // Après connexion, on peut le renvoyer vers /applications.
   const [postLoginRedirect, setPostLoginRedirect] = useState(null);
 
-
   // Supprime la redirection mémorisée après qu'elle
   // a été utilisée.
   const clearPostLoginRedirect = () => {
     setPostLoginRedirect(null);
   };
-
 
   // ==========================================================
   // CONTEXT PROVIDER
@@ -262,7 +221,6 @@ export function AuthProvider({ children }) {
         // Mise à jour partielle de l'utilisateur
         updateUser,
 
-
         // ------------------------------------------------------
         // Redirection après connexion
         // ------------------------------------------------------
@@ -275,7 +233,6 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
 
 // ============================================================
 // HOOK useAuth
@@ -291,10 +248,8 @@ export function AuthProvider({ children }) {
 // Le hook ajoute également plusieurs informations pratiques
 // permettant de vérifier le rôle de l'utilisateur.
 export const useAuth = () => {
-
   // Récupération du contexte.
   const context = useContext(AuthContext);
-
 
   // ==========================================================
   // AUTHENTIFICATION
@@ -303,34 +258,25 @@ export const useAuth = () => {
   // Si user vaut null, l'utilisateur n'est pas connecté.
   const isAuthenticated = !!context.user;
 
-
   // ==========================================================
   // RÔLE ADMIN
   // ==========================================================
-  const isAdmin =
-    context.user?.role === "admin";
-
+  const isAdmin = context.user?.role === "admin";
 
   // ==========================================================
   // RÔLE CLIENT
   // ==========================================================
-  const isClient =
-    context.user?.role === "client";
-
+  const isClient = context.user?.role === "client";
 
   // ==========================================================
   // RÔLE AGENT SAV
   // ==========================================================
-  const isSavAgent =
-    context.user?.role === "sav_agent";
-
+  const isSavAgent = context.user?.role === "sav_agent";
 
   // ==========================================================
   // RÔLE AGENT COMMERCIAL
   // ==========================================================
-  const isSalesAgent =
-    context.user?.role === "sales_agent";
-
+  const isSalesAgent = context.user?.role === "sales_agent";
 
   // ==========================================================
   // EMPLOYÉ
@@ -347,11 +293,7 @@ export const useAuth = () => {
   // if (isEmployee) {
   //     ...
   // }
-  const isEmployee =
-    isAdmin ||
-    isSalesAgent ||
-    isSavAgent;
-
+  const isEmployee = isAdmin || isSalesAgent || isSavAgent;
 
   // ==========================================================
   // RETOUR DU HOOK
@@ -372,4 +314,3 @@ export const useAuth = () => {
     isEmployee,
   };
 };
-

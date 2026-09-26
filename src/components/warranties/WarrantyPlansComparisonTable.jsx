@@ -1,80 +1,63 @@
 import {
-    BsShieldCheck,
-    BsLightningCharge,
-    BsCheckCircle,
-    BsXCircle,
-    BsPencil,
-    BsToggleOff,
-    BsToggleOn
+  BsShieldCheck,
+  BsLightningCharge,
+  BsCheckCircle,
+  BsXCircle,
+  BsPencil,
+  BsToggleOff,
+  BsToggleOn,
 } from "react-icons/bs";
 
-
 export default function WarrantyPlansComparisonTable({
-    plans,
-    onToggle,
-    onEdit
+  plans,
+  onToggle,
+  onEdit,
 }) {
+  const features = [
+    {
+      key: "covers_engine",
+      label: "Moteur",
+      icon: <BsShieldCheck />,
+    },
 
+    {
+      key: "covers_transmission",
+      label: "Transmission",
+      icon: <BsShieldCheck />,
+    },
 
-    const features = [
+    {
+      key: "covers_electronics",
+      label: "Électronique",
+      icon: <BsLightningCharge />,
+    },
 
-        {
-            key: "covers_engine",
-            label: "Moteur",
-            icon: <BsShieldCheck />
-        },
+    {
+      key: "covers_assistance",
+      label: "Assistance",
+      icon: <BsShieldCheck />,
+    },
 
-        {
-            key: "covers_transmission",
-            label: "Transmission",
-            icon: <BsShieldCheck />
-        },
+    {
+      key: "covers_wear_parts",
+      label: "Pièces d'usure",
+      icon: <BsShieldCheck />,
+    },
+  ];
 
-        {
-            key: "covers_electronics",
-            label: "Électronique",
-            icon: <BsLightningCharge />
-        },
+  const formatPlanType = (type) => {
+    if (!type) return "";
 
-        {
-            key: "covers_assistance",
-            label: "Assistance",
-            icon: <BsShieldCheck />
-        },
+    return type
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  };
 
-        {
-            key: "covers_wear_parts",
-            label: "Pièces d'usure",
-            icon: <BsShieldCheck />
-        },
-
-    ];
-
-
-
-    const formatPlanType = (type) => {
-
-        if (!type) return "";
-
-        return type
-            .replaceAll("_", " ")
-            .toLowerCase()
-            .replace(
-                /\b\w/g,
-                c => c.toUpperCase()
-            );
-
-    };
-
-
-
-    return (
-
-        <div className="table-responsive">
-
-
-            <table
-                className="
+  return (
+    <div className="table-responsive">
+      <table
+        className="
                 table
                 align-middle
                 text-center
@@ -82,467 +65,179 @@ export default function WarrantyPlansComparisonTable({
                 rounded-4
                 overflow-hidden
                 "
-            >
-
-
-                {/* =========================
+      >
+        {/* =========================
                     HEADER
                 ========================= */}
 
-                <thead className="table-dark">
+        <thead className="table-dark">
+          <tr>
+            <th className="text-start">Garanties</th>
 
+            {plans.map((plan) => (
+              <th key={plan.id}>
+                <div className="fw-bold fs-6">{plan.name}</div>
 
-                    <tr>
+                <div className="small mt-1">{plan.price} €</div>
 
+                <span
+                  className={
+                    plan.active
+                      ? "badge bg-success mt-2"
+                      : "badge bg-secondary mt-2"
+                  }
+                >
+                  {plan.active ? "Actif" : "Inactif"}
+                </span>
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-                        <th className="text-start">
-                            Garanties
-                        </th>
-
-
-
-                        {
-                            plans.map(plan => (
-
-                                <th key={plan.id}>
-
-
-                                    <div className="fw-bold fs-6">
-
-                                        {plan.name}
-
-                                    </div>
-
-
-
-                                    <div className="small mt-1">
-
-                                        {plan.price} €
-
-                                    </div>
-
-
-
-                                    <span
-                                        className={
-                                            plan.active
-                                            ?
-                                            "badge bg-success mt-2"
-                                            :
-                                            "badge bg-secondary mt-2"
-                                        }
-                                    >
-
-                                        {
-                                            plan.active
-                                            ?
-                                            "Actif"
-                                            :
-                                            "Inactif"
-                                        }
-
-
-                                    </span>
-
-
-                                </th>
-
-                            ))
-                        }
-
-
-                    </tr>
-
-
-                </thead>
-
-
-
-
-
-                <tbody>
-
-
-
-                    {/* =========================
+        <tbody>
+          {/* =========================
                         PLAN INFO
                     ========================= */}
 
+          <tr className="table-light">
+            <td className="text-start fw-semibold">Informations</td>
 
+            {plans.map((plan) => (
+              <td key={plan.id} className="small">
+                <div className="mb-2">
+                  <span className="text-muted">Type</span>
 
-                    <tr className="table-light">
+                  <br />
 
+                  <span className="badge bg-primary">
+                    {formatPlanType(plan.plan_type)}
+                  </span>
+                </div>
 
-                        <td className="text-start fw-semibold">
+                <div className="mb-2">
+                  <span className="text-muted">Durée</span>
 
-                            Informations
+                  <br />
 
-                        </td>
+                  <strong>{plan.duration_months} mois</strong>
+                </div>
 
+                <div>
+                  <span className="text-muted">Kilométrage</span>
 
+                  <br />
 
+                  {plan.mileage_limit
+                    ? `${plan.mileage_limit.toLocaleString()} km`
+                    : "Illimité"}
+                </div>
+              </td>
+            ))}
+          </tr>
 
-                        {
-                            plans.map(plan => (
-
-
-                                <td
-                                    key={plan.id}
-                                    className="small"
-                                >
-
-
-
-                                    <div className="mb-2">
-
-                                        <span className="text-muted">
-                                            Type
-                                        </span>
-
-
-                                        <br />
-
-
-                                        <span className="badge bg-primary">
-
-                                            {
-                                                formatPlanType(
-                                                    plan.plan_type
-                                                )
-                                            }
-
-                                        </span>
-
-
-                                    </div>
-
-
-
-
-
-                                    <div className="mb-2">
-
-                                        <span className="text-muted">
-
-                                            Durée
-
-                                        </span>
-
-
-                                        <br />
-
-
-                                        <strong>
-
-                                            {
-                                                plan.duration_months
-                                            }
-                                            {" "}
-                                            mois
-
-                                        </strong>
-
-
-                                    </div>
-
-
-
-
-
-                                    <div>
-
-
-                                        <span className="text-muted">
-
-                                            Kilométrage
-
-                                        </span>
-
-
-                                        <br />
-
-
-                                        {
-
-                                            plan.mileage_limit
-
-                                            ?
-
-                                            `${plan.mileage_limit.toLocaleString()} km`
-
-                                            :
-
-                                            "Illimité"
-
-                                        }
-
-
-                                    </div>
-
-
-
-                                </td>
-
-
-                            ))
-                        }
-
-
-
-                    </tr>
-
-
-
-
-
-
-
-                    {/* =========================
+          {/* =========================
                         FEATURES
                     ========================= */}
 
-
-
-                    {
-                        features.map(feature => (
-
-
-                            <tr key={feature.key}>
-
-
-                                <td
-                                    className="
+          {features.map((feature) => (
+            <tr key={feature.key}>
+              <td
+                className="
                                     text-start
                                     fw-semibold
                                     "
-                                >
-
-                                    <span
-                                        className="
+              >
+                <span
+                  className="
                                         text-primary
                                         me-2
                                         "
-                                    >
+                >
+                  {feature.icon}
+                </span>
 
-                                        {feature.icon}
+                {feature.label}
+              </td>
 
-                                    </span>
-
-
-                                    {feature.label}
-
-
-                                </td>
-
-
-
-
-
-
-                                {
-                                    plans.map(plan => (
-
-
-
-                                        <td key={plan.id}>
-
-
-                                            {
-                                                plan[feature.key]
-
-                                                ?
-
-                                                <BsCheckCircle
-                                                    className="
+              {plans.map((plan) => (
+                <td key={plan.id}>
+                  {plan[feature.key] ? (
+                    <BsCheckCircle
+                      className="
                                                     text-success
                                                     fs-5
                                                     "
-                                                />
-
-
-                                                :
-
-
-                                                <BsXCircle
-                                                    className="
+                    />
+                  ) : (
+                    <BsXCircle
+                      className="
                                                     text-danger
                                                     fs-5
                                                     "
-                                                />
+                    />
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
 
-                                            }
-
-
-                                        </td>
-
-
-
-                                    ))
-                                }
-
-
-
-
-
-                            </tr>
-
-
-                        ))
-                    }
-
-
-
-
-
-
-
-                    {/* =========================
+          {/* =========================
                         ACTIONS
                     ========================= */}
 
+          <tr>
+            <td></td>
 
-
-
-                    <tr>
-
-
-                        <td></td>
-
-
-
-
-                        {
-                            plans.map(plan => (
-
-
-                                <td key={plan.id}>
-
-
-                                    <div className="d-grid gap-2">
-
-
-
-                                        <button
-                                            className="
+            {plans.map((plan) => (
+              <td key={plan.id}>
+                <div className="d-grid gap-2">
+                  <button
+                    className="
                                             btn
                                             btn-outline-warning
                                             btn-sm
                                             "
-                                            onClick={() =>
-                                                onEdit(plan)
-                                            }
-                                        >
+                    onClick={() => onEdit(plan)}
+                  >
+                    <BsPencil className="me-1" />
+                    Modifier
+                  </button>
 
-                                            <BsPencil
-                                                className="me-1"
-                                            />
-
-                                            Modifier
-
-
-                                        </button>
-
-
-
-
-
-
-                                        <button
-
-                                            className={
-                                                plan.active
-
-                                                ?
-
-                                                `
+                  <button
+                    className={
+                      plan.active
+                        ? `
                                                 btn
                                                 btn-outline-danger
                                                 btn-sm
                                                 `
-
-                                                :
-
-                                                `
+                        : `
                                                 btn
                                                 btn-outline-success
                                                 btn-sm
                                                 `
-                                            }
+                    }
 
-
-                                            onClick={() =>
-                                                onToggle(
-                                                    plan.id,
-                                                    plan.active
-                                                )
-                                            }
-
-                                        >
-
-
-                                            {
-
-                                                plan.active
-
-                                                ?
-
-                                                <>
-
-                                                    <BsToggleOff
-                                                        className="me-1"
-                                                    />
-
-                                                    Désactiver
-
-                                                </>
-
-
-                                                :
-
-
-                                                <>
-
-                                                    <BsToggleOn
-                                                        className="me-1"
-                                                    />
-
-                                                    Activer
-
-                                                </>
-
-
-                                            }
-
-
-                                        </button>
-
-
-
-                                    </div>
-
-
-                                </td>
-
-
-                            ))
-                        }
-
-
-
-                    </tr>
-
-
-
-
-                </tbody>
-
-
-
-            </table>
-
-
-        </div>
-
-    );
-
+                    onClick={() => onToggle(plan.id, plan.active)}
+                  >
+                    {plan.active ? (
+                      <>
+                        <BsToggleOff className="me-1" />
+                        Désactiver
+                      </>
+                    ) : (
+                      <>
+                        <BsToggleOn className="me-1" />
+                        Activer
+                      </>
+                    )}
+                  </button>
+                </div>
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
 }

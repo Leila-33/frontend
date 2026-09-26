@@ -34,24 +34,14 @@ export default function LeadCard({
    * information manque dans la réponse de l'API.
    */
   const fullName =
-    [
-      lead?.first_name,
-      lead?.last_name,
-    ]
-      .filter(Boolean)
-      .join(" ") ||
+    [lead?.first_name, lead?.last_name].filter(Boolean).join(" ") ||
     "Prospect sans nom";
 
   /**
    * Nom du véhicule associé au lead.
    */
   const vehicleName =
-    [
-      lead?.vehicle?.brand,
-      lead?.vehicle?.model,
-    ]
-      .filter(Boolean)
-      .join(" ") ||
+    [lead?.vehicle?.brand, lead?.vehicle?.model].filter(Boolean).join(" ") ||
     "Véhicule non renseigné";
 
   /**
@@ -77,7 +67,6 @@ export default function LeadCard({
       "
     >
       <div className="card-body p-4">
-
         {/* =================================================
             INFORMATIONS DU LEAD
         ================================================= */}
@@ -128,9 +117,7 @@ export default function LeadCard({
               w-100
               mt-4
             "
-            onClick={() =>
-              onTakeLead?.(lead.id)
-            }
+            onClick={() => onTakeLead?.(lead.id)}
             disabled={loading}
           >
             {loading ? (
@@ -143,7 +130,6 @@ export default function LeadCard({
                   "
                   aria-hidden="true"
                 />
-
                 Attribution...
               </>
             ) : (
@@ -156,7 +142,6 @@ export default function LeadCard({
                   "
                   aria-hidden="true"
                 />
-
                 Prendre ce lead
               </>
             )}
@@ -174,14 +159,9 @@ export default function LeadCard({
  * il n'a pas besoin d'être exporté car il est uniquement
  * utilisé par `LeadCard`.
  */
-function LeadInformation({
-  fullName,
-  vehicleName,
-  formattedPrice,
-}) {
+function LeadInformation({ fullName, vehicleName, formattedPrice }) {
   return (
     <div>
-
       {/* =================================================
           PROSPECT
       ================================================= */}
@@ -218,9 +198,7 @@ function LeadInformation({
             {fullName}
           </h2>
 
-          <span className="text-muted small">
-            Prospect
-          </span>
+          <span className="text-muted small">Prospect</span>
         </div>
       </div>
 
@@ -229,7 +207,6 @@ function LeadInformation({
       ================================================= */}
 
       <div className="border-top pt-3">
-
         <div className="d-flex align-items-start gap-2 mb-2">
           <i
             className="
@@ -242,9 +219,7 @@ function LeadInformation({
           />
 
           <div className="min-w-0">
-            <div className="small text-muted">
-              Véhicule recherché
-            </div>
+            <div className="small text-muted">Véhicule recherché</div>
 
             <div
               className="
@@ -271,9 +246,7 @@ function LeadInformation({
             aria-hidden="true"
           />
 
-          <span className="fw-semibold">
-            {formattedPrice}
-          </span>
+          <span className="fw-semibold">{formattedPrice}</span>
         </div>
       </div>
     </div>

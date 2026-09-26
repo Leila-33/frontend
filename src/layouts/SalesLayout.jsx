@@ -20,25 +20,17 @@ import { useNotifications } from "../contexts/NotificationContext";
 // ==========================================================
 
 export default function SalesLayout() {
-
   // ========================================================
   // COMPTEURS COMMERCIAUX
   // ========================================================
 
-  const {
-    newLeadsCount,
-    myLeadsCount
-  } = useSalesNotifications();
-
+  const { newLeadsCount, myLeadsCount } = useSalesNotifications();
 
   // ========================================================
   // NOTIFICATIONS
   // ========================================================
 
-  const {
-    unreadNotificationCount
-  } = useNotifications();
-
+  const { unreadNotificationCount } = useNotifications();
 
   // ========================================================
   // SIDEBAR
@@ -53,7 +45,6 @@ export default function SalesLayout() {
       onClickLink={onClickLink}
     />
   );
-
 
   return (
     <DashboardLayout

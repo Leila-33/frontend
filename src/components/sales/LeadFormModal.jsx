@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { toast } from "react-toastify";
 
@@ -54,8 +50,7 @@ export default function LeadFormModal({
    * Permet notamment d'empêcher plusieurs soumissions
    * successives du formulaire.
    */
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // =====================================================
   // VALIDATION
@@ -73,43 +68,30 @@ export default function LeadFormModal({
   const validate = useCallback((data) => {
     const validationErrors = {};
 
-    const firstName =
-      data.first_name.trim();
+    const firstName = data.first_name.trim();
 
-    const lastName =
-      data.last_name.trim();
+    const lastName = data.last_name.trim();
 
-    const email =
-      data.email.trim();
+    const email = data.email.trim();
 
-    const phone =
-      data.phone.trim();
+    const phone = data.phone.trim();
 
     if (!firstName) {
-      validationErrors.first_name =
-        "Le prénom est obligatoire.";
+      validationErrors.first_name = "Le prénom est obligatoire.";
     }
 
     if (!lastName) {
-      validationErrors.last_name =
-        "Le nom est obligatoire.";
+      validationErrors.last_name = "Le nom est obligatoire.";
     }
 
     if (!email) {
-      validationErrors.email =
-        "L'email est obligatoire.";
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        email
-      )
-    ) {
-      validationErrors.email =
-        "Veuillez saisir une adresse email valide.";
+      validationErrors.email = "L'email est obligatoire.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      validationErrors.email = "Veuillez saisir une adresse email valide.";
     }
 
     if (!phone) {
-      validationErrors.phone =
-        "Le téléphone est obligatoire.";
+      validationErrors.phone = "Le téléphone est obligatoire.";
     }
 
     return validationErrors;
@@ -155,10 +137,7 @@ export default function LeadFormModal({
    * sans attendre la soumission.
    */
   const handleChange = (event) => {
-    const {
-      name,
-      value,
-    } = event.target;
+    const { name, value } = event.target;
 
     const updatedForm = {
       ...form,
@@ -191,12 +170,9 @@ export default function LeadFormModal({
       return;
     }
 
-    const validationErrors =
-      validate(form);
+    const validationErrors = validate(form);
 
-    if (
-      Object.keys(validationErrors).length > 0
-    ) {
+    if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
@@ -204,38 +180,28 @@ export default function LeadFormModal({
     try {
       setSubmitting(true);
 
-      const data = await apiFetch(
-        "/leads",
-        {
-          method: "POST",
-          body: {
-            vehicle_id: vehicleId,
+      const data = await apiFetch("/leads", {
+        method: "POST",
+        body: {
+          vehicle_id: vehicleId,
 
-            /**
-             * On nettoie les champs texte avant
-             * de les transmettre à l'API.
-             */
-            first_name:
-              form.first_name.trim(),
+          /**
+           * On nettoie les champs texte avant
+           * de les transmettre à l'API.
+           */
+          first_name: form.first_name.trim(),
 
-            last_name:
-              form.last_name.trim(),
+          last_name: form.last_name.trim(),
 
-            email:
-              form.email.trim(),
+          email: form.email.trim(),
 
-            phone:
-              form.phone.trim(),
+          phone: form.phone.trim(),
 
-            message:
-              form.message.trim(),
-          },
-        }
-      );
+          message: form.message.trim(),
+        },
+      });
 
-      toast.success(
-        "Votre demande a bien été envoyée."
-      );
+      toast.success("Votre demande a bien été envoyée.");
 
       /**
        * Informe immédiatement le composant parent
@@ -248,10 +214,7 @@ export default function LeadFormModal({
        */
       onClose();
     } catch (error) {
-      toast.error(
-        error?.message ||
-        "Erreur lors de l'envoi de votre demande."
-      );
+      toast.error(error?.message || "Erreur lors de l'envoi de votre demande.");
     } finally {
       setSubmitting(false);
     }
@@ -272,8 +235,7 @@ export default function LeadFormModal({
    * Le formulaire est valide lorsqu'aucune erreur
    * n'est actuellement présente.
    */
-  const isValid =
-    Object.keys(errors).length === 0;
+  const isValid = Object.keys(errors).length === 0;
 
   return (
     <>
@@ -293,7 +255,6 @@ export default function LeadFormModal({
       >
         <div className="modal-dialog modal-dialog-centered modal-lg">
           <div className="modal-content">
-
             {/* =============================================
                 EN-TÊTE
             ============================================= */}
@@ -308,8 +269,8 @@ export default function LeadFormModal({
                 </h2>
 
                 <p className="text-muted small mb-0">
-                  Laissez vos coordonnées pour être
-                  recontacté par un conseiller.
+                  Laissez vos coordonnées pour être recontacté par un
+                  conseiller.
                 </p>
               </div>
 
@@ -326,23 +287,15 @@ export default function LeadFormModal({
                 FORMULAIRE
             ============================================= */}
 
-            <form
-              onSubmit={handleSubmit}
-              noValidate
-            >
+            <form onSubmit={handleSubmit} noValidate>
               <div className="modal-body">
-
                 <div className="row g-3">
-
                   {/* =======================================
                       PRÉNOM
                   ======================================= */}
 
                   <div className="col-12 col-md-6">
-                    <label
-                      htmlFor="lead-first-name"
-                      className="form-label"
-                    >
+                    <label htmlFor="lead-first-name" className="form-label">
                       Prénom
                     </label>
 
@@ -351,22 +304,14 @@ export default function LeadFormModal({
                       type="text"
                       name="first_name"
                       className={`form-control ${
-                        errors.first_name
-                          ? "is-invalid"
-                          : ""
+                        errors.first_name ? "is-invalid" : ""
                       }`}
                       value={form.first_name}
                       onChange={handleChange}
                       autoComplete="given-name"
-                      aria-invalid={
-                        Boolean(
-                          errors.first_name
-                        )
-                      }
+                      aria-invalid={Boolean(errors.first_name)}
                       aria-describedby={
-                        errors.first_name
-                          ? "lead-first-name-error"
-                          : undefined
+                        errors.first_name ? "lead-first-name-error" : undefined
                       }
                     />
 
@@ -385,10 +330,7 @@ export default function LeadFormModal({
                   ======================================= */}
 
                   <div className="col-12 col-md-6">
-                    <label
-                      htmlFor="lead-last-name"
-                      className="form-label"
-                    >
+                    <label htmlFor="lead-last-name" className="form-label">
                       Nom
                     </label>
 
@@ -397,22 +339,14 @@ export default function LeadFormModal({
                       type="text"
                       name="last_name"
                       className={`form-control ${
-                        errors.last_name
-                          ? "is-invalid"
-                          : ""
+                        errors.last_name ? "is-invalid" : ""
                       }`}
                       value={form.last_name}
                       onChange={handleChange}
                       autoComplete="family-name"
-                      aria-invalid={
-                        Boolean(
-                          errors.last_name
-                        )
-                      }
+                      aria-invalid={Boolean(errors.last_name)}
                       aria-describedby={
-                        errors.last_name
-                          ? "lead-last-name-error"
-                          : undefined
+                        errors.last_name ? "lead-last-name-error" : undefined
                       }
                     />
 
@@ -431,10 +365,7 @@ export default function LeadFormModal({
                   ======================================= */}
 
                   <div className="col-12">
-                    <label
-                      htmlFor="lead-email"
-                      className="form-label"
-                    >
+                    <label htmlFor="lead-email" className="form-label">
                       Email
                     </label>
 
@@ -443,30 +374,19 @@ export default function LeadFormModal({
                       type="email"
                       name="email"
                       className={`form-control ${
-                        errors.email
-                          ? "is-invalid"
-                          : ""
+                        errors.email ? "is-invalid" : ""
                       }`}
                       value={form.email}
                       onChange={handleChange}
                       autoComplete="email"
-                      aria-invalid={
-                        Boolean(
-                          errors.email
-                        )
-                      }
+                      aria-invalid={Boolean(errors.email)}
                       aria-describedby={
-                        errors.email
-                          ? "lead-email-error"
-                          : undefined
+                        errors.email ? "lead-email-error" : undefined
                       }
                     />
 
                     {errors.email && (
-                      <div
-                        id="lead-email-error"
-                        className="invalid-feedback"
-                      >
+                      <div id="lead-email-error" className="invalid-feedback">
                         {errors.email}
                       </div>
                     )}
@@ -477,10 +397,7 @@ export default function LeadFormModal({
                   ======================================= */}
 
                   <div className="col-12">
-                    <label
-                      htmlFor="lead-phone"
-                      className="form-label"
-                    >
+                    <label htmlFor="lead-phone" className="form-label">
                       Téléphone
                     </label>
 
@@ -489,30 +406,19 @@ export default function LeadFormModal({
                       type="tel"
                       name="phone"
                       className={`form-control ${
-                        errors.phone
-                          ? "is-invalid"
-                          : ""
+                        errors.phone ? "is-invalid" : ""
                       }`}
                       value={form.phone}
                       onChange={handleChange}
                       autoComplete="tel"
-                      aria-invalid={
-                        Boolean(
-                          errors.phone
-                        )
-                      }
+                      aria-invalid={Boolean(errors.phone)}
                       aria-describedby={
-                        errors.phone
-                          ? "lead-phone-error"
-                          : undefined
+                        errors.phone ? "lead-phone-error" : undefined
                       }
                     />
 
                     {errors.phone && (
-                      <div
-                        id="lead-phone-error"
-                        className="invalid-feedback"
-                      >
+                      <div id="lead-phone-error" className="invalid-feedback">
                         {errors.phone}
                       </div>
                     )}
@@ -523,14 +429,8 @@ export default function LeadFormModal({
                   ======================================= */}
 
                   <div className="col-12">
-                    <label
-                      htmlFor="lead-message"
-                      className="form-label"
-                    >
-                      Message{" "}
-                      <span className="text-muted">
-                        (optionnel)
-                      </span>
+                    <label htmlFor="lead-message" className="form-label">
+                      Message <span className="text-muted">(optionnel)</span>
                     </label>
 
                     <textarea
@@ -554,7 +454,6 @@ export default function LeadFormModal({
               =========================================== */}
 
               <div className="modal-footer">
-
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
@@ -567,10 +466,7 @@ export default function LeadFormModal({
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={
-                    !isValid ||
-                    submitting
-                  }
+                  disabled={!isValid || submitting}
                 >
                   {submitting ? (
                     <>
@@ -582,7 +478,6 @@ export default function LeadFormModal({
                         "
                         aria-hidden="true"
                       />
-
                       Envoi en cours...
                     </>
                   ) : (
@@ -595,7 +490,6 @@ export default function LeadFormModal({
                         "
                         aria-hidden="true"
                       />
-
                       Envoyer ma demande
                     </>
                   )}
@@ -612,11 +506,7 @@ export default function LeadFormModal({
 
       <div
         className="modal-backdrop fade show"
-        onClick={
-          submitting
-            ? undefined
-            : onClose
-        }
+        onClick={submitting ? undefined : onClose}
         aria-hidden="true"
       />
     </>
