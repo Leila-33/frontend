@@ -1,11 +1,9 @@
 // config/api.js
+const API_URL = `${window.location.origin}/api`;
 
-export const API_URL =
+const WS_URL =
   window.location.protocol === "https:"
-    ? "https://api.mmotors.com/api"
-    : "http://localhost:8000/api";
+    ? `wss://${window.location.host}/api`
+    : `ws://${window.location.host}/api`;
 
-export const WS_URL =
-  window.location.protocol === "https:"
-    ? "wss://api.mmotors.com/api"
-    : "ws://localhost:8000/api";
+export { API_URL, WS_URL };

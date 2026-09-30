@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 import apiFetch from "../services/apiFetch";
 import { updateSupportTicketStatus } from "../services/supportTicketService";
+import { WS_URL } from "../config/api";
 
 /**
  * Hook centralisant la gestion d'un ticket SAV.
@@ -143,9 +144,7 @@ export default function useSupportTicket(id) {
     // -----------------------------------------------------
 
     const ws = new WebSocket(
-      `ws://localhost:8000/api/ws/support-tickets/${id}?token=${encodeURIComponent(
-        token
-      )}`
+      `${WS_URL}/ws/support-tickets/${id}?token=${encodeURIComponent(token)}`
     );
 
     wsRef.current = ws;
