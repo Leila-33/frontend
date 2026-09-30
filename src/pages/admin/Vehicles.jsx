@@ -144,7 +144,7 @@ export default function AdminVehicles() {
 
         const params = new URLSearchParams(cleanFilters);
 
-        const data = await apiFetch(`/admin/vehicles/?${params.toString()}`);
+        const data = await apiFetch(`/admin/vehicles?${params.toString()}`);
 
         setVehicles(data.items || []);
         setTotal(data.total || 0);
