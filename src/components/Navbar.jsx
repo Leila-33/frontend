@@ -224,9 +224,7 @@ export default function Navbar() {
                     NOTIFICATIONS
                 ------------------------------------------------ */}
 
-                <li className="nav-item d-flex align-items-center">
-                  <NotificationBell />
-                </li>
+                <NotificationBell />
 
                 {/* ------------------------------------------------
                     COMPTE

@@ -89,7 +89,6 @@ export function VehicleCard({ v, fetchVehicles, openModal }) {
    */
 
   const openAvailabilityModal = (event, vehicle) => {
-    console.log("l");
     event.stopPropagation();
 
     setAvailabilityVehicle(vehicle);

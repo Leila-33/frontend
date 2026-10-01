@@ -33,8 +33,6 @@ export default function useNotificationSocket(userId, onMessage) {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("WS EVENT TYPE:", data.type);
-          console.log("WS DATA:", data);
           onMessageRef.current?.(data);
         } catch (error) {
           console.error("Erreur parsing message WebSocket :", error);
