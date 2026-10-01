@@ -65,7 +65,7 @@ export default function DashboardLayout({
           CONTENU PRINCIPAL
           ==================================================== */}
 
-      <div className="flex-grow-1">
+      <div className="flex-grow-1 min-vw-0">
         {/* ==================================================
             BARRE MOBILE
             ================================================== */}

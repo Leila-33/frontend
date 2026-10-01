@@ -1,6 +1,5 @@
 import React from "react";
 import { useAuth } from "../../contexts/AuthContext";
-
 // ==========================================================
 // SIDEBAR GÉNÉRIQUE
 // ==========================================================
@@ -35,16 +34,15 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`bg-white border-end vh-100 p-3 d-flex flex-column ${
+      className={`sidebar bg-white border-end p-3 d-flex flex-column ${
         mobile ? "" : "d-none d-lg-flex"
       }`}
-      style={{ width: "280px" }}
     >
       {/* ======================================================
           EN-TÊTE
           ====================================================== */}
 
-      <div className="mb-4 px-2">
+      <div className="mb-4 px-2 flex-shrink-0">
         <h4 className="fw-bold mb-1">Mmotors</h4>
 
         <p className="text-muted small mb-0">{title}</p>
@@ -54,18 +52,20 @@ export default function Sidebar({
           NAVIGATION
           ====================================================== */}
 
-      <nav className="d-flex flex-column gap-1">{children}</nav>
+      <div className="sidebar-nav-wrapper">
+        <nav className="sidebar-nav d-flex flex-column gap-1">{children}</nav>
+      </div>
 
       {/* ======================================================
           INFORMATIONS UTILISATEUR
           ====================================================== */}
 
-      <div className="mt-auto pt-4">
+      <div className="mt-auto pt-4 flex-shrink-0">
         <div className="border rounded-4 p-3 bg-light">
           <div className="d-flex align-items-center gap-3">
             {/* Icône utilisateur */}
             <div
-              className="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center"
+              className="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style={{
                 width: 42,
                 height: 42,
@@ -74,7 +74,7 @@ export default function Sidebar({
               <i className={`bi ${userIcon}`} />
             </div>
 
-            {/* Nom et rôle */}
+            {/* Nom, rôle et email */}
             <div className="overflow-hidden">
               <div className="fw-semibold small text-truncate">
                 {displayName}
@@ -86,7 +86,6 @@ export default function Sidebar({
                 </div>
               )}
 
-              {/* Email réel de l'utilisateur connecté */}
               {user?.email && (
                 <div className="text-muted small text-truncate">
                   {user.email}

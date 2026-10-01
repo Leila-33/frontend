@@ -45,3 +45,86 @@
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
+
+/* ==========================================================
+   SIDEBAR
+   ========================================================== */
+
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+}
+
+
+/* ==========================================================
+   ZONE DE NAVIGATION
+   ========================================================== */
+
+.sidebar-nav-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+
+/* ==========================================================
+   NAVIGATION SCROLLABLE
+   ========================================================== */
+
+.sidebar-nav {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  /*
+   * Firefox
+   * La scrollbar est pratiquement invisible
+   * tant que l'utilisateur ne passe pas dessus.
+   */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+
+  /*
+   * Permet un défilement plus naturel sur les appareils tactiles.
+   */
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* ==========================================================
+   CHROME / EDGE / SAFARI
+   ========================================================== */
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+
+/* Apparition de la scrollbar au survol */
+
+.sidebar-nav:hover {
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.sidebar-nav:hover::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.sidebar-nav:hover::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
