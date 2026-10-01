@@ -133,7 +133,7 @@ export default function Vehicles() {
         // REQUÊTE API
         // =========================
 
-        const data = await apiFetch(`/vehicles/?${params.toString()}`);
+        const data = await apiFetch(`/vehicles?${params.toString()}`);
 
         // =========================
         // MISE À JOUR DES RÉSULTATS

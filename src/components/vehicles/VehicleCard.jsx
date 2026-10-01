@@ -107,7 +107,7 @@ export function VehicleCard({ v, fetchVehicles, openModal }) {
   };
 
   /* =======================================================
-     AFFICHAGE DE LA DISPONIBILITÉ D'UN VEHICULE EN VENTE (VISIBILITE CLIENT)
+     AFFICHAGE DE LA DISPONIBILITÉ D'UN VEHICULE (VISIBILITE CLIENT)
   ======================================================= */
 
   /**
@@ -120,14 +120,8 @@ export function VehicleCard({ v, fetchVehicles, openModal }) {
    * → affichage de l'information + interrupteur permettant
    *   de modifier la disponibilité.
    *
-   * La disponibilité commerciale n'est affichée que pour
-   * les véhicules proposés à la vente.
    */
   const renderAvailability = (vehicle) => {
-    if (vehicle.type !== "sale") {
-      return null;
-    }
-
     const isAvailable = vehicle.is_available;
 
     /* -------------------------------------------------------
