@@ -44,7 +44,7 @@ export default function VehicleDetail() {
   // AUTHENTIFICATION
   // =========================================================
 
-  const { isClient, isAuthenticated, isAdmin, user } = useAuth();
+  const { isClient, isAuthenticated, isAdmin, isEmployee, user } = useAuth();
   // =========================================================
   // ÉTAT DU VÉHICULE
   // =========================================================
@@ -516,8 +516,9 @@ export default function VehicleDetail() {
   // DISPONIBILITÉ À L'ACHAT OU A LA LOCATION
   // =========================================================
 
-  const isAvailable =
-    vehicle?.status === "PUBLISHED" && vehicle?.is_available === true;
+  const isPublished = vehicle?.status === "PUBLISHED";
+  const isAvailable = vehicle?.is_available === true;
+  const canBeProposed = isPublished && isAvailable;
 
   // =========================================================
   // LEAD COMMERCIAL
@@ -1169,13 +1170,20 @@ export default function VehicleDetail() {
     INDISPONIBILITÉ DU VÉHICULE
 ===================================================== */}
 
-            {!isAvailable && (
+            {!canBeProposed && (
               <div className="alert alert-warning mb-4" role="alert">
                 <i
                   className="bi bi-exclamation-triangle me-2"
                   aria-hidden="true"
                 />
-                Ce véhicule n'est actuellement pas disponible.
+
+                {isClient
+                  ? "Ce véhicule n'est actuellement plus disponible à la vente ou à la location."
+                  : isEmployee
+                    ? "Votre rôle ne vous permet pas d'entamer un processus pour ce véhicule."
+                    : isAdmin
+                      ? "Ce véhicule n'est pas disponible ou n'est pas publié."
+                      : "Ce véhicule n'est actuellement pas disponible."}
               </div>
             )}
 
@@ -1183,7 +1191,7 @@ export default function VehicleDetail() {
     ACTIONS VENTE - CLIENT CONNECTÉ
 ===================================================== */}
 
-            {vehicle.type === "sale" && isAvailable && (
+            {vehicle.type === "sale" && canBeProposed && (
               <div className="d-grid gap-2 mb-4">
                 {/* =================================================
         JE SUIS INTÉRESSÉ
@@ -1331,19 +1339,21 @@ export default function VehicleDetail() {
 
             {isClient && (
               <div className="d-grid gap-2 mb-4" aria-live="polite">
-                {/* =================================================
+                {/* =========================================================
         ACTION PRINCIPALE - LOCATION
-    ================================================= */}
+    ========================================================= */}
 
                 {vehicle.type === "rent" && (
                   <button
                     type="button"
                     className="btn btn-dark py-3"
-                    disabled={!isAvailable}
+                    disabled={!canBeProposed && !applicationId}
                     onClick={handlePrimaryAction}
                   >
                     <i
-                      className="bi bi-calendar-check me-2"
+                      className={`bi ${
+                        applicationId ? "bi-folder2-open" : "bi-calendar-check"
+                      } me-2`}
                       aria-hidden="true"
                     />
 
@@ -1353,9 +1363,9 @@ export default function VehicleDetail() {
                   </button>
                 )}
 
-                {/* =================================================
+                {/* =========================================================
         ESSAI ROUTIER - VENTE
-    ================================================= */}
+    ========================================================= */}
 
                 {vehicle.type === "sale" &&
                   (loadingExistingTestDrive ? (
@@ -1375,13 +1385,17 @@ export default function VehicleDetail() {
                     <button
                       type="button"
                       className="btn btn-primary py-3"
-                      disabled={!isAvailable}
+                      disabled={!canBeProposed && !existingTestDrive}
                       onClick={() => {
                         setShowTestDriveModal(true);
                       }}
                     >
                       <i
-                        className="bi bi-calendar-check me-2"
+                        className={`bi ${
+                          existingTestDrive
+                            ? "bi-calendar2-check"
+                            : "bi-calendar-check"
+                        } me-2`}
                         aria-hidden="true"
                       />
 

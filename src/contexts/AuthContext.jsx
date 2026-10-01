@@ -293,7 +293,7 @@ export const useAuth = () => {
   // if (isEmployee) {
   //     ...
   // }
-  const isEmployee = isAdmin || isSalesAgent || isSavAgent;
+  const isEmployee = isSalesAgent || isSavAgent;
 
   // ==========================================================
   // RETOUR DU HOOK
