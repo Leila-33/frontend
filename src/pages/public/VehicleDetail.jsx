@@ -1061,7 +1061,37 @@ export default function VehicleDetail() {
             {vehicle.description && (
               <p className="text-muted">{vehicle.description}</p>
             )}
+            {/* =================================================
+    ÉQUIPEMENTS
+================================================= */}
 
+            {vehicle.equipments && vehicle.equipments.length > 0 && (
+              <div className="mt-4">
+                <h5 className="fw-bold mb-3">
+                  <i className="bi bi-list-check me-2" />
+                  Équipements
+                </h5>
+
+                <div className="d-flex flex-wrap gap-2">
+                  {vehicle.equipments.map((equipment, index) => (
+                    <span
+                      key={equipment.id || index}
+                      className="
+            badge
+            bg-light
+            text-dark
+            border
+            px-3
+            py-2
+          "
+                    >
+                      <i className="bi bi-check2 me-1 text-success" />
+                      {equipment.name || equipment}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* =================================================
                 OPTIONS DE LOCATION
             ================================================= */}

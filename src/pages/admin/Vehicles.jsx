@@ -265,6 +265,51 @@ export default function AdminVehicles() {
       validationErrors.engine_type = "Type de moteur requis";
     }
 
+    /* ---------- Équipements ---------- */
+
+    if (!data.equipments?.trim()) {
+      validationErrors.equipments = "Au moins un équipement est requis";
+    } else {
+      const equipments = data.equipments
+        .split(",")
+        .map((equipment) => equipment.trim());
+
+      /*
+       * Vérifie qu'aucun équipement vide n'est présent.
+       *
+       * Exemple invalide :
+       * "GPS,,Climatisation"
+       * "GPS, ,Climatisation"
+       */
+      if (equipments.some((equipment) => !equipment)) {
+        validationErrors.equipments = "Chaque équipement doit être renseigné";
+      }
+
+      /*
+       * Vérifie la longueur de chaque équipement.
+       */
+      if (equipments.some((equipment) => equipment.length > 100)) {
+        validationErrors.equipments =
+          "Un équipement ne peut pas dépasser 100 caractères";
+      }
+
+      /*
+       * Vérifie les doublons sans tenir compte
+       * des majuscules/minuscules.
+       *
+       * Exemple invalide :
+       * "GPS, Climatisation, GPS"
+       */
+      const normalizedEquipments = equipments.map((equipment) =>
+        equipment.toLowerCase()
+      );
+
+      if (new Set(normalizedEquipments).size !== normalizedEquipments.length) {
+        validationErrors.equipments =
+          "Un même équipement ne peut pas être ajouté plusieurs fois";
+      }
+    }
+
     /* ---------- Garantie ---------- */
 
     /*
@@ -303,22 +348,12 @@ export default function AdminVehicles() {
 
     let newValue = value;
 
-    /*
-     * Le champ équipements est saisi sous forme de texte
-     * séparé par des virgules, mais envoyé à l'API sous
-     * forme de tableau.
-     */
-    if (name === "equipments") {
-      newValue = value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-
     const updatedForm = {
       ...form,
       [name]: newValue,
     };
+
+    setForm(updatedForm);
 
     /* =====================================================
        LOCATION → PAS DE GARANTIE
@@ -554,6 +589,10 @@ export default function AdminVehicles() {
       /* =====================================================
          2. CONSTRUCTION DU PAYLOAD
       ===================================================== */
+      const equipments = (form.equipments || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
       const payload = {
         brand: form.brand.trim(),
@@ -575,7 +614,7 @@ export default function AdminVehicles() {
         warranty_plan_id:
           form.type === "sale" ? form.warranty_plan_id || null : null,
 
-        equipments: form.equipments || [],
+        equipments: equipments.length > 0 ? equipments : [],
 
         included_options: form.type === "rent" ? form.included_options : [],
 
@@ -1027,7 +1066,34 @@ export default function AdminVehicles() {
                       onChange={handleChange}
                     />
                   </div>
+                  {/* =================================================
+                          ÉQUIPEMENTS
+                      ================================================= */}
 
+                  <div className="col-12">
+                    <label className="form-label">Équipements</label>
+
+                    <textarea
+                      name="equipments"
+                      className={`form-control ${
+                        errors.equipments ? "is-invalid" : ""
+                      }`}
+                      rows="3"
+                      placeholder="Ex. Climatisation, GPS, Caméra de recul, Régulateur de vitesse..."
+                      value={form.equipments || ""}
+                      onChange={handleChange}
+                    />
+
+                    <div className="form-text">
+                      Séparez les équipements par des virgules.
+                    </div>
+
+                    {errors.equipments && (
+                      <div className="invalid-feedback">
+                        {errors.equipments}
+                      </div>
+                    )}
+                  </div>
                   {/* =================================================
                       GARANTIE
                   ================================================= */}
