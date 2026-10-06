@@ -5,32 +5,39 @@ import { WS_URL } from "../config/api";
 // lorsque la connexion WebSocket est interrompue.
 const RECONNECT_DELAY = 3000;
 
-
-export default function useNotificationSocket(onMessage) {
+export default function useNotificationSocket(
+  onMessage,
+  enabled = true
+) {
   // Référence vers la dernière version du callback.
-  // Cela permet de recevoir les nouvelles fonctions onMessage
-  // sans recréer la connexion WebSocket à chaque changement.
+  // Cela évite de recréer la connexion WebSocket
+  // lorsque la fonction onMessage change.
   const onMessageRef = useRef(onMessage);
 
-  // Met à jour la référence du callback lorsque celui-ci change.
+  // Met à jour la référence du callback.
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
 
   useEffect(() => {
+    // Si l'utilisateur n'est pas authentifié,
+    // aucune connexion WebSocket ne doit être créée.
+    if (!enabled) {
+      return;
+    }
+
     // Référence vers la connexion WebSocket courante.
     let ws = null;
 
-    // Référence vers le timer utilisé pour la reconnexion.
+    // Référence vers le timer de reconnexion.
     let reconnectTimer = null;
 
-    // Indique si la connexion doit continuer à fonctionner.
-    // Passe à false lors du démontage du composant.
+    // Indique si le WebSocket doit continuer
+    // à fonctionner et à se reconnecter.
     let shouldReconnect = true;
 
     const connect = () => {
-      // Évite de créer une nouvelle connexion
-      // après le démontage du composant.
+      // Évite une nouvelle connexion après le nettoyage.
       if (!shouldReconnect) {
         return;
       }
@@ -38,17 +45,17 @@ export default function useNotificationSocket(onMessage) {
       console.log("WS CONNECTING");
 
       /*
-       * Le navigateur envoie automatiquement le cookie
-       * HttpOnly access_token lors de la connexion WebSocket.
+       * Le navigateur envoie automatiquement les cookies
+       * associés au domaine lors de la connexion WebSocket.
        *
-       * Le backend récupère ensuite l'utilisateur à partir
-       * de ce token.
+       * Le backend peut ainsi récupérer l'utilisateur
+       * à partir du cookie HttpOnly access_token.
        */
       ws = new WebSocket(
         `${WS_URL}/ws/notifications`
       );
 
-      // Connexion WebSocket établie avec succès.
+      // Connexion WebSocket établie.
       ws.onopen = () => {
         console.log("WS connected");
       };
@@ -56,17 +63,12 @@ export default function useNotificationSocket(onMessage) {
       // Réception d'un message envoyé par le backend.
       ws.onmessage = (event) => {
         try {
-          // Les messages WebSocket sont reçus sous forme de texte.
-          // Ils sont convertis en objet JavaScript.
           const data = JSON.parse(event.data);
 
-          console.log("WS message", data);
-
-          // Utilise toujours la dernière version du callback.
+          // Utilise toujours la dernière version
+          // du callback fourni par le composant.
           onMessageRef.current?.(data);
         } catch (error) {
-          // Gestion d'un message qui ne contient pas
-          // un JSON valide.
           console.error(
             "Erreur parsing message WebSocket :",
             error
@@ -74,12 +76,15 @@ export default function useNotificationSocket(onMessage) {
         }
       };
 
-      // Gestion des erreurs de connexion WebSocket.
+      // Gestion des erreurs WebSocket.
       ws.onerror = (error) => {
-        console.error("WS error", error);
+        console.error(
+          "WS error",
+          error
+        );
       };
 
-      // Appelé lorsque la connexion est fermée.
+      // Connexion fermée.
       ws.onclose = (event) => {
         console.log(
           "WS closed",
@@ -87,26 +92,26 @@ export default function useNotificationSocket(onMessage) {
           event.reason
         );
 
-        // Si le composant a été démonté,
+        // Si le hook est désactivé ou démonté,
         // aucune reconnexion ne doit être effectuée.
         if (!shouldReconnect) {
           return;
         }
 
-        // Attend quelques secondes avant de tenter
-        // une nouvelle connexion.
+        // Programme une nouvelle tentative.
         reconnectTimer = setTimeout(() => {
           connect();
         }, RECONNECT_DELAY);
       };
     };
 
-    // Première connexion WebSocket.
+    // Première connexion.
     connect();
 
-    // Nettoyage lors du démontage du composant.
+    // Nettoyage lorsque :
+    // - le composant est démonté ;
+    // - enabled passe à false.
     return () => {
-      // Empêche toute nouvelle tentative de reconnexion.
       shouldReconnect = false;
 
       // Annule une éventuelle reconnexion programmée.
@@ -114,12 +119,12 @@ export default function useNotificationSocket(onMessage) {
         clearTimeout(reconnectTimer);
       }
 
-      // Ferme proprement la connexion WebSocket active.
+      // Ferme la connexion active.
       if (ws) {
         ws.close();
       }
 
       console.log("WS cleanup");
     };
-  }, []);
+  }, [enabled]);
 }

@@ -40,7 +40,7 @@ export default function UserSidebar({
           ====================================================== */}
 
       <SidebarNavItem to="/dashboard" icon="bi bi-grid" onClick={onClickLink}>
-        Dashboard
+        Tableau de bord
       </SidebarNavItem>
 
       {/* ======================================================

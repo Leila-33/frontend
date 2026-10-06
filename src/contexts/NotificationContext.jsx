@@ -282,102 +282,116 @@ export function NotificationProvider({ children }) {
    * Ouvre une connexion WebSocket pour l'utilisateur connecté
    * et permet de recevoir les mises à jour en temps réel.
    */
-  useNotificationSocket((data) => {
-    switch (data.type) {
-      // ====================================================
-      // NOUVELLE NOTIFICATION
-      // ====================================================
+  const handleSocketEvent = useCallback(
+    (data) => {
+      switch (data.type) {
+        // ====================================================
+        // NOUVELLE NOTIFICATION
+        // ====================================================
 
-      case "notification":
-        setNotifications((prev) => [data.notification, ...prev]);
-        break;
+        case "notification":
+          setNotifications((prev) => [data.notification, ...prev]);
+          break;
 
-      // ====================================================
-      // NOUVEAUX LEADS DISPONIBLES
-      // ====================================================
+        // ====================================================
+        // NOUVEAUX LEADS DISPONIBLES
+        // ====================================================
 
-      case "NEW_LEADS_UPDATED": {
-        const count = Number(data.count ?? 0);
-        setNewLeadsCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+        case "NEW_LEADS_UPDATED": {
+          const count = Number(data.count ?? 0);
 
-        break;
+          setNewLeadsCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+
+          break;
+        }
+
+        // ====================================================
+        // LEADS DU COMMERCIAL
+        // ====================================================
+
+        case "MY_LEADS_UPDATED": {
+          const count = Number(data.count ?? 0);
+
+          setMyLeadsCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+
+          break;
+        }
+
+        // ====================================================
+        // NOTIFICATIONS NON LUES
+        // ====================================================
+
+        case "UNREAD_NOTIFICATIONS_UPDATED": {
+          const count = Number(data.count ?? 0);
+
+          setUnreadNotificationCount(
+            Number.isFinite(count) ? Math.max(0, count) : 0
+          );
+
+          break;
+        }
+
+        // ====================================================
+        // TICKETS NON LUS
+        // ====================================================
+
+        case "UNREAD_TICKETS_UPDATED": {
+          const count = Number(data.count ?? 0);
+
+          setUnreadTicketCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+
+          break;
+        }
+
+        // ====================================================
+        // DEVIS NÉCESSITANT UNE ACTION
+        // ====================================================
+
+        case "QUOTE_UPDATED": {
+          const count = Number(data.count ?? 0);
+
+          setActionRequiredQuoteCount(
+            Number.isFinite(count) ? Math.max(0, count) : 0
+          );
+
+          break;
+        }
+
+        // ====================================================
+        // ESSAIS ROUTIERS EN ATTENTE
+        // ====================================================
+
+        case "TEST_DRIVE_PENDING_UPDATED": {
+          const count = Number(data.count ?? 0);
+
+          setPendingTestDriveCount(
+            Number.isFinite(count) ? Math.max(0, count) : 0
+          );
+
+          break;
+        }
+
+        // ====================================================
+        // ÉVÉNEMENT INCONNU
+        // ====================================================
+
+        default:
+          // Les événements inconnus sont ignorés.
+          break;
       }
+    },
+    [
+      setNotifications,
+      setNewLeadsCount,
+      setMyLeadsCount,
+      setUnreadNotificationCount,
+      setUnreadTicketCount,
+      setActionRequiredQuoteCount,
+      setPendingTestDriveCount,
+    ]
+  );
 
-      // ====================================================
-      // LEADS DU COMMERCIAL
-      // ====================================================
-
-      case "MY_LEADS_UPDATED": {
-        const count = Number(data.count ?? 0);
-
-        setMyLeadsCount(Number.isFinite(count) ? Math.max(0, count) : 0);
-
-        break;
-      }
-
-      // ====================================================
-      // NOTIFICATIONS NON LUES
-      // ====================================================
-
-      case "UNREAD_NOTIFICATIONS_UPDATED": {
-        const count = Number(data.count ?? 0);
-
-        setUnreadNotificationCount(
-          Number.isFinite(count) ? Math.max(0, count) : 0
-        );
-
-        break;
-      }
-
-      // ====================================================
-      // TICKETS NON LUS
-      // ====================================================
-
-      case "UNREAD_TICKETS_UPDATED": {
-        const count = Number(data.count ?? 0);
-
-        setUnreadTicketCount(Number.isFinite(count) ? Math.max(0, count) : 0);
-
-        break;
-      }
-
-      // ====================================================
-      // DEVIS NÉCESSITANT UNE ACTION
-      // ====================================================
-
-      case "QUOTE_UPDATED": {
-        const count = Number(data.count ?? 0);
-
-        setActionRequiredQuoteCount(
-          Number.isFinite(count) ? Math.max(0, count) : 0
-        );
-
-        break;
-      }
-
-      // ====================================================
-      // ESSAIS ROUTIERS EN ATTENTE
-      // ====================================================
-
-      case "TEST_DRIVE_PENDING_UPDATED": {
-        const count = Number(data.count ?? 0);
-
-        setPendingTestDriveCount(
-          Number.isFinite(count) ? Math.max(0, count) : 0
-        );
-
-        break;
-      }
-
-      // ====================================================
-      // ÉVÉNEMENT INCONNU
-      // ====================================================
-
-      default:
-        // Les événements inconnus sont ignorés.
-        break;
-    }
-  });
+  useNotificationSocket(handleSocketEvent, !!user);
 
   // ==========================================================
   // INITIALISATION
