@@ -1,352 +1,501 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  useCallback,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 import apiFetch from "../services/apiFetch";
-
-// Hook permettant d'établir une connexion WebSocket
-// avec le backend.
-//
-// Il permet de recevoir en temps réel certains événements
-// liés aux notifications, aux tickets et aux devis.
 import useNotificationSocket from "../hooks/useNotificationSocket";
-
 import { toast } from "react-toastify";
-
-// Permet de récupérer l'utilisateur actuellement connecté.
-//
-// Le NotificationProvider utilise son identifiant pour
-// savoir pour quel utilisateur ouvrir la connexion WebSocket.
 import { useAuth } from "./AuthContext";
 
 // ============================================================
 // CONTEXT
 // ============================================================
 
-// Création du contexte global des notifications.
-//
-// Les composants placés sous NotificationProvider pourront
-// accéder aux notifications et aux fonctions exposées
-// dans le Provider.
 const NotificationContext = createContext();
+
+// ============================================================
+// PROVIDER
+// ============================================================
 
 export function NotificationProvider({ children }) {
   // ==========================================================
   // UTILISATEUR CONNECTÉ
   // ==========================================================
 
-  // Récupération de l'utilisateur depuis AuthContext.
-  const { user, isClient, isAdmin, isSavAgent } = useAuth();
+  const { user, isClient, isAdmin, isSalesAgent, isSavAgent } = useAuth();
 
   // ==========================================================
   // ÉTATS
   // ==========================================================
 
+  // ----------------------------------------------------------
+  // NOTIFICATIONS
+  // ----------------------------------------------------------
+
   // Liste des notifications de l'utilisateur.
   const [notifications, setNotifications] = useState([]);
 
   // Nombre total de notifications non lues.
-  // Cette valeur est notamment être utilisée dans
-  // le badge de la cloche de notification.
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
-  // Nombre de tickets support contenant de nouveaux
-  // éléments non lus.
-  // Est utilisé dans le badge du menu SAV.
+  // ----------------------------------------------------------
+  // LEADS COMMERCIAUX
+  // ----------------------------------------------------------
+
+  // Nombre de nouveaux leads disponibles pour les commerciaux.
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
+
+  // Nombre de leads actuellement attribués
+  // au commercial connecté.
+  const [myLeadsCount, setMyLeadsCount] = useState(0);
+  // ----------------------------------------------------------
+  // SUPPORT
+  // ----------------------------------------------------------
+
+  // Nombre de tickets support contenant
+  // de nouveaux éléments non lus.
   const [unreadTicketCount, setUnreadTicketCount] = useState(0);
 
-  // Nombre de devis nécessitant une action de l'utilisateur.
-  //
-  // Par exemple, lorsqu'un commercial envoie un devis
-  // au client, celui-ci peut devoir l'accepter ou le refuser.
+  // ----------------------------------------------------------
+  // DEVIS
+  // ----------------------------------------------------------
+
+  // Nombre de devis nécessitant une action du client.
   const [actionRequiredQuoteCount, setActionRequiredQuoteCount] = useState(0);
 
-  // Nombre d'essais routiers nécessitant une action de l'administrateur.
+  // ----------------------------------------------------------
+  // ESSAIS ROUTIERS
+  // ----------------------------------------------------------
+
+  // Nombre d'essais routiers nécessitant
+  // une action de l'administrateur.
   const [pendingTestDriveCount, setPendingTestDriveCount] = useState(0);
+
   // ==========================================================
   // CHARGER LES NOTIFICATIONS
   // ==========================================================
 
-  // Récupère toutes les notifications de l'utilisateur
-  // depuis l'API FastAPI.
-  const fetchNotifications = async () => {
+  /**
+   * Récupère toutes les notifications de l'utilisateur
+   * actuellement connecté.
+   */
+  const fetchNotifications = useCallback(async () => {
     try {
       const res = await apiFetch("/notifications/me");
-      setNotifications(res.notifications);
-    } catch {
+
+      setNotifications(res.notifications ?? []);
+    } catch (error) {
+      console.error("Erreur lors du chargement des notifications :", error);
+
       toast.error("Erreur chargement notifications");
     }
-  };
+  }, []);
 
   // ==========================================================
   // CHARGER LE NOMBRE DE NOTIFICATIONS NON LUES
   // ==========================================================
 
-  const loadUnreadCount = async () => {
+  /**
+   * Récupère le nombre de notifications non lues.
+   */
+  const loadUnreadCount = useCallback(async () => {
     try {
       const data = await apiFetch("/notifications/unread-count");
-      setUnreadNotificationCount(data.count);
-    } catch {
+
+      const count = Number(data?.count ?? 0);
+
+      setUnreadNotificationCount(
+        Number.isFinite(count) ? Math.max(0, count) : 0
+      );
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement du nombre de notifications non lues :",
+        error
+      );
+
       toast.error("Erreur chargement nombre de notifications non lues");
     }
-  };
+  }, []);
+
+  // ==========================================================
+  // CHARGER LE NOMBRE DE LEADS COMMERCIAUX
+  // ==========================================================
+
+  /**
+   * Récupère les statistiques CRM du commercial connecté.
+   *
+   * L'API retourne notamment :
+   * - le nombre de nouveaux leads disponibles ;
+   * - le nombre de leads actuellement attribués au commercial.
+   */
+  const fetchSalesStats = useCallback(async () => {
+    try {
+      const data = await apiFetch("/agent/leads/notifications", {
+        method: "GET",
+      });
+
+      const newLeadsCount = Number(data?.new_leads_count ?? 0);
+
+      const myLeadsCount = Number(data?.my_leads_count ?? 0);
+
+      setNewLeadsCount(
+        Number.isFinite(newLeadsCount) ? Math.max(0, newLeadsCount) : 0
+      );
+
+      setMyLeadsCount(
+        Number.isFinite(myLeadsCount) ? Math.max(0, myLeadsCount) : 0
+      );
+    } catch (error) {
+      console.error("Erreur lors du chargement des statistiques CRM :", error);
+
+      toast.error("Impossible de charger les données CRM.");
+    }
+  }, []);
 
   // ==========================================================
   // CHARGER LE NOMBRE DE TICKETS NON LUS
   // ==========================================================
 
-  const fetchUnreadTickets = async () => {
+  /**
+   * Récupère le nombre de tickets support
+   * contenant de nouveaux éléments non lus.
+   */
+  const fetchUnreadTickets = useCallback(async () => {
     try {
       const res = await apiFetch("/support-tickets/unread-count");
-      setUnreadTicketCount(res.count);
-    } catch (err) {
-      console.error(err);
+
+      const count = Number(res?.count ?? 0);
+
+      setUnreadTicketCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+    } catch (error) {
+      console.error("Erreur lors du chargement des tickets non lus :", error);
     }
-  };
+  }, []);
 
   // ==========================================================
-  // CHARGER LES DEVIS NÉCESSITANT UNE ACTION
+  // CHARGER LE NOMBRE DE DEVIS NÉCESSITANT UNE ACTION
   // ==========================================================
 
-  const fetchActionRequiredQuotes = async () => {
+  /**
+   * Récupère le nombre de devis nécessitant
+   * une action de la part du client.
+   */
+  const fetchActionRequiredQuotes = useCallback(async () => {
     try {
       const res = await apiFetch("/quotes/action-required-count");
-      // Mise à jour du compteur.
-      setActionRequiredQuoteCount(res.count);
-    } catch (err) {
-      // Affichage de l'erreur dans la console.
-      console.error(err);
+
+      const count = Number(res?.count ?? 0);
+
+      setActionRequiredQuoteCount(
+        Number.isFinite(count) ? Math.max(0, count) : 0
+      );
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement des devis nécessitant une action :",
+        error
+      );
     }
-  };
+  }, []);
+
+  // ==========================================================
+  // CHARGER LE NOMBRE D'ESSAIS ROUTIERS EN ATTENTE
+  // ==========================================================
+
+  /**
+   * Récupère le nombre d'essais routiers
+   * nécessitant une action de l'administrateur.
+   */
+  const fetchPendingTestDriveCount = useCallback(async () => {
+    try {
+      const res = await apiFetch("/admin/test-drives/pending-count");
+
+      const count = Number(res?.count ?? 0);
+
+      setPendingTestDriveCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement des essais routiers en attente :",
+        error
+      );
+    }
+  }, []);
 
   // ==========================================================
   // MARQUER UNE NOTIFICATION COMME LUE
   // ==========================================================
 
-  const markAsRead = async (id) => {
+  const markAsRead = useCallback(async (id) => {
     try {
       await apiFetch(`/notifications/${id}/read`, {
         method: "PATCH",
       });
+
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === id
+        prev.map((notification) =>
+          notification.id === id
             ? {
-                ...n,
+                ...notification,
                 status: "READ",
               }
-            : n
+            : notification
         )
       );
-    } catch {
+    } catch (error) {
+      console.error("Erreur lors de la lecture de la notification :", error);
+
       toast.error("Erreur lecture notification");
     }
-  };
+  }, []);
 
   // ==========================================================
   // SUPPRIMER UNE NOTIFICATION
   // ==========================================================
 
-  const handleDelete = async (id) => {
+  const handleDelete = useCallback(async (id) => {
     try {
       await apiFetch(`/notifications/${id}`, {
         method: "DELETE",
       });
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-    } catch {
+
+      setNotifications((prev) =>
+        prev.filter((notification) => notification.id !== id)
+      );
+    } catch (error) {
+      console.error(
+        "Erreur lors de la suppression de la notification :",
+        error
+      );
+
       toast.error("Erreur suppression notification");
     }
-  };
-
-  // ==========================================================
-  // CHARGER LE NOMBRE D'ESSAIS ROUTIERS NECESSITANT UNE ACTION
-  // ==========================================================
-  const fetchPendingTestDriveCount = async () => {
-    try {
-      const res = await apiFetch("/admin/test-drives/pending-count");
-
-      setPendingTestDriveCount(res.count);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  }, []);
 
   // ==========================================================
   // WEBSOCKET
   // ==========================================================
 
-  // Ouverture et gestion de la connexion WebSocket.
-  //
-  // user?.id :
-  //
-  // - si user existe → son id est transmis
-  // - si user est null → undefined
-  //
-  // Le WebSocket permet de recevoir des événements
-  // du backend en temps réel, sans devoir interroger
-  // constamment l'API.
-  useNotificationSocket(
-    user?.id,
+  /**
+   * Ouvre une connexion WebSocket pour l'utilisateur connecté
+   * et permet de recevoir les mises à jour en temps réel.
+   */
+  useNotificationSocket((data) => {
+    switch (data.type) {
+      // ====================================================
+      // NOUVELLE NOTIFICATION
+      // ====================================================
 
-    // Fonction appelée lorsqu'un événement
-    // est reçu depuis le WebSocket.
-    (data) => {
-      // "data.type" indique quel type d'événement
-      // le backend vient d'envoyer.
-      switch (data.type) {
-        // ====================================================
-        // NOUVELLE NOTIFICATION
-        // ====================================================
+      case "notification":
+        setNotifications((prev) => [data.notification, ...prev]);
+        break;
 
-        case "notification":
-          // Ajout de la nouvelle notification
-          // au début de la liste.
-          setNotifications((prev) => [data.notification, ...prev]);
+      // ====================================================
+      // NOUVEAUX LEADS DISPONIBLES
+      // ====================================================
 
-          break;
+      case "NEW_LEADS_UPDATED": {
+        const count = Number(data.count ?? 0);
+        setNewLeadsCount(Number.isFinite(count) ? Math.max(0, count) : 0);
 
-        // ====================================================
-        // COMPTEUR DE NOTIFICATIONS NON LUES MIS À JOUR
-        // ====================================================
-        case "UNREAD_NOTIFICATIONS_UPDATED":
-          setUnreadNotificationCount(data.count);
-
-          break;
-
-        // ====================================================
-        // COMPTEUR DE TICKETS MIS À JOUR
-        // ====================================================
-        case "UNREAD_TICKETS_UPDATED":
-          setUnreadTicketCount(data.count);
-
-          break;
-
-        // ====================================================
-        // COMPTEUR DE DEVIS NECESSITANT UNE ACTION MIS À JOUR
-        // ====================================================
-
-        case "QUOTE_UPDATED":
-          setActionRequiredQuoteCount(data.count);
-
-          break;
-
-        // ====================================================
-        // COMPTEUR D'ESSAIS ROUTIERS NECESSITANT UNE ACTION
-        // ====================================================
-        case "TEST_DRIVE_PENDING_UPDATED":
-          setPendingTestDriveCount(data.count);
-          break;
-
-        // ====================================================
-        // ÉVÉNEMENT INCONNU
-        // ====================================================
-
-        default:
-          // Si le backend envoie un type que le frontend
-          // ne connaît pas encore, on ne fait rien.
-          break;
+        break;
       }
+
+      // ====================================================
+      // LEADS DU COMMERCIAL
+      // ====================================================
+
+      case "MY_LEADS_UPDATED": {
+        const count = Number(data.count ?? 0);
+
+        setMyLeadsCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+
+        break;
+      }
+
+      // ====================================================
+      // NOTIFICATIONS NON LUES
+      // ====================================================
+
+      case "UNREAD_NOTIFICATIONS_UPDATED": {
+        const count = Number(data.count ?? 0);
+
+        setUnreadNotificationCount(
+          Number.isFinite(count) ? Math.max(0, count) : 0
+        );
+
+        break;
+      }
+
+      // ====================================================
+      // TICKETS NON LUS
+      // ====================================================
+
+      case "UNREAD_TICKETS_UPDATED": {
+        const count = Number(data.count ?? 0);
+
+        setUnreadTicketCount(Number.isFinite(count) ? Math.max(0, count) : 0);
+
+        break;
+      }
+
+      // ====================================================
+      // DEVIS NÉCESSITANT UNE ACTION
+      // ====================================================
+
+      case "QUOTE_UPDATED": {
+        const count = Number(data.count ?? 0);
+
+        setActionRequiredQuoteCount(
+          Number.isFinite(count) ? Math.max(0, count) : 0
+        );
+
+        break;
+      }
+
+      // ====================================================
+      // ESSAIS ROUTIERS EN ATTENTE
+      // ====================================================
+
+      case "TEST_DRIVE_PENDING_UPDATED": {
+        const count = Number(data.count ?? 0);
+
+        setPendingTestDriveCount(
+          Number.isFinite(count) ? Math.max(0, count) : 0
+        );
+
+        break;
+      }
+
+      // ====================================================
+      // ÉVÉNEMENT INCONNU
+      // ====================================================
+
+      default:
+        // Les événements inconnus sont ignorés.
+        break;
     }
-  );
+  });
 
   // ==========================================================
   // INITIALISATION
   // ==========================================================
 
-  // Cet effet est exécuté :
-  //
-  // - au montage du Provider
-  // - lorsque "user" change
-  //
-  // Le tableau [user] signifie que l'effet dépend
-  // de l'utilisateur connecté.
   useEffect(() => {
-    // Si aucun utilisateur n'est connecté,
-    // on ne charge aucune donnée personnelle.
+    // Aucun chargement de données personnelles
+    // lorsqu'aucun utilisateur n'est connecté.
     if (!user) {
       return;
     }
 
-    // ========================================================
-    // CHARGEMENT INITIAL
-    // ========================================================
+    // --------------------------------------------------------
+    // NOTIFICATIONS
+    // --------------------------------------------------------
 
-    // Chargement de toutes les notifications.
     fetchNotifications();
-
-    // Chargement du nombre de notifications non lues.
     loadUnreadCount();
 
-    // ========================================================
-    // TICKETS
-    // ========================================================
+    // --------------------------------------------------------
+    // LEADS COMMERCIAUX
+    // --------------------------------------------------------
 
-    // Les clients et les agents SAV peuvent avoir
-    // des tickets à consulter.
+    if (isSalesAgent) {
+      fetchSalesStats();
+    }
+
+    // --------------------------------------------------------
+    // TICKETS SUPPORT
+    // --------------------------------------------------------
+
     if (isClient || isSavAgent) {
       fetchUnreadTickets();
     }
 
-    // ========================================================
+    // --------------------------------------------------------
     // DEVIS
-    // ========================================================
+    // --------------------------------------------------------
 
-    // Seul le client doit être informé des devis
-    // nécessitant une action de sa part.
     if (isClient) {
       fetchActionRequiredQuotes();
     }
 
-    // ========================================================
+    // --------------------------------------------------------
     // ESSAIS ROUTIERS
-    // ========================================================
+    // --------------------------------------------------------
 
-    // Seul l'administrateur doit voir le compteur
-    // des essais routiers nécessitant une action.
     if (isAdmin) {
       fetchPendingTestDriveCount();
     }
-  }, [user, isClient, isSavAgent, isAdmin]);
+  }, [
+    user,
+    isClient,
+    isAdmin,
+    isSalesAgent,
+    isSavAgent,
+    fetchNotifications,
+    loadUnreadCount,
+    fetchSalesStats,
+    fetchUnreadTickets,
+    fetchActionRequiredQuotes,
+    fetchPendingTestDriveCount,
+  ]);
 
   // ==========================================================
   // CONTEXT PROVIDER
   // ==========================================================
 
-  // Les données et fonctions placées dans "value"
-  // deviennent accessibles à tous les composants
-  // enfants du NotificationProvider.
   return (
     <NotificationContext.Provider
       value={{
-        // Liste des notifications.
-        notifications,
+        // ------------------------------------------------------
+        // NOTIFICATIONS
+        // ------------------------------------------------------
 
-        // Nombre de notifications non lues.
+        notifications,
         unreadNotificationCount,
 
-        // Nombre de tickets non lus.
+        // ------------------------------------------------------
+        // LEADS COMMERCIAUX
+        // ------------------------------------------------------
+
+        newLeadsCount,
+        myLeadsCount,
+
+        // ------------------------------------------------------
+        // SUPPORT
+        // ------------------------------------------------------
+
         unreadTicketCount,
 
-        // Nombre de devis nécessitant une action.
+        // ------------------------------------------------------
+        // DEVIS
+        // ------------------------------------------------------
+
         actionRequiredQuoteCount,
+
+        // ------------------------------------------------------
+        // ESSAIS ROUTIERS
+        // ------------------------------------------------------
 
         pendingTestDriveCount,
 
-        // Fonctions permettant aux composants
-        // de déclencher des opérations.
+        // ------------------------------------------------------
+        // FONCTIONS
+        // ------------------------------------------------------
+
         fetchNotifications,
-
+        loadUnreadCount,
+        fetchSalesStats,
         fetchUnreadTickets,
-
         fetchActionRequiredQuotes,
+        fetchPendingTestDriveCount,
 
         markAsRead,
-
         handleDelete,
-
-        fetchPendingTestDriveCount,
       }}
     >
-      {/* Tous les composants enfants peuvent maintenant
-          accéder au NotificationContext. */}
       {children}
     </NotificationContext.Provider>
   );
@@ -356,22 +505,8 @@ export function NotificationProvider({ children }) {
 // HOOK PERSONNALISÉ
 // ============================================================
 
-// Permet aux composants d'utiliser facilement
-// le NotificationContext.
-//
-// Au lieu d'écrire :
-//
-// useContext(NotificationContext)
-//
-// on pourra simplement écrire :
-//
-// useNotifications()
-//
-// Exemple :
-//
-// const {
-//   notifications,
-//   unreadNotificationCount,
-//   markAsRead
-// } = useNotifications();
+/**
+ * Permet aux composants d'accéder facilement
+ * au NotificationContext.
+ */
 export const useNotifications = () => useContext(NotificationContext);

@@ -837,130 +837,117 @@ export default function VehicleDetail() {
             {vehicle.type === "sale" && vehicle.warranty_plan && (
               <div
                 className="
-                  card
-                  border-0
-                  shadow-sm
-                  rounded-4
-                  mb-4
-                "
+      card
+      border-0
+      shadow-sm
+      rounded-4
+      mb-4
+    "
               >
                 <div className="card-body">
-                  {/* En-tête garantie */}
+                  {/* =========================
+          EN-TÊTE
+          ========================= */}
 
                   <div
                     className="
-                      d-flex
-                      align-items-center
-                      mb-3
-                    "
+          d-flex
+          align-items-center
+          mb-3
+        "
                   >
                     <div
                       className="
-                        bg-success-subtle
-                        text-success
-                        rounded-circle
-                        d-flex
-                        align-items-center
-                        justify-content-center
-                        me-2
-                      "
+            bg-success-subtle
+            text-success
+            rounded-circle
+            d-flex
+            align-items-center
+            justify-content-center
+            me-2
+          "
                       style={{
                         width: 40,
                         height: 40,
                       }}
                     >
-                      <i
-                        className="
-                          bi
-                          bi-shield-check
-                          fs-5
-                        "
-                      />
+                      <i className="bi bi-shield-check fs-5" />
                     </div>
 
                     <div>
                       <h5 className="fw-bold mb-0">Garantie incluse</h5>
 
                       <small className="text-muted">
-                        Protection du véhicule
+                        Une protection incluse avec ce véhicule
                       </small>
                     </div>
                   </div>
 
-                  {/* Nom de la garantie */}
+                  {/* =========================
+          NOM DE LA GARANTIE
+          ========================= */}
 
-                  <div className="fw-semibold mb-2">
+                  <div className="fw-semibold mb-3">
                     {vehicle.warranty_plan.name}
                   </div>
 
-                  {/* Durée / kilométrage */}
+                  {/* =========================
+          DURÉE / KILOMÉTRAGE
+          ========================= */}
 
-                  <div
-                    className="
-                      row
-                      g-2
-                      small
-                      text-muted
-                    "
-                  >
+                  <div className="row g-3 small">
                     <div className="col-6">
-                      <i
-                        className="
-                          bi
-                          bi-calendar-check
-                          me-1
-                        "
-                      />
+                      <div className="text-muted mb-1">
+                        <i className="bi bi-calendar-check me-1" />
+                        Durée de la garantie
+                      </div>
 
-                      {vehicle.warranty_plan.duration_months}
-                      {" mois"}
+                      <div className="fw-semibold">
+                        {vehicle.warranty_plan.duration_months} mois
+                      </div>
                     </div>
 
                     {vehicle.warranty_plan.mileage_limit && (
                       <div className="col-6">
-                        <i
-                          className="
-                            bi
-                            bi-speedometer2
-                            me-1
-                          "
-                        />
+                        <div className="text-muted mb-1">
+                          <i className="bi bi-speedometer2 me-1" />
+                          Kilométrage couvert
+                        </div>
 
-                        {Number(
-                          vehicle.warranty_plan.mileage_limit
-                        ).toLocaleString("fr-FR")}
-
-                        {" km"}
+                        <div className="fw-semibold">
+                          {Number(
+                            vehicle.warranty_plan.mileage_limit
+                          ).toLocaleString("fr-FR")}{" "}
+                          km
+                        </div>
                       </div>
                     )}
                   </div>
 
                   <hr />
 
-                  {/* Éléments couverts */}
+                  {/* =========================
+          ÉLÉMENTS COUVERTS
+          ========================= */}
+
+                  <div className="small text-muted mb-2">Éléments couverts</div>
 
                   <div
                     className="
-                      d-flex
-                      flex-wrap
-                      gap-2
-                    "
+          d-flex
+          flex-wrap
+          gap-2
+        "
                   >
                     {vehicle.warranty_plan.covers_engine && (
                       <span
                         className="
-                          badge
-                          bg-success-subtle
-                          text-success
-                        "
+              badge
+              bg-success-subtle
+              text-success
+            "
                       >
-                        <i
-                          className="
-                            bi
-                            bi-check-circle
-                            me-1
-                          "
-                        />
+                        <i className="bi bi-check-circle me-1" />
                         Moteur
                       </span>
                     )}
@@ -968,18 +955,12 @@ export default function VehicleDetail() {
                     {vehicle.warranty_plan.covers_transmission && (
                       <span
                         className="
-                          badge
-                          bg-success-subtle
-                          text-success
-                        "
+              badge
+              bg-success-subtle
+              text-success
+            "
                       >
-                        <i
-                          className="
-                            bi
-                            bi-check-circle
-                            me-1
-                          "
-                        />
+                        <i className="bi bi-check-circle me-1" />
                         Transmission
                       </span>
                     )}
@@ -987,18 +968,12 @@ export default function VehicleDetail() {
                     {vehicle.warranty_plan.covers_electronics && (
                       <span
                         className="
-                          badge
-                          bg-success-subtle
-                          text-success
-                        "
+              badge
+              bg-success-subtle
+              text-success
+            "
                       >
-                        <i
-                          className="
-                            bi
-                            bi-check-circle
-                            me-1
-                          "
-                        />
+                        <i className="bi bi-check-circle me-1" />
                         Électronique
                       </span>
                     )}
@@ -1006,18 +981,12 @@ export default function VehicleDetail() {
                     {vehicle.warranty_plan.covers_assistance && (
                       <span
                         className="
-                          badge
-                          bg-success-subtle
-                          text-success
-                        "
+              badge
+              bg-success-subtle
+              text-success
+            "
                       >
-                        <i
-                          className="
-                            bi
-                            bi-check-circle
-                            me-1
-                          "
-                        />
+                        <i className="bi bi-check-circle me-1" />
                         Assistance
                       </span>
                     )}
@@ -1066,7 +1035,7 @@ export default function VehicleDetail() {
 ================================================= */}
 
             {vehicle.equipments && vehicle.equipments.length > 0 && (
-              <div className="mt-4">
+              <div className="mt-4 mb-4">
                 <h5 className="fw-bold mb-3">
                   <i className="bi bi-list-check me-2" />
                   Équipements

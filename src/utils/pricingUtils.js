@@ -127,8 +127,9 @@ export const computePricing = (
     ? Math.max(0, Number(form?.duration_months ?? 36))
     : 0;
 
-  const downPayment = isSale ? Math.max(0, Number(form?.down_payment ?? 0)) : 0;
-
+const downPayment = isSale
+  ? Number(form?.down_payment)
+  : null;
   const discount = isSale ? Math.max(0, Number(form?.discount ?? 0)) : 0;
 
   const normalizedTradeInValue = isSale

@@ -53,7 +53,7 @@ export default function UserSidebar({
         onClick={onClickLink}
       >
         <span className="d-flex align-items-center gap-2">
-          Mes essais
+          Mes essais routiers
           {pendingTestDrives > 0 && (
             <span className="badge bg-primary rounded-pill">
               {pendingTestDrives}

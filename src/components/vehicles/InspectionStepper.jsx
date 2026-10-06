@@ -153,7 +153,7 @@ export default function InspectionStepper({
     [vehicleId]
   );
 
-  useNotificationSocket(user?.id, handleSocketEvent);
+  useNotificationSocket(handleSocketEvent);
 
   // ===================================================
   // STATUTS CALCULÉS

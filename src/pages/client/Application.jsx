@@ -504,8 +504,8 @@ export default function Application() {
         e.financial =
           "L'apport et la reprise ne peuvent pas dépasser le prix du véhicule";
       }
-      if (pricing.downPayment < 0) {
-        e.down_payment = "Apport invalide";
+      if (pricing.downPayment <= 0) {
+        e.down_payment = "L'apport doit être supérieur à 0";
       }
 
       if (pricing.totalPrice > 0 && pricing.downPayment > pricing.totalPrice) {
@@ -847,37 +847,6 @@ export default function Application() {
       // =========================
       // FINANCEMENT
       // =========================
-
-      const financingPayload = pricing.isSale
-        ? {
-            down_payment: pricing.downPayment,
-            duration_months: pricing.durationMonths,
-          }
-        : null;
-
-      // =========================
-      // REPRISE DE VÉHICULE
-      // =========================
-
-      // La reprise est disponible uniquement
-      // pour une vente et si l'utilisateur l'a activée.
-      const tradeInPayload =
-        pricing.isSale && form.trade_in_enabled
-          ? {
-              enabled: true,
-              estimated_value: tradeInValue,
-              brand: form.trade_brand,
-              model: form.trade_model,
-              year: Number(form.trade_year),
-              mileage: Number(form.trade_mileage),
-              condition: form.trade_condition,
-            }
-          : null;
-
-      // =========================
-      // PAYLOAD COMMUN
-      // =========================
-
       const payload = {
         // =========================
         // IDENTIFICATION
@@ -910,21 +879,7 @@ export default function Application() {
         // OPTIONS
         // =========================
 
-        // Les options ne sont disponibles
-        // que pour une location.
         selected_option_ids: pricing.isRent ? form.optionsSelected || [] : [],
-
-        // =========================
-        // FINANCEMENT
-        // =========================
-
-        financing: financingPayload,
-
-        // =========================
-        // REPRISE
-        // =========================
-
-        trade_in: tradeInPayload,
 
         // =========================
         // LOCATION
@@ -939,11 +894,27 @@ export default function Application() {
         // =========================
 
         ...(pricing.isSale && {
+          financing: {
+            down_payment: Number(pricing.downPayment),
+            duration_months: Number(form.duration_months),
+          },
+
+          trade_in: form.trade_in_enabled
+            ? {
+                enabled: true,
+                estimated_value: Number(tradeInValue),
+                brand: form.trade_brand,
+                model: form.trade_model,
+                year: Number(form.trade_year),
+                mileage: Number(form.trade_mileage),
+                condition: form.trade_condition,
+              }
+            : null,
+
           employment_status: form.employment_status,
 
-          monthly_income: Number(form.monthly_income || 0),
-
-          monthly_expenses: Number(form.monthly_expenses || 0),
+          monthly_income: Number(form.monthly_income),
+          monthly_expenses: Number(form.monthly_expenses),
         }),
 
         // =========================

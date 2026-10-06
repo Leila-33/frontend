@@ -3,7 +3,6 @@ import React from "react";
 import DashboardLayout from "./DashboardLayout";
 import SalesSidebar from "../components/layout/sidebars/SalesSidebar";
 
-import useSalesNotifications from "../hooks/useSalesNotifications";
 import { useNotifications } from "../contexts/NotificationContext";
 
 // ==========================================================
@@ -21,16 +20,11 @@ import { useNotifications } from "../contexts/NotificationContext";
 
 export default function SalesLayout() {
   // ========================================================
-  // COMPTEURS COMMERCIAUX
+  // COMPTEURS COMMERCIAUX ET NOTIFICATIONS
   // ========================================================
 
-  const { newLeadsCount, myLeadsCount } = useSalesNotifications();
-
-  // ========================================================
-  // NOTIFICATIONS
-  // ========================================================
-
-  const { unreadNotificationCount } = useNotifications();
+  const { newLeadsCount, myLeadsCount, unreadNotificationCount } =
+    useNotifications();
 
   // ========================================================
   // SIDEBAR
