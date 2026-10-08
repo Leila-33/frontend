@@ -183,6 +183,8 @@ export default function InspectionStepper({
   // Le véhicule est déjà publié.
   const isPublished = vehicle?.status === "PUBLISHED";
 
+  // Le véhicule est vendu
+  const isSold = vehicle?.status === "SOLD";
   // ===================================================
   // CONDITIONS D'ACTION
   // ===================================================
@@ -382,7 +384,10 @@ export default function InspectionStepper({
     if (step.waiting) {
       return <span className="text-muted small">En attente</span>;
     }
-
+    // Véhicule vendu : aucune étape à démarrer.
+    if (isSold) {
+      return null;
+    }
     // Étape disponible.
     return <span className="text-warning small">Prête à démarrer</span>;
   };
@@ -569,6 +574,7 @@ export default function InspectionStepper({
                   <PublicationContent
                     finalCheckDone={finalCheckDone}
                     isPublished={isPublished}
+                    isSold={isSold}
                     canPublish={canPublishVehicle}
                     onPublish={publishVehicle}
                     loading={actionLoading === "publish"}
@@ -923,6 +929,7 @@ function FinalCheckContent({
 function PublicationContent({
   finalCheckDone,
   isPublished,
+  isSold,
   canPublish,
   onPublish,
   loading,
@@ -935,6 +942,18 @@ function PublicationContent({
     return (
       <p className="text-muted small mt-3 mb-0">
         La validation finale est nécessaire avant de publier le véhicule.
+      </p>
+    );
+  }
+
+  // -----------------------------------------------
+  // VÉHICULE VENDU
+  // -----------------------------------------------
+
+  if (isSold) {
+    return (
+      <p className="text-warning small mt-3 mb-0">
+        Le véhicule a été vendu et ne peut plus être publié.
       </p>
     );
   }
