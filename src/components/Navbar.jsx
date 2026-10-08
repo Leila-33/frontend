@@ -1,42 +1,69 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import NotificationBell from "./NotificationBell";
+import "../styles/Navbar.css";
 
 // ==========================================================
 // NAVBAR PRINCIPALE
 // ==========================================================
-// Cette navbar centralise :
-// - l'identité Mmotors
-// - le menu responsive
-// - les notifications
-// - l'accès au compte
-// - la déconnexion
-//
-// Les liens affichés dans "Mon compte" sont adaptés
-// au rôle de l'utilisateur connecté.
+// - identité M-Motors
+// - navigation publique
+// - notifications
+// - compte utilisateur
+// - menu responsive
+// - navigation selon le rôle
 // ==========================================================
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+
+  const accountRef = useRef(null);
 
   const isAuthenticated = Boolean(user);
 
   // ==========================================================
-  // FERMER LE MENU MOBILE
+  // FERMETURE DU MENU
   // ==========================================================
 
   const closeMenu = () => {
     setIsOpen(false);
+    setIsAccountOpen(false);
   };
 
   // ==========================================================
-  // DASHBOARD SELON LE RÔLE
+  // FERMETURE DU DROPDOWN AU CLIC EXTÉRIEUR
   // ==========================================================
-  // On garde cette logique directement dans la navbar afin
-  // d'éviter une dépendance supplémentaire vers roles.js.
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (accountRef.current && !accountRef.current.contains(event.target)) {
+        setIsAccountOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // ==========================================================
+  // FERMER LE MENU LORS D'UN CHANGEMENT DE PAGE
+  // ==========================================================
+
+  useEffect(() => {
+    setIsOpen(false);
+    setIsAccountOpen(false);
+  }, [location.pathname]);
+
+  // ==========================================================
+  // DASHBOARD SELON LE RÔLE
   // ==========================================================
 
   const getDashboardPath = () => {
@@ -68,20 +95,60 @@ export default function Navbar() {
     "Mon compte";
 
   // ==========================================================
-  // LIENS DU COMPTE SELON LE RÔLE
+  // RÔLE À AFFICHER
+  // ==========================================================
+
+  const getRoleLabel = () => {
+    switch (user?.role) {
+      case "admin":
+        return "Administrateur";
+
+      case "sales_agent":
+        return "Commercial";
+
+      case "sav_agent":
+        return "Agent SAV";
+
+      case "client":
+      default:
+        return "Client";
+    }
+  };
+
+  const roleLabel = getRoleLabel();
+
+  // ==========================================================
+  // INITIALISATION AVATAR
+  // ==========================================================
+
+  const getInitials = () => {
+    const firstInitial = user?.first_name?.charAt(0);
+    const lastInitial = user?.last_name?.charAt(0);
+
+    if (firstInitial || lastInitial) {
+      return `${firstInitial || ""}${lastInitial || ""}`.toUpperCase();
+    }
+
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+
+    return "M";
+  };
+
+  const initials = getInitials();
+
+  // ==========================================================
+  // LIENS COMPTE SELON LE RÔLE
   // ==========================================================
 
   const getAccountLinks = () => {
     switch (user?.role) {
-      // ------------------------------------------------------
-      // ADMINISTRATEUR
-      // ------------------------------------------------------
-
       case "admin":
         return [
           {
             to: dashboardPath,
-            label: "Dashboard",
+            label: "Tableau de bord",
             icon: "bi-grid",
           },
           {
@@ -96,15 +163,11 @@ export default function Navbar() {
           },
         ];
 
-      // ------------------------------------------------------
-      // COMMERCIAL
-      // ------------------------------------------------------
-
       case "sales_agent":
         return [
           {
             to: dashboardPath,
-            label: "Dashboard",
+            label: "Tableau de bord",
             icon: "bi-grid",
           },
           {
@@ -113,21 +176,17 @@ export default function Navbar() {
             icon: "bi-person-lines-fill",
           },
           {
-            to: "/sales/vehicles",
+            to: "/vehicles",
             label: "Véhicules",
             icon: "bi-car-front",
           },
         ];
 
-      // ------------------------------------------------------
-      // SAV
-      // ------------------------------------------------------
-
       case "sav_agent":
         return [
           {
             to: dashboardPath,
-            label: "Dashboard",
+            label: "Tableau de bord",
             icon: "bi-grid",
           },
           {
@@ -137,16 +196,12 @@ export default function Navbar() {
           },
         ];
 
-      // ------------------------------------------------------
-      // CLIENT
-      // ------------------------------------------------------
-
       case "client":
       default:
         return [
           {
             to: dashboardPath,
-            label: "Dashboard",
+            label: "Tableau de bord",
             icon: "bi-grid",
           },
           {
@@ -165,199 +220,254 @@ export default function Navbar() {
 
   const accountLinks = getAccountLinks();
 
+  // ==========================================================
+  // NAVIGATION ACTIVE
+  // ==========================================================
+
+  const isActive = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+
+    return location.pathname.startsWith(path);
+  };
+
+  // ==========================================================
+  // DÉCONNEXION
+  // ==========================================================
+
+  const handleLogout = () => {
+    logout();
+    closeMenu();
+  };
+
+  // ==========================================================
+  // RENDU
+  // ==========================================================
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
-      <div className="container">
-        {/* ==================================================
-            LOGO
-        ================================================== */}
-
-        <Link
-          className="navbar-brand d-flex align-items-center gap-2 fw-bold"
-          to="/"
-          onClick={closeMenu}
-        >
-          <span
-            className="d-flex align-items-center justify-content-center bg-white text-dark rounded-3"
-            style={{
-              width: 36,
-              height: 36,
-            }}
-          >
-            <i className="bi bi-car-front-fill" />
-          </span>
-
-          <span>Mmotors</span>
-        </Link>
-
-        {/* ==================================================
-            BOUTON MOBILE
-        ================================================== */}
-
-        <button
-          type="button"
-          className="navbar-toggler border-0 shadow-none"
-          onClick={() => setIsOpen((previous) => !previous)}
-          aria-expanded={isOpen}
-          aria-controls="main-navbar"
-          aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
-        >
-          <span className="navbar-toggler-icon" />
-        </button>
-
-        {/* ==================================================
-            MENU PRINCIPAL
-        ================================================== */}
-
-        <div
-          id="main-navbar"
-          className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
-        >
-          <ul className="navbar-nav ms-auto align-items-center gap-2">
+    <header className="mm-navbar-wrapper">
+      <nav className="mm-navbar">
+        <div className="container">
+          <div className="mm-navbar-inner">
             {/* ==================================================
-                UTILISATEUR CONNECTÉ
+                LOGO
             ================================================== */}
 
-            {isAuthenticated && (
-              <>
-                {/* ------------------------------------------------
-                    NOTIFICATIONS
-                ------------------------------------------------ */}
+            <Link
+              to="/"
+              className="mm-navbar-brand"
+              onClick={closeMenu}
+              aria-label="M-Motors - Accueil"
+            >
+              <span className="mm-navbar-logo">
+                <i className="bi bi-car-front-fill" />
+              </span>
 
-                <NotificationBell />
+              <span className="mm-navbar-brand-text">
+                <strong>M-MOTORS</strong>
+                <small>Vente • Location • Financement</small>
+              </span>
+            </Link>
 
-                {/* ------------------------------------------------
-                    COMPTE
-                ------------------------------------------------ */}
+            {/* ==================================================
+                BOUTON MOBILE
+            ================================================== */}
 
-                <li className="nav-item dropdown">
-                  <button
-                    type="button"
-                    className="btn btn-dark d-flex align-items-center gap-2 px-3 py-2 rounded-3"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    {/* Avatar */}
+            <button
+              type="button"
+              className={`mm-navbar-toggle ${isOpen ? "is-open" : ""}`}
+              onClick={() => setIsOpen((previous) => !previous)}
+              aria-expanded={isOpen}
+              aria-controls="main-navbar"
+              aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
 
-                    <span
-                      className="d-flex align-items-center justify-content-center bg-secondary rounded-circle"
-                      style={{
-                        width: 34,
-                        height: 34,
-                      }}
-                    >
-                      <i className="bi bi-person-fill" />
-                    </span>
+            {/* ==================================================
+                CONTENU NAVBAR
+            ================================================== */}
 
-                    {/* Nom */}
+            <div
+              id="main-navbar"
+              className={`mm-navbar-collapse ${isOpen ? "is-open" : ""}`}
+            >
+              {/* ==================================================
+                  NAVIGATION PRINCIPALE
+              ================================================== */}
 
-                    <span className="d-none d-md-inline text-start">
-                      <span className="d-block small fw-semibold">
-                        {userName}
-                      </span>
+              <div className="mm-navbar-main-links">
+                <Link
+                  to="/"
+                  className={`mm-navbar-link ${isActive("/") ? "active" : ""}`}
+                  onClick={closeMenu}
+                >
+                  <span>Accueil</span>
+                </Link>
 
-                      <span className="d-block text-white-50 small">
-                        Mon compte
-                      </span>
-                    </span>
+                <Link
+                  to="/vehicles"
+                  className={`mm-navbar-link ${
+                    isActive("/vehicles") ? "active" : ""
+                  }`}
+                  onClick={closeMenu}
+                >
+                  <span>Véhicules</span>
+                </Link>
+              </div>
 
-                    <i className="bi bi-chevron-down small" />
-                  </button>
+              {/* ==================================================
+                  ACTIONS
+              ================================================== */}
 
-                  {/* ------------------------------------------------
-                      MENU DROPDOWN
-                  ------------------------------------------------ */}
+              <div className="mm-navbar-actions">
+                {isAuthenticated ? (
+                  <>
+                    {/* ------------------------------------------------
+                        NOTIFICATIONS
+                    ------------------------------------------------ */}
 
-                  <ul className="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 p-2">
-                    {/* Informations utilisateur */}
+                    <div className="mm-navbar-notification">
+                      <NotificationBell />
+                    </div>
 
-                    <li className="px-3 py-2">
-                      <div className="fw-semibold">{userName}</div>
+                    {/* ------------------------------------------------
+                        COMPTE
+                    ------------------------------------------------ */}
 
-                      {user?.email && (
-                        <div className="text-muted small text-truncate">
-                          {user.email}
-                        </div>
-                      )}
-                    </li>
-
-                    <li>
-                      <hr className="dropdown-divider" />
-                    </li>
-
-                    {/* Liens du rôle */}
-
-                    {accountLinks.map((item) => (
-                      <li key={item.to}>
-                        <Link
-                          className="dropdown-item rounded-3 py-2"
-                          to={item.to}
-                          onClick={closeMenu}
-                        >
-                          <i className={`bi ${item.icon} me-2`} />
-
-                          {item.label}
-                        </Link>
-                      </li>
-                    ))}
-
-                    {/* Profil */}
-
-                    <li>
-                      <hr className="dropdown-divider" />
-                    </li>
-
-                    {/* Déconnexion */}
-
-                    <li>
+                    <div className="mm-account-wrapper" ref={accountRef}>
                       <button
                         type="button"
-                        className="dropdown-item rounded-3 py-2 text-danger"
-                        onClick={() => {
-                          logout();
-                          closeMenu();
-                        }}
+                        className={`mm-account-trigger ${
+                          isAccountOpen ? "is-open" : ""
+                        }`}
+                        onClick={() =>
+                          setIsAccountOpen((previous) => !previous)
+                        }
+                        aria-expanded={isAccountOpen}
+                        aria-haspopup="menu"
                       >
-                        <i className="bi bi-box-arrow-right me-2" />
-                        Déconnexion
+                        <span className="mm-account-avatar">{initials}</span>
+
+                        <span className="mm-account-summary">
+                          <strong>{userName}</strong>
+                          <small>{roleLabel}</small>
+                        </span>
+
+                        <i
+                          className={`bi bi-chevron-down mm-account-chevron ${
+                            isAccountOpen ? "rotate" : ""
+                          }`}
+                        />
                       </button>
-                    </li>
-                  </ul>
-                </li>
-              </>
-            )}
 
-            {/* ==================================================
-                UTILISATEUR NON CONNECTÉ
-            ================================================== */}
+                      {/* ------------------------------------------------
+                          DROPDOWN
+                      ------------------------------------------------ */}
 
-            {!isAuthenticated && (
-              <>
-                <li className="nav-item">
-                  <Link
-                    className="nav-link px-3"
-                    to="/login"
-                    onClick={closeMenu}
-                  >
-                    <i className="bi bi-box-arrow-in-right me-2" />
-                    Connexion
-                  </Link>
-                </li>
+                      {isAccountOpen && (
+                        <div className="mm-account-dropdown" role="menu">
+                          {/* En-tête */}
 
-                <li className="nav-item">
-                  <Link
-                    className="btn btn-light btn-sm px-3 rounded-3 fw-semibold"
-                    to="/register"
-                    onClick={closeMenu}
-                  >
-                    Créer un compte
-                  </Link>
-                </li>
-              </>
-            )}
-          </ul>
+                          <div className="mm-dropdown-header">
+                            <span className="mm-dropdown-avatar">
+                              {initials}
+                            </span>
+
+                            <div className="mm-dropdown-user">
+                              <strong>{userName}</strong>
+
+                              {user?.email && (
+                                <span title={user.email}>{user.email}</span>
+                              )}
+
+                              <small>{roleLabel}</small>
+                            </div>
+                          </div>
+
+                          <div className="mm-dropdown-divider"></div>
+
+                          {/* Liens */}
+
+                          <div className="mm-dropdown-links">
+                            {accountLinks.map((item) => (
+                              <Link
+                                key={item.to}
+                                to={item.to}
+                                className={`mm-dropdown-link ${
+                                  isActive(item.to) ? "active" : ""
+                                }`}
+                                onClick={closeMenu}
+                                role="menuitem"
+                              >
+                                <span className="mm-dropdown-link-icon">
+                                  <i className={`bi ${item.icon}`} />
+                                </span>
+
+                                <span>{item.label}</span>
+
+                                <i className="bi bi-chevron-right ms-auto"></i>
+                              </Link>
+                            ))}
+                          </div>
+
+                          <div className="mm-dropdown-divider"></div>
+
+                          {/* Déconnexion */}
+
+                          <button
+                            type="button"
+                            className="mm-dropdown-logout"
+                            onClick={handleLogout}
+                          >
+                            <span className="mm-dropdown-link-icon">
+                              <i className="bi bi-box-arrow-right"></i>
+                            </span>
+
+                            <span>Déconnexion</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* ------------------------------------------------
+                        CONNEXION
+                    ------------------------------------------------ */}
+
+                    <Link
+                      to="/login"
+                      className="mm-login-link"
+                      onClick={closeMenu}
+                    >
+                      <i className="bi bi-person"></i>
+                      <span>Connexion</span>
+                    </Link>
+
+                    {/* ------------------------------------------------
+                        INSCRIPTION
+                    ------------------------------------------------ */}
+
+                    <Link
+                      to="/register"
+                      className="mm-register-button"
+                      onClick={closeMenu}
+                    >
+                      <span>Créer un compte</span>
+
+                      <i className="bi bi-arrow-right"></i>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

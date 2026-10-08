@@ -98,7 +98,7 @@ export default function NotificationBell() {
   // ========================================================
 
   return (
-    <li ref={notificationRef} className="nav-item position-relative">
+    <div ref={notificationRef} className="nav-item position-relative">
       {/* ====================================================
           BOUTON DE NOTIFICATIONS
       ==================================================== */}
@@ -212,6 +212,6 @@ export default function NotificationBell() {
           </div>
         </div>
       )}
-    </li>
+    </div>
   );
 }

@@ -54,7 +54,7 @@ export default function SavSidebar({
         end
         onClick={onClickLink}
       >
-        Dashboard
+        Tableau de bord
       </SidebarNavItem>
 
       {/* ======================================================
