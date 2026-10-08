@@ -64,6 +64,7 @@ export default function useNotificationSocket(
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log("WS message received", data);
 
           // Utilise toujours la dernière version
           // du callback fourni par le composant.
