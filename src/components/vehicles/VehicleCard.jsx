@@ -123,10 +123,11 @@ export function VehicleCard({ v, fetchVehicles, openModal }) {
    */
   const renderAvailability = (vehicle) => {
     const isAvailable = vehicle.is_available;
+    const isSold = vehicle.status === "SOLD";
 
     /* -------------------------------------------------------
-       BADGE DE DISPONIBILITÉ
-    ------------------------------------------------------- */
+     BADGE DE DISPONIBILITÉ
+  ------------------------------------------------------- */
 
     const badge = (
       <span className="d-flex align-items-center gap-2">
@@ -144,17 +145,22 @@ export function VehicleCard({ v, fetchVehicles, openModal }) {
       </span>
     );
 
-    /*
-     * Seul l'administrateur peut modifier
-     * la disponibilité commerciale.
-     */
-    if (!isAdmin) {
+    /* -------------------------------------------------------
+     VÉHICULE VENDU
+     La disponibilité ne peut plus être modifiée.
+  ------------------------------------------------------- */
+
+    if (isSold) {
       return badge;
     }
 
     /* -------------------------------------------------------
-       AFFICHAGE ADMINISTRATEUR
-    ------------------------------------------------------- */
+     ADMINISTRATEUR
+  ------------------------------------------------------- */
+
+    if (!isAdmin) {
+      return badge;
+    }
 
     return (
       <div
