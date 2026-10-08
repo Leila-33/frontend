@@ -19,7 +19,7 @@ import { formatDateTime, isToday } from "../../utils/dateUtils";
 
 import {
   getAdminTestDrives,
-  updateTestDriveStatus,
+  updateAdminTestDriveStatus,
 } from "../../services/testDriveService";
 import { useDebounce } from "../../hooks/useDebounce";
 import {
@@ -300,7 +300,7 @@ export default function AdminTestDrives() {
     try {
       // Envoie le nouveau statut au backend
       // via le service centralisé.
-      await updateTestDriveStatus(selected.id, actionModal.type);
+      await updateAdminTestDriveStatus(selected.id, actionModal.type);
 
       // Message correspondant à l'action effectuée.
       toast.success(

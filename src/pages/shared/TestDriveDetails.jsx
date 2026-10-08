@@ -17,7 +17,7 @@ import { formatDateTime } from "../../utils/dateUtils";
 import {
   getTestDrive,
   cancelTestDrive as cancelTestDriveRequest,
-  updateTestDriveStatus,
+  updateAdminTestDriveStatus,
 } from "../../services/testDriveService";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -200,7 +200,7 @@ export default function TestDriveDetails() {
        *   "status": "confirmed"
        * }
        */
-      await updateTestDriveStatus(selected.id, actionModal.type);
+      await updateAdminTestDriveStatus(selected.id, actionModal.type);
 
       // Message affiché après chaque action.
       toast.success(

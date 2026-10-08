@@ -34,19 +34,6 @@ export const updateAdminTestDriveStatus = (testDriveId, status) => {
 };
 
 // ==========================================================
-// MODIFIER LE STATUT D'UN ESSAI ROUTIER - CLIENT
-// ==========================================================
-
-export const updateTestDriveStatus = (testDriveId, status) => {
-  return apiFetch(`/test-drives/${testDriveId}/status`, {
-    method: "PATCH",
-    body: {
-      status,
-    },
-  });
-};
-
-// ==========================================================
 // ANNULER UN ESSAI ROUTIER - CLIENT
 // ==========================================================
 
