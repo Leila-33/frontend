@@ -1,13 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
+import QuoteStatusBadge from "../../../components/quotes/QuoteStatusBadge";
 import ConfirmActionModal from "../../../components/common/ConfirmActionModal";
 import apiFetch from "../../../services/apiFetch";
-import QuoteVehicleCard from "../../../components/quotes/QuoteVehicleCard";
-import QuoteFinancingCard from "../../../components/quotes/QuoteFinancingCard";
-import QuoteTradeInCard from "../../../components/quotes/QuoteTradeInCard";
-import QuoteStatusBadge from "../../../components/quotes/QuoteStatusBadge";
+
+import QuoteInfoItem from "../../../components/quotes/QuoteInfoItem";
+import QuoteSectionCard from "../../../components/quotes/QuoteSectionCard";
+import QuoteVehicleSection from "../../../components/quotes/QuoteVehicleSection";
+import QuoteFinancialSection from "../../../components/quotes/QuoteFinancialSection";
+import QuoteFinancingSection from "../../../components/quotes/QuoteFinancingSection";
+import QuoteTradeInSection from "../../../components/quotes/QuoteTradeInSection";
+import QuoteLifecycleSection from "../../../components/quotes/QuoteLifecycleSection";
+import QuoteSummarySection from "../../../components/quotes/QuoteSummarySection";
+import QuotePageFooter from "../../../components/quotes/QuotePageFooter";
+
+import { formatDateLong } from "../../../utils/dateUtils";
+
+import "../../../styles/QuoteDetailPage.css";
 
 /**
  * Page de détail d'une offre commerciale.
@@ -29,51 +40,36 @@ export default function QuoteDetailPage() {
   // ÉTAT
   // =====================================================
 
-  /**
-   * Offre actuellement chargée.
-   */
   const [quote, setQuote] = useState(null);
-
-  /**
-   * Chargement initial de l'offre.
-   */
   const [loading, setLoading] = useState(true);
-
-  /**
-   * Chargement d'une action :
-   * - envoi ;
-   * - suppression.
-   */
   const [actionLoading, setActionLoading] = useState(false);
-
-  /**
-   * Contrôle d'ouverture de la modale de suppression.
-   */
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [error, setError] = useState("");
 
   // =====================================================
-  // CHARGEMENT DE L'OFFRE
+  // CHARGEMENT DU DEVIS
   // =====================================================
 
   const fetchQuote = useCallback(async () => {
     if (!id) {
       setQuote(null);
+      setError("Identifiant du devis manquant.");
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
+      setError("");
 
       const data = await apiFetch(`/agent/quotes/${id}`, {
         method: "GET",
       });
 
       setQuote(data);
-    } catch (error) {
+    } catch (err) {
       setQuote(null);
-
-      toast.error(error?.message || "Impossible de charger l'offre.");
+      setError(err?.message || "Impossible de charger le devis.");
     } finally {
       setLoading(false);
     }
@@ -88,7 +84,7 @@ export default function QuoteDetailPage() {
   // =====================================================
 
   const handleDelete = useCallback(async () => {
-    if (!quote?.id) {
+    if (!quote?.id || quote.status !== "DRAFT") {
       return;
     }
 
@@ -99,15 +95,15 @@ export default function QuoteDetailPage() {
         method: "DELETE",
       });
 
-      toast.success("Offre supprimée.");
+      toast.success("Devis supprimé.");
 
-      /**
-       * Après suppression, retour vers le détail
-       * du lead auquel l'offre était associée.
-       */
-      navigate(`/sales/leads/${quote.lead?.id}`);
-    } catch (error) {
-      toast.error(error?.message || "Impossible de supprimer l'offre.");
+      if (quote.lead?.id) {
+        navigate(`/sales/leads/${quote.lead.id}`);
+      } else {
+        navigate("/sales/quotes");
+      }
+    } catch (err) {
+      toast.error(err?.message || "Impossible de supprimer le devis.");
     } finally {
       setActionLoading(false);
       setShowDeleteModal(false);
@@ -115,11 +111,11 @@ export default function QuoteDetailPage() {
   }, [navigate, quote]);
 
   // =====================================================
-  // ENVOI DE L'OFFRE
+  // ENVOI AU CLIENT
   // =====================================================
 
   const handleSend = useCallback(async () => {
-    if (!quote?.id || quote.status !== "DRAFT") {
+    if (!quote?.id || quote.status !== "DRAFT" || actionLoading) {
       return;
     }
 
@@ -130,243 +126,356 @@ export default function QuoteDetailPage() {
         method: "POST",
       });
 
-      toast.success("Offre envoyée au client.");
+      toast.success("Devis envoyé au client.");
 
-      /**
-       * Recharge l'offre afin de récupérer son nouveau statut
-       * et les éventuelles données mises à jour par le backend.
-       */
+      // Récupère le statut et les données actualisés.
       await fetchQuote();
-    } catch (error) {
-      toast.error(error?.message || "Impossible d'envoyer l'offre.");
+    } catch (err) {
+      toast.error(err?.message || "Impossible d'envoyer le devis.");
     } finally {
       setActionLoading(false);
     }
-  }, [fetchQuote, quote]);
+  }, [actionLoading, fetchQuote, quote]);
 
   // =====================================================
-  // ÉTATS DE CHARGEMENT / ERREUR
+  // CHARGEMENT INITIAL
   // =====================================================
 
   if (loading) {
     return (
-      <div className="container py-5">
-        <div
-          className="d-flex justify-content-center align-items-center gap-2 text-muted"
-          role="status"
-          aria-live="polite"
-        >
-          <span
-            className="spinner-border spinner-border-sm"
-            aria-hidden="true"
-          />
-          <span>Chargement de l'offre...</span>
+      <main className="customer-quote-page">
+        <div className="customer-quote-container">
+          <div className="quote-loading" role="status" aria-live="polite">
+            <span
+              className="spinner-border spinner-border-sm"
+              aria-hidden="true"
+            />
+            <span>Chargement du devis...</span>
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  if (!quote) {
-    return (
-      <div className="container py-5">
-        <div className="alert alert-warning">Offre introuvable.</div>
-      </div>
+      </main>
     );
   }
 
   // =====================================================
-  // DONNÉES ASSOCIÉES
+  // DEVIS INTROUVABLE
+  // =====================================================
+
+  if (!quote) {
+    return (
+      <main className="customer-quote-page">
+        <div className="customer-quote-container">
+          <div className="quote-inline-error" role="alert">
+            <i className="bi bi-exclamation-circle" aria-hidden="true" />
+            <span>{error || "Devis introuvable."}</span>
+
+            <button
+              type="button"
+              className="quote-button quote-button--outline"
+              onClick={() => navigate("/sales/quotes")}
+            >
+              Retour aux devis
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // =====================================================
+  // DONNÉES D'AFFICHAGE
   // =====================================================
 
   const clientName =
     [quote.lead?.first_name, quote.lead?.last_name].filter(Boolean).join(" ") ||
     "Client non renseigné";
 
+  // Selon le mapper, le véhicule peut être à la racine
+  // du devis ou rattaché au lead.
+  const vehicle = quote.vehicle ?? quote.lead?.vehicle;
+
+  const canEdit = quote.status === "DRAFT";
+  const canSend = quote.status === "DRAFT";
+
   // =====================================================
   // AFFICHAGE
   // =====================================================
 
   return (
-    <div className="container py-4">
-      {/* =====================================================
-          EN-TÊTE
-      ===================================================== */}
+    <main className="customer-quote-page">
+      <div className="customer-quote-container">
+        {/* Fil d'Ariane */}
+        <nav className="quote-breadcrumb" aria-label="Fil d’Ariane">
+          <Link to="/sales">Accueil commercial</Link>
 
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-        <div>
-          <h1 className="h2 fw-bold mb-1">Offre commerciale</h1>
+          <i className="bi bi-chevron-right" aria-hidden="true" />
 
-          <div className="text-muted">#{quote.id}</div>
-        </div>
+          <span aria-current="page">Devis #{quote.id}</span>
+        </nav>
 
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          {/* Statut de l'offre */}
-          <QuoteStatusBadge status={quote.status} role="agent" />
+        {/* En-tête */}
+        <header className="quote-page-header">
+          <div className="quote-page-header__main">
+            <button
+              type="button"
+              className="quote-back-link"
+              onClick={() => navigate(-1)}
+            >
+              <i className="bi bi-arrow-left" aria-hidden="true" />
+              Retour
+            </button>
 
-          {/* Actions disponibles uniquement pour un brouillon */}
-          {quote.status === "DRAFT" && (
+            <div className="quote-page-header__title-row">
+              <div>
+                <p className="quote-eyebrow">GESTION COMMERCIALE</p>
+
+                <h1>Détail du devis</h1>
+
+                <p className="quote-reference">
+                  Référence <strong>#{quote.id}</strong>
+                </p>
+              </div>
+
+              <QuoteStatusBadge status={quote.status} role="agent" />
+            </div>
+          </div>
+
+          <div className="quote-page-header__date">
+            <i className="bi bi-calendar3" aria-hidden="true" />
+
+            <span>Créé le {formatDateLong(quote.created_at)}</span>
+          </div>
+        </header>
+
+        {/* Erreur d'action ou de rechargement */}
+        {error && (
+          <div className="quote-inline-error" role="alert">
+            <i className="bi bi-exclamation-circle" aria-hidden="true" />
+
+            <span>{error}</span>
+
+            <button
+              type="button"
+              onClick={() => setError("")}
+              aria-label="Fermer le message d’erreur"
+            >
+              <i className="bi bi-x-lg" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
+        {/* Actions commerciales */}
+        <div className="quote-agent-actions">
+          {canEdit && (
             <>
               <button
                 type="button"
-                className="btn btn-outline-primary"
+                className="quote-button quote-button--outline"
                 onClick={() => navigate(`/sales/quotes/${quote.id}/edit`)}
                 disabled={actionLoading}
               >
-                <i className="bi bi-pencil me-2" aria-hidden="true" />
-                Modifier
+                <i className="bi bi-pencil" aria-hidden="true" />
+                Modifier le devis
               </button>
 
               <button
                 type="button"
-                className="btn btn-outline-danger"
+                className="quote-button quote-button--outline-danger"
                 onClick={() => setShowDeleteModal(true)}
                 disabled={actionLoading}
               >
-                <i className="bi bi-trash me-2" aria-hidden="true" />
+                <i className="bi bi-trash" aria-hidden="true" />
                 Supprimer
               </button>
             </>
           )}
 
-          <button
-            type="button"
-            className="btn btn-outline-secondary"
-            onClick={() => navigate(-1)}
-          >
-            <i className="bi bi-arrow-left me-2" aria-hidden="true" />
-            Retour
-          </button>
-        </div>
-      </div>
-
-      {/* =====================================================
-          INFORMATIONS PRINCIPALES
-      ===================================================== */}
-      <div className="row g-4">
-        {/* ===================================================
-      CLIENT
-  =================================================== */}
-
-        <div className="col-lg-6">
-          <div className="card border-0 shadow-sm rounded-4 h-100">
-            <div className="card-body p-4">
-              <h2 className="h5 fw-semibold mb-3">Client</h2>
-
-              <div className="fw-semibold">{clientName}</div>
-
-              {quote.lead?.email && (
-                <div className="text-muted">{quote.lead.email}</div>
+          {canSend && (
+            <button
+              type="button"
+              className="quote-button quote-button--primary"
+              onClick={handleSend}
+              disabled={actionLoading}
+            >
+              {actionLoading ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm"
+                    aria-hidden="true"
+                  />
+                  Envoi en cours...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-send" aria-hidden="true" />
+                  Envoyer au client
+                </>
               )}
-
-              {quote.lead?.phone && (
-                <div className="text-muted">{quote.lead.phone}</div>
-              )}
-            </div>
-          </div>
+            </button>
+          )}
         </div>
 
-        {/* ===================================================
-      VÉHICULE
-  =================================================== */}
+        {/* Organisation du contenu */}
+        <div className="quote-layout">
+          {/* Colonne principale */}
+          <div className="quote-layout__main">
+            {/* Informations du client */}
+            <QuoteSectionCard
+              icon="bi-person"
+              title="Client associé"
+              description="Coordonnées du prospect auquel ce devis est destiné."
+            >
+              <div className="quote-info-grid">
+                <QuoteInfoItem label="Nom du client" value={clientName} />
 
-        <div className="col-lg-6">
-          <QuoteVehicleCard quote={quote} />
-        </div>
-
-        {/* ===================================================
-      FINANCEMENT
-  =================================================== */}
-
-        <div className="col-lg-8">
-          <QuoteFinancingCard quote={quote} />
-        </div>
-
-        {/* ===================================================
-      REPRISE
-  =================================================== */}
-
-        <div className="col-lg-4">
-          <QuoteTradeInCard quote={quote} />
-        </div>
-      </div>
-
-      {/* =====================================================
-          ACTION COMMERCIALE
-      ===================================================== */}
-
-      <div className="mt-4">
-        {quote.status === "DRAFT" && (
-          <button
-            type="button"
-            className="btn btn-dark"
-            onClick={handleSend}
-            disabled={actionLoading}
-          >
-            {actionLoading ? (
-              <>
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  aria-hidden="true"
+                <QuoteInfoItem
+                  label="Adresse e-mail"
+                  value={quote.lead?.email || "Non renseignée"}
                 />
-                Envoi...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-send me-2" aria-hidden="true" />
-                Envoyer l'offre au client
-              </>
-            )}
-          </button>
-        )}
 
-        {quote.status === "SENT" && (
-          <div className="alert alert-info mb-0" role="status">
-            <i className="bi bi-clock me-2" aria-hidden="true" />
-            Offre envoyée au client. En attente de sa réponse.
-          </div>
-        )}
+                <QuoteInfoItem
+                  label="Téléphone"
+                  value={quote.lead?.phone || "Non renseigné"}
+                />
+              </div>
 
-        {quote.status === "ACCEPTED" && (
-          <div className="alert alert-success mb-0" role="status">
-            <i className="bi bi-check-circle me-2" aria-hidden="true" />
-            Offre acceptée par le client.
-          </div>
-        )}
+              {quote.lead?.id && (
+                <Link
+                  to={`/sales/leads/${quote.lead.id}`}
+                  className="quote-vehicle__link"
+                >
+                  Consulter la fiche du prospect
+                  <i className="bi bi-arrow-up-right" aria-hidden="true" />
+                </Link>
+              )}
+            </QuoteSectionCard>
 
-        {quote.status === "REJECTED" && (
-          <div className="alert alert-danger mb-0" role="status">
-            <i className="bi bi-x-circle me-2" aria-hidden="true" />
-            Offre refusée par le client.
-          </div>
-        )}
+            {/* Véhicule proposé */}
+            <QuoteVehicleSection vehicle={vehicle} showVehicleLink={false} />
 
-        {quote.status === "EXPIRED" && (
-          <div className="alert alert-secondary mb-0" role="status">
-            <i className="bi bi-clock-history me-2" aria-hidden="true" />
-            Cette offre a expiré.
+            {/* Détail financier */}
+            <QuoteFinancialSection quote={quote} />
+
+            {/* Financement */}
+            <QuoteFinancingSection quote={quote} />
+
+            {/* Reprise */}
+            <QuoteTradeInSection quote={quote} />
+
+            {/* Dates et décision du client */}
+            <QuoteLifecycleSection quote={quote} />
           </div>
-        )}
+
+          {/* Colonne latérale */}
+          <aside
+            className="quote-layout__sidebar"
+            aria-label="Récapitulatif du devis"
+          >
+            {/* Récapitulatif financier sans actions client */}
+            <QuoteSummarySection quote={quote} showClientActions={false} />
+
+            {/* État commercial */}
+            <QuoteSectionCard
+              icon="bi-clipboard-check"
+              title="Suivi commercial"
+              description="État actuel de la proposition."
+            >
+              {quote.status === "DRAFT" && (
+                <div
+                  className="quote-result-message quote-result-message--neutral"
+                  role="status"
+                >
+                  <i className="bi bi-pencil-square" aria-hidden="true" />
+
+                  <div>
+                    <strong>Devis en préparation</strong>
+                    <p>
+                      Vérifiez les montants avant de transmettre la proposition
+                      au client.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {quote.status === "SENT" && (
+                <div
+                  className="quote-result-message quote-result-message--warning"
+                  role="status"
+                >
+                  <i className="bi bi-clock" aria-hidden="true" />
+
+                  <div>
+                    <strong>En attente de réponse</strong>
+                    <p>Le devis a été envoyé au client.</p>
+                  </div>
+                </div>
+              )}
+
+              {quote.status === "ACCEPTED" && (
+                <div
+                  className="quote-result-message quote-result-message--success"
+                  role="status"
+                >
+                  <i className="bi bi-check-circle-fill" aria-hidden="true" />
+
+                  <div>
+                    <strong>Devis accepté</strong>
+                    <p>Le client a accepté la proposition commerciale.</p>
+                  </div>
+                </div>
+              )}
+
+              {quote.status === "REJECTED" && (
+                <div
+                  className="quote-result-message quote-result-message--danger"
+                  role="status"
+                >
+                  <i className="bi bi-x-circle-fill" aria-hidden="true" />
+
+                  <div>
+                    <strong>Devis refusé</strong>
+                    <p>Le client a refusé la proposition commerciale.</p>
+                  </div>
+                </div>
+              )}
+
+              {quote.status === "EXPIRED" && (
+                <div
+                  className="quote-result-message quote-result-message--warning"
+                  role="status"
+                >
+                  <i className="bi bi-clock-history" aria-hidden="true" />
+
+                  <div>
+                    <strong>Devis expiré</strong>
+                    <p>La date de validité de la proposition est dépassée.</p>
+                  </div>
+                </div>
+              )}
+            </QuoteSectionCard>
+          </aside>
+        </div>
+
+        {/* Pied de page partagé */}
+        <QuotePageFooter />
       </div>
 
-      {/* =====================================================
-          MODALE DE SUPPRESSION
-      ===================================================== */}
-
+      {/* Confirmation de suppression */}
       <ConfirmActionModal
         open={showDeleteModal}
         type="delete"
-        title="Supprimer cette offre ?"
+        title="Supprimer ce devis ?"
         description={
           <>
             Cette action est définitive.
             <br />
-            L'offre sera supprimée.
+            Le devis sera supprimé.
           </>
         }
         loading={actionLoading}
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
       />
-    </div>
+    </main>
   );
 }

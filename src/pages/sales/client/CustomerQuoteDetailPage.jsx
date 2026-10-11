@@ -1,18 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-
-import { useNavigate, useParams } from "react-router-dom";
-
-import { toast } from "react-toastify";
-
-import QuoteDecisionModal from "../../../components/sales/QuoteDecisionModal";
-import QuoteFinancingCard from "../../../components/quotes/QuoteFinancingCard";
 import QuoteStatusBadge from "../../../components/quotes/QuoteStatusBadge";
-import QuoteTradeInCard from "../../../components/quotes/QuoteTradeInCard";
-import QuoteVehicleCard from "../../../components/quotes/QuoteVehicleCard";
-import { formatDate } from "../../../utils/dateUtils";
-
-import apiFetch from "../../../services/apiFetch";
-
+import { formatDateLong } from "../../../utils/dateUtils";
+import DecisionModal from "../../../components/sales/DecisionModal";
+import "../../../styles/QuoteDetailPage.css";
 /**
  * Page de détail d'une offre commerciale côté client.
  *
@@ -29,511 +18,448 @@ import apiFetch from "../../../services/apiFetch";
  * Les composants de présentation communs aux offres
  * sont réutilisés depuis `components/quotes`.
  */
+// ============================================================
+// IMPORTS
+// ============================================================
+
+// Hooks React :
+// - useState : stocke les données et l'état de la page.
+// - useEffect : charge le devis au montage du composant.
+// - useCallback : stabilise la fonction de chargement.
+// - useMemo : mémorise le nom du véhicule calculé.
+import { useCallback, useEffect, useState } from "react";
+
+// Navigation React Router.
+import { Link, useNavigate, useParams } from "react-router-dom";
+
+// Notifications visuelles après une action.
+import { toast } from "react-toastify";
+
+// Fonction centralisée pour effectuer les appels à l'API.
+import apiFetch from "../../../services/apiFetch";
+
+// Styles modernes de la page.
+import "../../../styles/QuoteDetailPage.css";
+
+import QuoteVehicleSection from "../../../components/quotes/QuoteVehicleSection";
+import QuoteFinancialSection from "../../../components/quotes/QuoteFinancialSection";
+import QuoteFinancingSection from "../../../components/quotes/QuoteFinancingSection";
+import QuoteTradeInSection from "../../../components/quotes/QuoteTradeInSection";
+import QuoteLifecycleSection from "../../../components/quotes/QuoteLifecycleSection";
+import QuoteSummarySection from "../../../components/quotes/QuoteSummarySection";
+import QuotePageFooter from "../../../components/quotes/QuotePageFooter";
+// ============================================================
+// FONCTIONS UTILITAIRES
+// ============================================================
+
+// Récupère un message exploitable depuis une erreur API.
+// Si aucun message n'est disponible, utilise un message générique.
+const getErrorMessage = (error, fallback) => {
+  return error?.message || fallback;
+};
+
+// ============================================================
+// PAGE PRINCIPALE : DÉTAIL DU DEVIS CLIENT
+// ============================================================
+
 export default function CustomerQuoteDetailPage() {
+  // Récupère l'identifiant du devis depuis l'URL.
+  // Exemple : /quotes/123 -> id = "123".
   const { id } = useParams();
+
+  // Permet de naviguer vers une autre page.
   const navigate = useNavigate();
 
-  // =====================================================
-  // ÉTAT
-  // =====================================================
+  // ----------------------------------------------------------
+  // ÉTATS DE LA PAGE
+  // ----------------------------------------------------------
 
-  /**
-   * Offre actuellement chargée.
-   */
+  // Données du devis renvoyées par l'API.
   const [quote, setQuote] = useState(null);
 
-  /**
-   * Chargement initial de l'offre.
-   */
+  // Indique si le chargement initial est en cours.
   const [loading, setLoading] = useState(true);
 
-  /**
-   * Chargement d'une action :
-   * - acceptation ;
-   * - refus.
-   */
+  // Indique si une acceptation ou un refus est en cours.
   const [actionLoading, setActionLoading] = useState(false);
 
-  /**
-   * Contrôle d'ouverture de la modale de décision.
-   */
-  const [showDecision, setShowDecision] = useState(false);
+  // Contient un éventuel message d'erreur de chargement.
+  const [error, setError] = useState("");
 
-  /**
-   * Action sélectionnée dans la modale :
-   * - accept ;
-   * - refuse.
-   */
-  const [decisionMode, setDecisionMode] = useState(null);
+  // Vaut "accept", "refuse" ou null selon la modale affichée.
+  const [decision, setDecision] = useState(null);
 
-  /**
-   * Message d'erreur de chargement.
-   */
-  const [error, setError] = useState(null);
+  // Stocke le motif et le commentaire facultatifs du refus.
+  const [reason, setReason] = useState("");
+  const [comment, setComment] = useState("");
 
-  // =====================================================
-  // CHARGEMENT DE L'OFFRE
-  // =====================================================
+  // ----------------------------------------------------------
+  // CHARGEMENT DU DEVIS
+  // ----------------------------------------------------------
 
-  /**
-   * Récupère l'offre depuis l'API.
-   *
-   * `useCallback` permet de conserver une référence stable
-   * utilisée par `useEffect`.
-   */
-  const fetchQuote = useCallback(async () => {
+  // Interroge l'API pour obtenir les données détaillées du devis.
+  // useCallback stabilise la fonction afin de pouvoir la réutiliser
+  // dans useEffect et dans le bouton « Réessayer ».
+  const loadQuote = useCallback(async () => {
+    // Vérifie la présence de l'identifiant dans l'URL.
     if (!id) {
-      setQuote(null);
-      setError("Offre introuvable.");
+      setError("Identifiant du devis manquant.");
       setLoading(false);
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError("");
 
-      const data = await apiFetch(`/quotes/${id}`, {
-        method: "GET",
-      });
+    try {
+      // L'URL est encodée afin de limiter les problèmes liés
+      // aux caractères particuliers dans l'identifiant.
+      const data = await apiFetch(`/quotes/${encodeURIComponent(id)}`);
 
       setQuote(data);
-    } catch (error) {
-      setQuote(null);
-
-      const message = error?.message || "Impossible de charger cette offre.";
-
-      setError(message);
-      toast.error(message);
+    } catch (err) {
+      setError(
+        getErrorMessage(err, "Impossible de charger les détails du devis.")
+      );
     } finally {
+      // Le chargement se termine même si l'appel échoue.
       setLoading(false);
     }
   }, [id]);
 
+  // Charge les informations lorsque le composant est monté
+  // et recharge le devis si l'identifiant change.
   useEffect(() => {
-    fetchQuote();
-  }, [fetchQuote]);
+    loadQuote();
+  }, [loadQuote]);
 
-  // =====================================================
-  // ACCEPTATION
-  // =====================================================
+  // ----------------------------------------------------------
+  // DONNÉES DÉRIVÉES
+  // ----------------------------------------------------------
 
-  /**
-   * Accepte l'offre commerciale.
-   *
-   * L'API crée le dossier associé puis retourne
-   * son identifiant.
-   */
-  const acceptQuote = useCallback(async () => {
-    if (!id) {
-      return false;
+  // Statut du devis transmis par le backend.
+  const status = quote?.status;
+
+  // Seul un devis envoyé peut être accepté ou refusé.
+  const canDecide = status === "SENT";
+
+  // Référence du devis : référence métier, identifiant du devis,
+  // puis identifiant provenant de l'URL comme solution de repli.
+  const quoteReference = quote?.id || id;
+
+  // ----------------------------------------------------------
+  // OUVERTURE ET FERMETURE DE LA MODALE
+  // ----------------------------------------------------------
+
+  // Ouvre la modale uniquement si le statut du devis permet
+  // encore une décision et qu'aucune action n'est en cours.
+  const openDecision = (type) => {
+    if (!canDecide || actionLoading) {
+      return;
     }
 
-    try {
-      setActionLoading(true);
+    // Réinitialise le motif à chaque nouvelle décision.
+    setReason("");
+    setComment("");
+    setDecision(type);
+  };
 
-      const data = await apiFetch(`/quotes/${id}/accept`, {
-        method: "POST",
-      });
-
-      toast.success(data?.message || "Votre offre a été acceptée.");
-
-      /**
-       * Le dossier ayant été créé par l'API,
-       * on redirige directement le client vers celui-ci.
-       */
-      if (data?.application_id) {
-        navigate(`/applications/${data.application_id}`);
-      } else {
-        /**
-         * Sécurité si l'API ne retourne pas
-         * immédiatement l'identifiant du dossier.
-         */
-        await fetchQuote();
-      }
-
-      return true;
-    } catch (error) {
-      toast.error(error?.message || "Impossible d'accepter cette offre.");
-
-      return false;
-    } finally {
-      setActionLoading(false);
-    }
-  }, [fetchQuote, id, navigate]);
-
-  // =====================================================
-  // REFUS
-  // =====================================================
-
-  /**
-   * Refuse l'offre commerciale.
-   *
-   * `data` provient de la modale et contient :
-   * - reason ;
-   * - comment.
-   */
-  const refuseQuote = useCallback(
-    async (data) => {
-      if (!id) {
-        return false;
-      }
-
-      try {
-        setActionLoading(true);
-
-        await apiFetch(`/quotes/${id}/refuse`, {
-          method: "POST",
-          body: {
-            reason: data?.reason,
-            comment: data?.comment,
-          },
-        });
-
-        toast.success("Votre refus a été enregistré.");
-
-        /**
-         * On recharge l'offre afin d'afficher
-         * immédiatement son nouveau statut.
-         */
-        await fetchQuote();
-
-        return true;
-      } catch (error) {
-        toast.error(error?.message || "Impossible de refuser cette offre.");
-
-        return false;
-      } finally {
-        setActionLoading(false);
-      }
-    },
-    [fetchQuote, id]
-  );
-
-  // =====================================================
-  // DÉCISION
-  // =====================================================
-
-  /**
-   * Ouvre la modale d'acceptation.
-   */
-  const handleAcceptClick = useCallback(() => {
-    setDecisionMode("accept");
-    setShowDecision(true);
-  }, []);
-
-  /**
-   * Ouvre la modale de refus.
-   */
-  const handleRefuseClick = useCallback(() => {
-    setDecisionMode("refuse");
-    setShowDecision(true);
-  }, []);
-
-  /**
-   * Ferme la modale de décision.
-   *
-   * Une action en cours empêche sa fermeture afin
-   * d'éviter une interaction pendant la requête.
-   */
-  const handleCloseDecision = useCallback(() => {
+  // Ferme la modale si aucune action n'est en cours.
+  const closeDecision = () => {
     if (actionLoading) {
       return;
     }
 
-    setShowDecision(false);
-    setDecisionMode(null);
-  }, [actionLoading]);
+    setDecision(null);
+  };
 
-  /**
-   * Exécute la décision sélectionnée dans la modale.
-   *
-   * La modale ne se ferme que lorsque l'action
-   * a réellement réussi.
-   */
-  const handleDecisionConfirm = useCallback(
-    async (data) => {
-      let success = false;
+  // ----------------------------------------------------------
+  // ACCEPTATION OU REFUS DU DEVIS
+  // ----------------------------------------------------------
 
-      if (decisionMode === "accept") {
-        success = await acceptQuote();
+  const handleDecision = async () => {
+    // Vérifie que le choix et le devis sont disponibles.
+    if (!decision || !quote || actionLoading) {
+      return;
+    }
+
+    const currentDecision = decision;
+
+    // Sélectionne la route correspondant à la décision.
+    // Vérifie les routes exactes avec ton backend.
+    const endpoint =
+      currentDecision === "accept"
+        ? `/quotes/${encodeURIComponent(id)}/accept`
+        : `/quotes/${encodeURIComponent(id)}/refuse`;
+
+    setActionLoading(true);
+
+    try {
+      // La méthode POST transmet la décision au backend.
+      const options = {
+        method: "POST",
+      };
+
+      // Le motif n'est envoyé que pour un refus.
+      if (currentDecision === "refuse") {
+        options.headers = {
+          "Content-Type": "application/json",
+        };
+
+        options.body = JSON.stringify({
+          reason: reason.trim() || null,
+          comment: comment.trim() || null,
+        });
       }
 
-      if (decisionMode === "refuse") {
-        success = await refuseQuote(data);
-      }
+      // L'API reste responsable de valider la décision
+      // et de modifier réellement le statut du devis.
+      const result = await apiFetch(endpoint, options);
 
-      if (success) {
-        setShowDecision(false);
-        setDecisionMode(null);
-      }
-    },
-    [acceptQuote, decisionMode, refuseQuote]
-  );
+      setDecision(null);
 
-  // =====================================================
-  // ÉTAT DE CHARGEMENT
-  // =====================================================
+      if (currentDecision === "accept") {
+        // Confirmation visuelle après réponse réussie de l'API.
+        toast.success("Votre devis a été accepté.");
+
+        // Si l'API renvoie l'identifiant du dossier associé,
+        // redirige le client vers ce dossier.
+        const applicationId = result?.application_id || quote?.application_id;
+
+        if (applicationId) {
+          navigate(`/applications/${applicationId}`, { replace: true });
+
+          return;
+        }
+
+        // Si l'identifiant du dossier n'est pas disponible,
+        // recharge le devis pour actualiser son statut.
+        await loadQuote();
+      } else {
+        // Après un refus, recharge les données du devis.
+        toast.success("Votre refus a bien été enregistré.");
+
+        await loadQuote();
+      }
+    } catch (err) {
+      // Affiche une erreur sans simuler la réussite de l'action.
+      toast.error(
+        getErrorMessage(
+          err,
+          currentDecision === "accept"
+            ? "Impossible d’accepter le devis."
+            : "Impossible de refuser le devis."
+        )
+      );
+    } finally {
+      // Réactive les boutons même si l'API renvoie une erreur.
+      setActionLoading(false);
+    }
+  };
+
+  // ----------------------------------------------------------
+  // ÉTAT : CHARGEMENT INITIAL
+  // ----------------------------------------------------------
 
   if (loading) {
     return (
-      <div className="container py-5">
-        <div
-          className="d-flex justify-content-center align-items-center gap-2 text-muted"
-          role="status"
-          aria-live="polite"
-        >
-          <span
-            className="spinner-border spinner-border-sm"
-            aria-hidden="true"
-          />
-
-          <span>Chargement de l'offre...</span>
+      <main className="customer-quote-page">
+        <div className="quote-loading" role="status" aria-live="polite">
+          <span className="quote-spinner" />
+          <p>Chargement de votre devis...</p>
         </div>
-      </div>
+      </main>
     );
   }
 
-  // =====================================================
-  // ÉTAT D'ERREUR
-  // =====================================================
+  // ----------------------------------------------------------
+  // ÉTAT : ERREUR DE CHARGEMENT
+  // ----------------------------------------------------------
 
-  if (error || !quote) {
+  // Si aucun devis n'a été obtenu, affiche une page d'erreur
+  // avec la possibilité de relancer l'appel API.
+  if (error && !quote) {
     return (
-      <div className="container py-5">
-        <div className="alert alert-danger" role="alert">
-          {error || "Offre introuvable."}
-        </div>
+      <main className="customer-quote-page">
+        <div className="quote-error">
+          <div className="quote-error__icon">
+            <i className="bi bi-exclamation-triangle" />
+          </div>
 
-        <button
-          type="button"
-          className="btn btn-outline-secondary"
-          onClick={() => navigate(-1)}
-        >
-          <i className="bi bi-arrow-left me-2" aria-hidden="true" />
-          Retour
-        </button>
-      </div>
-    );
-  }
+          <h1>Devis indisponible</h1>
 
-  // =====================================================
-  // DONNÉES D'AFFICHAGE
-  // =====================================================
+          <p>{error}</p>
 
-  const applicationId = quote.application_id;
-
-  const salesAgentName =
-    [quote.sales_agent?.first_name, quote.sales_agent?.last_name]
-      .filter(Boolean)
-      .join(" ") || "Conseiller non renseigné";
-
-  const createdAt = formatDate(quote.created_at);
-
-  // =====================================================
-  // AFFICHAGE
-  // =====================================================
-
-  return (
-    <div className="container py-4 pb-5">
-      {/* =====================================================
-          EN-TÊTE
-      ===================================================== */}
-
-      <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
-        <div>
-          <h1 className="h2 fw-bold mb-1">Votre offre commerciale</h1>
-
-          <div className="text-muted">Offre #{quote.id}</div>
-
-          <div className="text-muted small">Créée le {createdAt}</div>
-        </div>
-
-        <div className="d-flex flex-column align-items-lg-end gap-3">
-          <QuoteStatusBadge status={quote.status} role="client" />
-
-          {/* =================================================
-              DOSSIER APRÈS ACCEPTATION
-          ================================================= */}
-
-          {quote.status === "ACCEPTED" && applicationId && (
+          <div className="quote-error__actions">
             <button
               type="button"
-              className="btn btn-success"
-              onClick={() => navigate(`/applications/${applicationId}`)}
+              className="quote-button quote-button--primary"
+              onClick={loadQuote}
             >
-              <i className="bi bi-folder2-open me-2" aria-hidden="true" />
-              Voir mon dossier
+              <i className="bi bi-arrow-clockwise" />
+              Réessayer
             </button>
-          )}
+
+            <button
+              type="button"
+              className="quote-button quote-button--secondary"
+              onClick={() => navigate(-1)}
+            >
+              Retour
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
+    );
+  }
 
-      {/* =====================================================
-          MESSAGE SELON LE STATUT
-      ===================================================== */}
+  // Protection supplémentaire si aucune donnée n'est disponible.
+  if (!quote) {
+    return null;
+  }
 
-      {quote.status === "ACCEPTED" && (
-        <div className="alert alert-success mb-4" role="status">
-          <div className="d-flex gap-2">
-            <i className="bi bi-check-circle mt-1" aria-hidden="true" />
+  // ==========================================================
+  // AFFICHAGE PRINCIPAL
+  // ==========================================================
 
-            <div>
-              <strong>Offre acceptée</strong>
+  return (
+    <main className="customer-quote-page">
+      <div className="customer-quote-container">
+        {/* Fil d'Ariane */}
+        <nav className="quote-breadcrumb" aria-label="Fil d’Ariane">
+          <Link to="/">Accueil</Link>
 
+          <i className="bi bi-chevron-right" aria-hidden="true" />
+
+          <Link to="/quotes">Mes devis</Link>
+
+          <i className="bi bi-chevron-right" aria-hidden="true" />
+
+          <span aria-current="page">Détail du devis</span>
+        </nav>
+
+        {/* En-tête du devis */}
+        <header className="quote-page-header">
+          <div className="quote-page-header__main">
+            <button
+              type="button"
+              className="quote-back-link"
+              onClick={() => navigate(-1)}
+            >
+              <i className="bi bi-arrow-left" aria-hidden="true" />
+              Retour
+            </button>
+
+            <div className="quote-page-header__title-row">
               <div>
-                Vous avez accepté cette offre.
-                {applicationId && (
-                  <> Votre dossier de financement a été créé.</>
-                )}
+                <p className="quote-eyebrow">PROPOSITION COMMERCIALE</p>
+
+                <h1>Votre devis</h1>
+
+                <p className="quote-reference">
+                  Référence <strong>#{quoteReference}</strong>
+                </p>
               </div>
+
+              <QuoteStatusBadge status={status} />
             </div>
           </div>
-        </div>
-      )}
 
-      {quote.status === "REJECTED" && (
-        <div className="alert alert-danger mb-4" role="status">
-          <div className="d-flex gap-2">
-            <i className="bi bi-x-circle mt-1" aria-hidden="true" />
-
-            <div>
-              <strong>Offre refusée</strong>
-
-              <div>Vous avez refusé cette offre.</div>
-            </div>
+          <div className="quote-page-header__date">
+            <i className="bi bi-calendar3" aria-hidden="true" />
+            <span>Créé le {formatDateLong(quote.created_at)}</span>
           </div>
-        </div>
-      )}
+        </header>
 
-      {quote.status === "EXPIRED" && (
-        <div className="alert alert-warning mb-4" role="status">
-          <div className="d-flex gap-2">
-            <i className="bi bi-clock-history mt-1" aria-hidden="true" />
+        {/* Erreur de rechargement */}
+        {error && (
+          <div className="quote-inline-error" role="alert">
+            <i className="bi bi-exclamation-circle" aria-hidden="true" />
 
-            <div>
-              <strong>Offre expirée</strong>
+            <span>{error}</span>
 
-              <div>
-                Cette offre n'est plus valable et ne peut plus être acceptée.
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =====================================================
-          INFORMATIONS DE L'OFFRE
-      ===================================================== */}
-
-      <div className="row g-4">
-        {/* ===================================================
-            VÉHICULE
-        =================================================== */}
-
-        <div className="col-lg-6">
-          <QuoteVehicleCard quote={quote} />
-        </div>
-
-        {/* ===================================================
-            FINANCEMENT
-        =================================================== */}
-
-        <div className="col-lg-8">
-          <QuoteFinancingCard quote={quote} />
-        </div>
-
-        {/* ===================================================
-            REPRISE
-        =================================================== */}
-
-        <div className="col-lg-4">
-          <QuoteTradeInCard quote={quote} />
-        </div>
-
-        {/* ===================================================
-            CONSEILLER
-        =================================================== */}
-
-        {quote.sales_agent && (
-          <div className="col-12">
-            <div className="card border-0 shadow-sm rounded-4">
-              <div className="card-body p-4">
-                <h2 className="h5 fw-semibold mb-3">
-                  <i className="bi bi-headset me-2" aria-hidden="true" />
-                  Votre conseiller
-                </h2>
-
-                <div className="fw-semibold">{salesAgentName}</div>
-
-                {quote.sales_agent.email && (
-                  <div className="text-muted">{quote.sales_agent.email}</div>
-                )}
-
-                {quote.sales_agent.phone && (
-                  <div className="text-muted">{quote.sales_agent.phone}</div>
-                )}
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setError("")}
+              aria-label="Fermer le message d’erreur"
+            >
+              <i className="bi bi-x-lg" aria-hidden="true" />
+            </button>
           </div>
         )}
-      </div>
 
-      {/* =====================================================
-          ACTIONS CLIENT
-      ===================================================== */}
+        {/* Contenu principal et colonne latérale */}
+        <div className="quote-layout">
+          {/* Colonne principale */}
+          <div className="quote-layout__main">
+            <QuoteVehicleSection
+              vehicle={quote.vehicle}
+              vehiclePath={
+                quote.vehicle?.id ? `/vehicle/${quote.vehicle.id}` : undefined
+              }
+            />
 
-      {quote.status === "SENT" && (
-        <div className="d-flex flex-wrap gap-2 mt-4">
-          <button
-            type="button"
-            className="btn btn-success"
-            onClick={handleAcceptClick}
-            disabled={actionLoading}
+            <QuoteFinancialSection quote={quote} />
+
+            <QuoteFinancingSection quote={quote} />
+
+            <QuoteTradeInSection quote={quote} />
+
+            <QuoteLifecycleSection quote={quote} />
+          </div>
+
+          {/* Colonne latérale */}
+          <aside
+            className="quote-layout__sidebar"
+            aria-label="Récapitulatif et assistance"
           >
-            <i className="bi bi-check-circle me-2" aria-hidden="true" />
-            Accepter l'offre
-          </button>
+            <QuoteSummarySection
+              quote={quote}
+              canDecide={canDecide}
+              actionLoading={actionLoading}
+              openDecision={openDecision}
+            />
 
-          <button
-            type="button"
-            className="btn btn-outline-danger"
-            onClick={handleRefuseClick}
-            disabled={actionLoading}
-          >
-            <i className="bi bi-x-circle me-2" aria-hidden="true" />
-            Refuser l'offre
-          </button>
+            <section className="quote-help-card">
+              <div className="quote-help-card__icon">
+                <i className="bi bi-headset" aria-hidden="true" />
+              </div>
+
+              <h3>Besoin d’aide ?</h3>
+
+              <p>
+                Une question sur votre devis ou ses conditions ? Notre équipe
+                est là pour vous accompagner.
+              </p>
+
+              <Link to="/support-tickets" className="quote-help-card__link">
+                Contacter le support
+                <i className="bi bi-arrow-right" aria-hidden="true" />
+              </Link>
+            </section>
+
+            <p className="quote-security-note">
+              <i className="bi bi-shield-check" aria-hidden="true" />
+              Vos informations sont traitées de manière sécurisée.
+            </p>
+          </aside>
         </div>
-      )}
 
-      {/* =====================================================
-          RETOUR
-      ===================================================== */}
-
-      <div className="mt-4">
-        <button
-          type="button"
-          className="btn btn-outline-secondary"
-          onClick={() => navigate(-1)}
-          disabled={actionLoading}
-        >
-          <i className="bi bi-arrow-left me-2" aria-hidden="true" />
-          Retour
-        </button>
+        {/* Pied de page */}
+        <QuotePageFooter />
       </div>
 
-      {/* =====================================================
-          MODALE DE DÉCISION
-      ===================================================== */}
-
-      <QuoteDecisionModal
-        show={showDecision}
-        mode={decisionMode}
+      {/* Modale de confirmation */}
+      <DecisionModal
+        type={decision}
         loading={actionLoading}
-        onClose={handleCloseDecision}
-        onConfirm={handleDecisionConfirm}
+        onClose={closeDecision}
+        onConfirm={handleDecision}
+        reason={reason}
+        setReason={setReason}
+        comment={comment}
+        setComment={setComment}
       />
-    </div>
+    </main>
   );
 }

@@ -111,6 +111,25 @@ export default function useSupportTicket(id) {
     }
   }, [id]);
 
+  const markAsRead = useCallback(() => {
+    const ws = wsRef.current;
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    // Ne pas marquer comme lu si l'utilisateur
+    // consulte un autre onglet ou une autre fenêtre.
+    if (document.visibilityState !== "visible") {
+      return;
+    }
+
+    ws.send(
+      JSON.stringify({
+        type: "MARK_AS_READ",
+      })
+    );
+  }, []);
   // =====================================================
   // CHARGEMENT INITIAL
   // =====================================================
@@ -171,15 +190,8 @@ export default function useSupportTicket(id) {
           // NOUVEAU MESSAGE
           // ===============================================
 
-          case "NEW_MESSAGE":
+          case "NEW_MESSAGE": {
             setMessages((previousMessages) => {
-              /**
-               * Le backend peut éventuellement renvoyer
-               * un message déjà présent dans la liste.
-               *
-               * On vérifie donc son identifiant avant
-               * de l'ajouter afin d'éviter les doublons.
-               */
               if (
                 previousMessages.some((item) => item.id === message.data.id)
               ) {
@@ -189,7 +201,15 @@ export default function useSupportTicket(id) {
               return [...previousMessages, message.data];
             });
 
+            // La conversation est actuellement visible :
+            // demander au backend de la marquer comme lue.
+            if (document.visibilityState === "visible") {
+              markAsRead();
+              console.log("Ticket marqué comme lu via WebSocket.");
+            }
+
             break;
+          }
 
           // ===============================================
           // STATUT MIS À JOUR
@@ -270,7 +290,7 @@ export default function useSupportTicket(id) {
         wsRef.current = null;
       }
     };
-  }, [id]);
+  }, [id, markAsRead]);
 
   // =====================================================
   // ENVOI D'UN MESSAGE

@@ -25,6 +25,24 @@ export const formatDate = (value) => {
   });
 };
 
+// Formate une date pour l'affichage côté client.
+// Exemple : 2026-10-09 devient « 9 octobre 2026 ».
+export const formatDateLong = (value) => {
+  if (!value) {
+    return "Non renseignée";
+  }
+
+  const date = new Date(value);
+
+  // Contrôle de validité de la date fournie par l'API.
+  if (Number.isNaN(date.getTime())) {
+    return "Non renseignée";
+  }
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "long",
+  }).format(date);
+};
 // ==========================================================
 // FORMATER UNE DATE AVEC DATE + HEURE
 // ==========================================================
@@ -51,6 +69,24 @@ export const formatDateTime = (value) => {
   });
 };
 
+// Formate une date avec l'heure pour tracer précisément
+// les événements importants du cycle de vie du devis.
+export const formatDateTimeLong = (value) => {
+  if (!value) {
+    return "Non renseignée";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Non renseignée";
+  }
+
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "long",
+    timeStyle: "short",
+  }).format(date);
+};
 // ==========================================================
 // FORMATER UNIQUEMENT L'HEURE
 // ==========================================================

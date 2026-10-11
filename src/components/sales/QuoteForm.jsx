@@ -147,8 +147,8 @@ export default function QuoteFormPage({
 
     const numericDownPayment = Number(downPayment);
 
-    if (!Number.isFinite(numericDownPayment) || numericDownPayment < 0) {
-      validationErrors.down_payment = "Apport invalide.";
+    if (!Number.isFinite(numericDownPayment) || numericDownPayment <= 0) {
+      validationErrors.down_payment = "L'apport doit être supérieur à 0.";
     }
 
     // -------------------------------------------------
