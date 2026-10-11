@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import apiFetch from "../services/apiFetch";
-
+import { setAuthenticationFailureHandler } from "../services/refreshSession";
 // ============================================================
 // CONTEXTE D'AUTHENTIFICATION
 // ============================================================
@@ -134,27 +140,36 @@ export function AuthProvider({ children }) {
   //
   // On prévient d'abord le backend afin qu'il puisse effectuer
   // les éventuelles opérations nécessaires côté serveur.
-  const logout = async () => {
+  const logout = useCallback(async ({ remote = true } = {}) => {
     try {
-      await apiFetch("/auth/logout", {
-        method: "POST",
-      });
+      // Déconnexion côté serveur uniquement si elle est demandée.
+      if (remote) {
+        await apiFetch("/auth/logout", {
+          method: "POST",
+        });
+      }
     } catch (error) {
-      // Même si l'appel backend échoue, on poursuit la
-      // déconnexion côté frontend.
-      console.error("Erreur lors de la déconnexion", error);
+      console.error("Erreur lors de la déconnexion :", error);
     } finally {
-      // Suppression du token local.
+      // Nettoyage local dans tous les cas.
       localStorage.removeItem("access_token");
-
-      // Suppression de l'utilisateur du contexte.
-      //
-      // L'application considère alors immédiatement
-      // l'utilisateur comme déconnecté.
       setUser(null);
     }
-  };
+  }, []);
 
+  // ============================================================
+  // INTÉGRATION AU RENOUVELLEMENT DE SESSION
+  // ============================================================
+
+  useEffect(() => {
+    // En cas d'échec définitif du refresh, on déconnecte
+    // l'utilisateur sans rappeler apiFetch.
+    setAuthenticationFailureHandler(() => logout({ remote: false }));
+
+    return () => {
+      setAuthenticationFailureHandler(null);
+    };
+  }, [logout]);
   // ==========================================================
   // UPDATE USER
   // ==========================================================

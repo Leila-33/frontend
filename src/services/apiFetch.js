@@ -1,5 +1,7 @@
 import { startLoading, stopLoading } from "./loaderService";
-
+import refreshSession, {
+  RefreshSessionError,
+} from "./refreshSession";
 import { API_URL } from "../config/api";
 // ============================================================
 // URL DE BASE DE L'API
@@ -14,24 +16,6 @@ import { API_URL } from "../config/api";
 // devient :
 //
 // http://localhost:8000/api/auth/me
-
-// ============================================================
-// API FETCH CENTRALISÉ
-// ============================================================
-// Cette variable permet de partager une seule requête de
-// refresh entre plusieurs appels API simultanés.
-//
-// Exemple :
-//
-// Requête A → 401
-// Requête B → 401
-// Requête C → 401
-//
-// Au lieu d'envoyer 3 requêtes /auth/refresh,
-// une seule requête de refresh sera créée.
-//
-// Les autres requêtes attendront la même Promise.
-let refreshPromise = null;
 
 // ============================================================
 // ERREUR API PERSONNALISÉE
@@ -206,96 +190,62 @@ async function apiFetch(url, options = {}) {
     // On effectue la requête avec le token actuel.
     let res = await callApi(token);
 
-    // ========================================================
-    // REFRESH TOKEN
-    // ========================================================
-    // Si le backend retourne 401, cela signifie généralement
-    // que le token d'accès n'est plus valide.
-    //
-    // On tente alors d'obtenir un nouveau access_token.
-    //
-    // On vérifie également que l'ancien token existait.
-    if (res.status === 401 && token) {
-      // ------------------------------------------------------
-      // ÉVITER PLUSIEURS REFRESH SIMULTANÉS
-      // ------------------------------------------------------
-      // Si aucun refresh n'est actuellement en cours,
-      // on en démarre un.
-      //
-      // Si un refresh est déjà en cours, les autres requêtes
-      // utiliseront la même Promise.
-      if (!refreshPromise) {
-        refreshPromise = fetch(API_URL + "/auth/refresh", {
-          method: "POST",
+// ========================================================
+// REFRESH TOKEN
+// ========================================================
 
-          // Permet d'envoyer le cookie de refresh token.
-          credentials: "include",
-        })
-          // --------------------------------------------------
-          // TRAITEMENT DE LA RÉPONSE DU REFRESH
-          // --------------------------------------------------
-          .then(async (r) => {
-            // Transforme la réponse JSON en objet JavaScript.
-            const data = await r.json();
+// Si le backend retourne 401, on tente de renouveler
+// la session à l'aide du cookie HttpOnly refresh_token.
+//
+// Le renouvellement est centralisé dans refreshSession.js,
+// partagé avec le hook WebSocket.
 
-            // Si le refresh échoue, on considère que la
-            // session n'est plus valide.
-            if (!r.ok) {
-              throw new ApiError("Session expirée", r.status, data);
-            }
+const isAuthenticationRoute =
+  url === "/auth/login" ||
+  url === "/auth/refresh"||
+  url === "/auth/logout";
 
-            // Retourne les données du refresh.
-            //
-            // Exemple :
-            //
-            // {
-            //   access_token: "..."
-            // }
-            return data;
-          })
+if (res.status === 401 && token && !isAuthenticationRoute) {
+  try {
+    // ----------------------------------------------------
+    // RENOUVELLEMENT PARTAGÉ
+    // ----------------------------------------------------
 
-          // --------------------------------------------------
-          // FIN DU REFRESH
-          // --------------------------------------------------
-          // Quelle que soit l'issue du refresh, on remet
-          // refreshPromise à null.
-          //
-          // Cela permettra de lancer un nouveau refresh
-          // lorsqu'il sera nécessaire ultérieurement.
-          .finally(() => {
-            refreshPromise = null;
-          });
-      }
+    // apiFetch et useNotificationSocket utilisent la même
+    // fonction et la même Promise de renouvellement.
+    token = await refreshSession();
 
-      try {
-        // ----------------------------------------------------
-        // ATTENTE DU REFRESH
-        // ----------------------------------------------------
-        // Si un refresh était déjà en cours, cette requête
-        // attend simplement la même Promise.
-        const refreshData = await refreshPromise;
+    // ----------------------------------------------------
+    // REJOUER LA REQUÊTE INITIALE
+    // ----------------------------------------------------
 
-        // Récupération du nouveau access token.
-        token = refreshData.access_token;
+    // La première requête a échoué avec 401.
+    // On la rejoue une seule fois avec le nouveau token.
+    res = await callApi(token);
 
-        // Sauvegarde du nouveau token.
-        localStorage.setItem("access_token", token);
+  } catch (err) {
+    // ----------------------------------------------------
+    // ÉCHEC DU RENOUVELLEMENT
+    // ----------------------------------------------------
 
-        // ----------------------------------------------------
-        // NOUVEL APPEL API
-        // ----------------------------------------------------
-        // La requête initiale ayant échoué avec 401,
-        // on la rejoue avec le nouveau token.
-        res = await callApi(token);
-      } catch (err) {
-        // Le refresh a échoué :
-        // le token d'accès est supprimé.
-        localStorage.removeItem("access_token");
+    if (err instanceof RefreshSessionError) {
+      // Un refus définitif d'authentification est déjà
+      // transmis au gestionnaire de déconnexion par
+      // refreshSession.js.
 
-        // On remonte une erreur d'authentification claire.
-        throw new ApiError("Session expirée", 401, null);
-      }
+      // Une erreur réseau ou un HTTP 500 ne doit pas être
+      // transformé artificiellement en erreur 401.
+      throw new ApiError(
+        err.message,
+        err.status,
+        err.data
+      );
     }
+
+    // Préserve les autres erreurs sans les masquer.
+    throw err;
+  }
+}
 
     // ========================================================
     // PARSE RESPONSE
